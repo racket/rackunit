@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/class
          unstable/class-iop
-         racket/gui
+         racket/gui/base
          "../base.rkt"
          "../result.rkt"
          "../check-info.rkt"
@@ -40,8 +40,8 @@
     (run-case case model)
     state)
 
-  (foldts for-suite-entry for-suite-exit for-case
-          #f test))
+  (foldts-test-suite for-suite-entry for-suite-exit for-case
+                     #f test))
 
 ;; From old suite-runner:
 #|
