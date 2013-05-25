@@ -2,7 +2,7 @@
 (require racket/class
          unstable/class-iop
          data/gvector
-         "../base.rkt"
+         rackunit/private/base
          "interfaces.rkt"
          "cache-box.rkt")
 (provide case-result%

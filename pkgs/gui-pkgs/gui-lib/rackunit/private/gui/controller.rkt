@@ -2,7 +2,7 @@
 (require racket/class
          unstable/class-iop
          unstable/gui/notify
-         "../base.rkt"
+         rackunit/private/base
          "interfaces.rkt"
          "model.rkt")
 (provide controller%)

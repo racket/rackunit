@@ -1,9 +1,9 @@
 #lang racket/base
 (require racket/class
          unstable/class-iop
-         "../base.rkt"
-         "../result.rkt"
-         "../check-info.rkt"
+         rackunit/private/base
+         rackunit/private/result
+         rackunit/private/check-info
          "interfaces.rkt"
          "controller.rkt"
          "view.rkt")

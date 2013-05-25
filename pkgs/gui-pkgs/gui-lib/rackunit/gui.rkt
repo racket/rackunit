@@ -1,8 +1,8 @@
 #lang racket/base
 (require racket/contract/base
          racket/gui/base
-         "private/base.rkt"
-         "private/gui/gui.rkt")
+         rackunit/private/base
+         rackunit/private/gui/gui)
 
 (define (test/gui #:wait? [wait? #f]
                   . tests)
