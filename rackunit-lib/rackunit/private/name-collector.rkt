@@ -30,8 +30,7 @@
 
 (require "base.rkt"
          "monad.rkt"
-         "hash-monad.rkt"
-         srfi/1)
+         "hash-monad.rkt")
 
 (provide display-test-case-name
          push-suite-name!
@@ -52,11 +51,10 @@
      (cond
       ((test-success? result) (return-hash (void)))
       (else
-       (fold-right
-        (lambda (name seed)
+       (for-each
+        (lambda (name)
           (printf "~a > " name))
-        (void)
-        names)
+        (reverse names))
        (display (test-result-test-case-name result))
        (newline)
        (return-hash (void)))))))
