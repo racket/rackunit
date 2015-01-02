@@ -12,7 +12,7 @@ env:
 before_install:
 - export PKG=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`
 - echo $PKG
-- curl -L -o installer.sh http://www.cs.utah.edu/plt/snapshots/current/installers/min-racket-current-x86_64-linux-precise.sh
+- curl -L -o installer.sh http://plt.eecs.northwestern.edu/snapshots/current/installers/min-racket-current-x86_64-linux-precise.sh
 - sh installer.sh --in-place --dest ~/racket/
 
 install:
