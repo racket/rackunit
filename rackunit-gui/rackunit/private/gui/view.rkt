@@ -201,7 +201,7 @@ still be there, just not visible?
 
     ;; View Link
 
-    (define model=>view-link (make-hasheq))
+    (define model=>view-link (make-hash))
 
     (define/public (set-view-link model item)
       (hash-set! model=>view-link model item))
