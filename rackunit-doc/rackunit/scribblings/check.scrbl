@@ -354,12 +354,12 @@ information by default: the name of the checks and the values of the
 parameters.  Additionally the macro forms of checks grab location
 information and the expressions passed as parameters.
 
-@defform[(define-simple-check (name param ...) expr ...)]{
+@defform[(define-simple-check (name param ...) body ...)]{
 
 The @racket[define-simple-check] macro constructs a check
 called @racket[name] that takes the params and an optional
-message as arguments and evaluates the @racket[expr]s.  The
-check fails if the result of the @racket[expr]s is
+message as arguments and evaluates the @racket[body]s.  The
+check fails if the result of the last @racket[body] is
 @racket[#f].  Otherwise the check succeeds.  Note that
 simple checks cannot report extra information using
 @racket[with-check-info].}
@@ -379,14 +379,15 @@ We can use these checks in the usual way:
 ]
 
 @defform*[[(define-binary-check (name pred actual expected))
-          (define-binary-check (name actual expected) expr ...)]]{
+          (define-binary-check (name actual expected) body ...)]]{
 
 The @racket[define-binary-check] macro constructs a check
 that tests a binary predicate.  It's benefit over
 @racket[define-simple-check] is in better reporting on check
 failure.  The first form of the macro accepts a binary
 predicate and tests if the predicate holds for the given
-values.  The second form tests if @racket[expr] non-false.
+values.  The second form tests if the last @racket[body]
+evaluates to a non-false value.
 }
 
 Here's the first form, where we use a predefined predicate
@@ -411,7 +412,7 @@ tests a number if within 0.01 of the expected value:
     (< (abs (- actual expected)) 0.01))
 ]
 
-@defform[(define-check (name param ...) expr ...)]{
+@defform[(define-check (name param ...) body ...)]{
 
 The @racket[define-check] macro acts in exactly the same way
 as @racket[define-simple-check], except the check only fails

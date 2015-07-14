@@ -109,7 +109,7 @@
 
 (define-syntax (define-check stx)
   (syntax-case stx ()
-    ((define-check (name formal ...) expr ...)
+    ((define-check (name formal ...) body ...)
      (with-syntax ([reported-name
                     (symbol->string (syntax->datum (syntax name)))]
                    [(actual ...)
@@ -130,7 +130,7 @@
                                   (if message
                                       (list (make-check-message message))
                                       null))
-                             (lambda () (begin0 (begin expr ...) (test-log! #t))))))
+                             (lambda () (begin0 (let () body ...) (test-log! #t))))))
                        
                        ;; All checks should return (void).
                        (void)))]
@@ -176,22 +176,22 @@
 
 (define-syntax define-simple-check
   (syntax-rules ()
-    ((_ (name param ...) expr ...)
+    ((_ (name param ...) body ...)
      (define-check (name param ...)
-       (let ((result (begin expr ...)))
+       (let ((result (let () body ...)))
          (if result
              result
              (fail-check)))))))
 
 (define-syntax define-binary-check
   (syntax-rules ()
-    [(_ (name expr1 expr2) expr ...)
+    [(_ (name expr1 expr2) body ...)
      (define-check (name expr1 expr2)
        (with-check-info*
         (list (make-check-actual expr1)
               (make-check-expected expr2))
         (lambda ()
-          (let ((result (begin expr ...)))
+          (let ((result (let () body ...)))
             (if result
                 result
                 (fail-check))))))]
