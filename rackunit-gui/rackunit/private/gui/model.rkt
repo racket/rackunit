@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/class
-         unstable/class-iop
+         racket/class/iop
          data/gvector
          rackunit/private/base
          "interfaces.rkt"

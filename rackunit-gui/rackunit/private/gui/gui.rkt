@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/class
-         unstable/class-iop
+         racket/class/iop
          rackunit/private/base
          rackunit/private/result
          rackunit/private/check-info

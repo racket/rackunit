@@ -3,9 +3,9 @@
 (define collection 'multi)
 
 (define deps '("rackunit-lib"
+               "class-iop-lib"
                "data-lib"
                "gui-lib"
-               "unstable-list-lib" ; for class-iop
                "base"))
 
 (define pkg-desc "RackUnit test runner GUI")

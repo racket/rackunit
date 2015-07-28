@@ -1,5 +1,5 @@
 #lang racket/base
-(require unstable/class-iop)
+(require racket/class/iop)
 (provide (all-defined-out))
 
 ;; controller

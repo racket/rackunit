@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/class
-         unstable/class-iop
+         racket/class/iop
          unstable/gui/notify
          rackunit/private/base
          "interfaces.rkt"
