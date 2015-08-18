@@ -1,14 +1,13 @@
 #lang racket/base
-(require framework/preferences
-         unstable/gui/prefs)
+(require framework/preferences)
 (provide (all-defined-out))
 
 ;; Frame size preferences
 
 (preferences:set-default 'rackunit:frame:width 400 exact-positive-integer?)
 (preferences:set-default 'rackunit:frame:height 400 exact-positive-integer?)
-(define pref:width (pref:get/set 'rackunit:frame:width))
-(define pref:height (pref:get/set 'rackunit:frame:height))
+(define pref:width (preferences:get/set 'rackunit:frame:width))
+(define pref:height (preferences:get/set 'rackunit:frame:height))
 
 ;; CONSTANTS
 ;; Some of these are obsolete, given the preferences above.
