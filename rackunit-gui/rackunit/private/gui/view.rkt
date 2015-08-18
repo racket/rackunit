@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/class
          racket/class/iop
-         unstable/gui/notify
+         framework/notify
          racket/gui/base
          framework
          mrlib/hierlist
@@ -327,9 +327,9 @@ still be there, just not visible?
            (new menu%
                 (label "RackUnit")
                 (parent (get-menu-bar)))])
-      (menu-option/notify-box rackunit-menu
-                              "Lock"
-                              (get-field locked? controller)))
+      (notify:menu-option/notify-box rackunit-menu
+                                     "Lock"
+                                     (get-field locked? controller)))
 
     (define view
       (new view%

@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/class
          racket/class/iop
-         unstable/gui/notify
+         framework/notify
          rackunit/private/base
          "interfaces.rkt"
          "model.rkt")
@@ -13,10 +13,10 @@
 
     ;; model-shown : (notify-box (U model<%> #f))
     ;; The model currently displayed in the Details view, of #f is none.
-    (define-notify selected-model (new notify-box% (value #f)))
+    (notify:define-notify selected-model (new notify:notify-box% (value #f)))
 
     ;; locked? : (notify-box boolean)
-    (define-notify locked? (new notify-box% (value #f)))
+    (notify:define-notify locked? (new notify:notify-box% (value #f)))
 
     ;; view : #f or view<%>
     (define view #f)
