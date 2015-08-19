@@ -58,7 +58,7 @@
 
 
 (define (check-info-stack-max-name-width check-info-stack)
-  (apply max
+  (apply max 0
          (map check-info-name-width check-info-stack)))
 
 ;; display-check-info-stack : (listof check-info) -> void
