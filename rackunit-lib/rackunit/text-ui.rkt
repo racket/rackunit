@@ -130,7 +130,7 @@
              5]))))
 
 (define (textui-display-check-info-stack stack [verbose? #f])
-  (define max-name-width (check-info-stack-max-name-width check-info-stack))
+  (define max-name-width (check-info-stack-max-name-width stack))
   (for-each
    (lambda (info)
      (cond
