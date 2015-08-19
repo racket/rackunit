@@ -130,13 +130,15 @@
              5]))))
 
 (define (textui-display-check-info-stack stack [verbose? #f])
+  (define max-name-width (check-info-stack-max-name-width stack))
   (for-each
    (lambda (info)
      (cond
        [(check-name? info)
-        (display-check-info info)]
+        (display-check-info max-name-width info)]
        [(check-location? info)
         (display-check-info-name-value
+         max-name-width
          'location
          (trim-current-directory
           (location->string
@@ -144,16 +146,19 @@
          displayln)]
        [(check-params? info)
         (display-check-info-name-value
+         max-name-width
          'params
          (check-info-value info)
          (lambda (v) (map pretty-print v)))]
        [(check-actual? info)
         (display-check-info-name-value
+         max-name-width
          'actual
          (check-info-value info)
          pretty-print)]
        [(check-expected? info)
         (display-check-info-name-value
+         max-name-width
          'expected
          (check-info-value info)
          pretty-print)]
@@ -161,7 +166,7 @@
              (not verbose?))
         (void)]
        [else
-        (display-check-info info)]))
+        (display-check-info max-name-width info)]))
    (sort-stack
     (if verbose?
       stack

@@ -14,12 +14,13 @@
          display-error
 
          display-test-failure/error
-         strip-redundant-params)
+         strip-redundant-params
+         check-info-stack-max-name-width)
 
 ;; name-width : integer
 ;;
 ;; Number of characters we reserve for the check-info name column
-(define name-width 12)
+(define minimum-name-width 12)
 
 (define (display-delimiter)
   (display "--------------------") (newline))
@@ -39,21 +40,34 @@
    [else
     (substring s 0 n)]))
 
-(define (display-check-info-name-value name value [value-printer (lambda (x) (write x) (newline))])
+(define (check-info-name-width check-info)
+  (string-length
+   (symbol->string
+    (check-info-name check-info))))
+
+(define (display-check-info-name-value max-name-width name value [value-printer (lambda (x) (write x) (newline))])
   (display (string-pad-right
             (string-append (symbol->string name) ": ")
-            name-width))
+            (max minimum-name-width (+ max-name-width 2))))
   (value-printer value))
 
-(define display-check-info
-  (match-lambda [(struct check-info (name value))
-                 (display-check-info-name-value name value)]))
+(define (display-check-info max-name-width a-check-info)
+  (match a-check-info
+    [(struct check-info (name value))
+     (display-check-info-name-value max-name-width name value)]))
+
+
+(define (check-info-stack-max-name-width check-info-stack)
+  (apply max 0
+         (map check-info-name-width check-info-stack)))
 
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack check-info-stack)
-  (for-each
-   display-check-info
-   (strip-redundant-params check-info-stack))
+  (define max-name-width (check-info-stack-max-name-width check-info-stack))
+  (define (display-check-info-with-width check-info)
+    (display-check-info max-name-width check-info))
+  (for-each display-check-info-with-width
+            (strip-redundant-params check-info-stack))
   (newline))
 
 ;; display-test-name : (U string #f) -> void
