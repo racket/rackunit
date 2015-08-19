@@ -14,7 +14,8 @@
          display-error
 
          display-test-failure/error
-         strip-redundant-params)
+         strip-redundant-params
+         check-info-stack-max-name-width)
 
 ;; name-width : integer
 ;;
@@ -55,11 +56,14 @@
     [(struct check-info (name value))
      (display-check-info-name-value max-name-width name value)]))
 
+
+(define (check-info-stack-max-name-width check-info-stack)
+  (apply max
+         (map check-info-name-width check-info-stack)))
+
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack check-info-stack)
-  (define max-name-width
-    (apply max
-           (map check-info-name-width check-info-stack)))
+  (define max-name-width (check-info-stack-max-name-width check-info-stack))
   (define (display-check-info-with-width check-info)
     (display-check-info max-name-width check-info))
   (for-each display-check-info-with-width
