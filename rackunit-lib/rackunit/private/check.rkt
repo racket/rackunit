@@ -146,31 +146,47 @@
            
            (define-syntax (name stx)
              (with-syntax
-                 ([loc (syntax->location stx)])
+                 ([default-loc (syntax->location stx)])
                (syntax-case stx ()
                  ((name actual ...)
                   (syntax/loc stx
                     (check-secret-name actual ...
-                                       #:location (quote loc)
+                                       #:location (quote default-loc)
                                        #:expression (quote (name actual ...)))))
 
                  ((name actual ... msg)
                   (syntax/loc stx
                     (check-secret-name actual ... msg
-                                       #:location (quote loc)
+                                       #:location (quote default-loc)
                                        #:expression (quote (name actual ...)))))
+
+                 ((name actual ... #:location custom-loc)
+                    (syntax/loc stx
+                      (check-secret-name actual ...
+                                         #:location (if custom-loc
+                                                      (srcloc->location custom-loc)
+                                                      (quote default-loc))
+                                         #:expression (quote (name actual ...)))))
+
+                 ((name actual ... msg #:location custom-loc)
+                    (syntax/loc stx
+                      (check-secret-name actual ... msg
+                                         #:location (if custom-loc
+                                                      (srcloc->location custom-loc)
+                                                      (quote default-loc))
+                                         #:expression (quote (name actual ...)))))
                     
                  (name
                   (identifier? #'name)
-                  (syntax/loc stx
+                  (syntax/loc stx ;;bg; TODO need to add #:location option here
                     (case-lambda
                       [(formal ...)
                        (check-secret-name formal ... 
-                                          #:location (quote loc) 
+                                          #:location (quote default-loc) 
                                           #:expression (quote (name actual ...)))]
                       [(formal ... msg)
                        (check-secret-name formal ... msg
-                                          #:location (quote loc) 
+                                          #:location (quote default-loc) 
                                           #:expression (quote (name actual ...)))]))))))
            ))))))
 
