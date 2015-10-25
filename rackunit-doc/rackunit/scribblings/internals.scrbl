@@ -20,7 +20,8 @@ of these parameters.
 @defparam[current-check-handler handler (-> any/c any)]{
 
 Parameter containing the function that handles exceptions
-raised by check failures.  The default value is @racket[raise].
+raised by check failures.  The default value is a procedure
+that will display the exception data in a user-friendly format.
 }
 
 @defparam[current-check-around check (-> (-> any) any)]{

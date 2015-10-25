@@ -10,10 +10,10 @@
 @title{Checks}
 
 Checks are the basic building block of RackUnit.  A check
-checks some condition.  If the condition holds the check
-evaluates to @racket[(void)].  If the condition doesn't hold the
-check raises an instance of @racket[exn:test:check] with
-information detailing the failure.
+checks some condition and always
+evaluates to @racket[(void)].  If the condition doesn't hold, the
+check will report the failure (see @racket[current-check-handler]
+for customizing how failures are handled).
 
 Although checks are implemented as macros, which is
 necessary to grab source location, they are conceptually
