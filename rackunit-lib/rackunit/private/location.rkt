@@ -21,7 +21,8 @@
  [location-span (location/c . -> . (or/c number? false/c))]
  [syntax->location (syntax? . -> . location/c)]
  [location->string (location/c . -> . string?)]
- [location->srcloc (location/c . -> . srcloc?)])
+ [location->srcloc (location/c . -> . srcloc?)]
+ [srcloc->location (srcloc? . -> . location/c)])
 
 ;; syntax->location : syntax -> location
 (define (syntax->location stx)
@@ -46,6 +47,14 @@
           (location-column location)
           (location-position location)
           (location-span location)))
+
+;; srcloc->location: srcloc -> location
+(define (srcloc->location src)
+  (list (srcloc-source src)
+        (srcloc-line src)
+        (srcloc-column src)
+        (srcloc-position src)
+        (srcloc-span src)))
 
 (define (source->string source)
   (cond
