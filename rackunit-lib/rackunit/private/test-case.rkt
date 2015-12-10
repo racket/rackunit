@@ -64,11 +64,14 @@
     [(_ name expr ...)
      (quasisyntax/loc stx
        (parameterize
-           ([current-test-name 
-             (contract string? name 
-                       '#,(syntax-source-module #'name #t)
-                       '#,(syntax-source-module #'test-case #t))])
+           ([current-test-name
+             (ensure-string name (quote-syntax #,(datum->syntax #f 'loc #'name)))])
          (test-begin expr ...)))]))
+
+(define (ensure-string name src-stx)
+  (contract string? name
+            (syntax-source name)
+            (syntax-source-module #'test-case #t)))
 
 (define-syntax before
   (syntax-rules ()

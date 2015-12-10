@@ -1,8 +1,7 @@
 #lang racket/base
 
 (require racket/match
-         (for-syntax racket/base
-                     "location.rkt")
+         (for-syntax racket/base)
          rackunit/log
          "base.rkt"
          "check-info.rkt"
@@ -145,19 +144,18 @@
            (define check-secret-name check-fn)
            
            (define-syntax (name stx)
-             (with-syntax
-                 ([loc (syntax->location stx)])
+             (with-syntax ([loc (datum->syntax #f 'loc stx)])
                (syntax-case stx ()
                  ((name actual ...)
                   (syntax/loc stx
                     (check-secret-name actual ...
-                                       #:location (quote loc)
+                                       #:location (syntax->location (quote-syntax loc))
                                        #:expression (quote (name actual ...)))))
 
                  ((name actual ... msg)
                   (syntax/loc stx
                     (check-secret-name actual ... msg
-                                       #:location (quote loc)
+                                       #:location (syntax->location (quote-syntax loc))
                                        #:expression (quote (name actual ...)))))
                     
                  (name
@@ -166,11 +164,11 @@
                     (case-lambda
                       [(formal ...)
                        (check-secret-name formal ... 
-                                          #:location (quote loc) 
+                                          #:location (syntax->location (quote-syntax loc))
                                           #:expression (quote (name actual ...)))]
                       [(formal ... msg)
                        (check-secret-name formal ... msg
-                                          #:location (quote loc) 
+                                          #:location (syntax->location (quote-syntax loc))
                                           #:expression (quote (name actual ...)))]))))))
            ))))))
 
@@ -307,11 +305,7 @@
        (with-check-info*
         (list (make-check-name 'check-match)
               (make-check-location
-               (list '(unsyntax (syntax-source stx))
-                     '(unsyntax (syntax-line stx))
-                     '(unsyntax (syntax-column stx))
-                     '(unsyntax (syntax-position stx))
-                     '(unsyntax (syntax-span stx))))
+               (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
               (make-check-expression '#,(syntax->datum stx))
               (make-check-actual actual-val)
               (make-check-expected 'expected))
