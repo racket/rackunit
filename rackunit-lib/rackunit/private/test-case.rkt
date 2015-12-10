@@ -70,7 +70,7 @@
 
 (define (ensure-string name src-stx)
   (contract string? name
-            (syntax-source name)
+            (syntax-source src-stx)
             (syntax-source-module #'test-case #t)))
 
 (define-syntax before
