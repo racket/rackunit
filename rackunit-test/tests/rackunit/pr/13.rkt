@@ -3,7 +3,10 @@
          rackunit/text-ui
          racket/port
          racket/match
-         racket/system)
+         racket/system
+         racket/runtime-path)
+
+(define-runtime-path me "13.rkt")
 
 (define a
   (test-suite "Test Suite"
@@ -30,5 +33,5 @@
        (check-equal?
         (parameterize ([current-output-port (open-output-nowhere)])
           (parameterize ([current-error-port (current-output-port)])
-            (system/exit-code "raco test 13.rkt")))
+            (system/exit-code (format "raco test ~a" me))))
         1))]))
