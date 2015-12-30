@@ -33,5 +33,6 @@
        (check-equal?
         (parameterize ([current-output-port (open-output-nowhere)])
           (parameterize ([current-error-port (current-output-port)])
-            (system/exit-code (format "raco test ~a" me))))
+            (system*/exit-code (find-system-path 'exec-file)
+                               "-l" "raco" "--" "test" me)))
         1))]))
