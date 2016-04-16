@@ -6,3 +6,5 @@
 (define pkg-desc "Utilities for interoperating between testing frameworks")
 
 (define version "1.0")
+
+(define pkg-authors '("spencer@florence.io"))
