@@ -7,4 +7,4 @@
 
 (define version "1.0")
 
-(define pkg-authors '("spencer@florence.io"))
+(define pkg-authors '(florence))
