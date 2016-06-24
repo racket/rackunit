@@ -28,7 +28,7 @@
 ;;
 ;; Run a test-case immediately, printing information on failure
 (define (default-test-case-around thunk)
-  (with-handlers ([(lambda (e) #t) default-test-case-handler])
+  (with-handlers ([(lambda (e) (not (exn:break? e))) default-test-case-handler])
     (parameterize ((current-custodian (make-custodian)))
       (thunk))))
 
