@@ -215,7 +215,7 @@
                [(and (procedure? raw-pred) (procedure-arity-includes? raw-pred 1))
                 raw-pred]
                [else
-                (raise-argument-error 'check-exn "(-> any/c any/c)" raw-pred)])])
+                (raise-argument-error 'check-exn "(or/c (-> any/c any/c) regexp?)" raw-pred)])])
     (raise-error-if-not-thunk 'check-exn thunk)
     (let/ec succeed
       (with-handlers
