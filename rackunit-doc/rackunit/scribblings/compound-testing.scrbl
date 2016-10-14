@@ -122,7 +122,7 @@ finished.
     (check-eq? 1 1))
   (test-suite "A nested test suite"
     (test-case "Another test"
-      (check-< 1 2))))
+      (check < 1 2))))
 ]
 
 @defproc[(make-test-suite [name string?]
