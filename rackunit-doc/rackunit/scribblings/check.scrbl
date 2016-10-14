@@ -109,7 +109,7 @@ For example, the following checks all fail:
          void?]{
 
 Checks that @racket[thunk] raises an exception and that either
-@racket[exn-predicate] returns @racket[#t] if it is a function, or
+@racket[exn-predicate] returns a true value if it is a function, or
 that it matches the message in the exception if @racket[exn-predicate]
 is a regexp. In the latter case, the exception raised must be an
 @racket[exn:fail?].  The optional @racket[message] is included in the
