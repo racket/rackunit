@@ -1,7 +1,9 @@
 #lang racket/base
 (require racket/match
          "base.rkt"
-         "check-info.rkt")
+         "check-info.rkt"
+         "text-ui-util.rkt"
+         "location.rkt")
 
 (provide display-check-info-name-value
          display-check-info
@@ -15,7 +17,10 @@
 
          display-test-failure/error
          strip-redundant-params
-         check-info-stack-max-name-width)
+         check-info-stack-max-name-width
+
+         display-verbose-check-info
+         sort-stack)
 
 ;; name-width : integer
 ;;
@@ -56,6 +61,33 @@
     [(struct check-info (name value))
      (display-check-info-name-value max-name-width name value)]))
 
+;; display-verbose-check-info : test-result -> void
+(define (display-verbose-check-info result)
+  (cond
+    ((test-failure? result)
+     (let* ((exn (test-failure-result result))
+            (stack (exn:test:check-stack exn)))
+       (display-verbose-check-info-stack check-info-stack)))
+    ((test-error? result)
+     (display-exn (test-error-result result)))
+    (else
+     (void))))
+
+(define (display-verbose-check-info-stack check-info-stack)
+  (define max-name-width (check-info-stack-max-name-width check-info-stack))
+  (for ([info (in-list (sort-stack check-info-stack))])
+    (cond
+      ((check-location? info)
+       (display-check-info-name-value max-name-width
+                                      'location
+                                      (trim-current-directory
+                                       (location->string
+                                        (check-info-value info)))
+                                      (λ (x) (printf "~a\n" x))))
+      (else
+       (display-check-info-name-value max-name-width
+                                      (check-info-name info)
+                                      (check-info-value info))))))
 
 (define (check-info-stack-max-name-width check-info-stack)
   (apply max 0
@@ -63,11 +95,9 @@
 
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack check-info-stack)
-  (define max-name-width (check-info-stack-max-name-width check-info-stack))
-  (define (display-check-info-with-width check-info)
-    (display-check-info max-name-width check-info))
-  (for-each display-check-info-with-width
-            (strip-redundant-params check-info-stack))
+  (display-verbose-check-info-stack
+   (filter (λ (x) (not (check-expression? x)))
+           (strip-redundant-params check-info-stack)))
   (newline))
 
 ;; display-test-name : (U string #f) -> void
@@ -131,3 +161,21 @@
            (display-error) (newline)
            (display-exn e)])
     (display-delimiter)))
+
+(define (sort-stack l)
+  (sort l <
+        #:key 
+        (λ (info)
+          (cond
+            [(check-name? info)
+             0]
+            [(check-location? info)
+             1]
+            [(check-params? info)
+             2]
+            [(check-actual? info)
+             3]
+            [(check-expected? info)
+             4]
+            [else
+             5]))))
