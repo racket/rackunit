@@ -111,24 +111,6 @@
        (display-exn exn))]
     [else (void)]))
 
-(define (sort-stack l)
-  (sort l < 
-        #:key 
-        (λ (info)
-          (cond
-            [(check-name? info)
-             0]
-            [(check-location? info)
-             1]
-            [(check-params? info)
-             2]
-            [(check-actual? info)
-             3]
-            [(check-expected? info)
-             4]            
-            [else
-             5]))))
-
 (define (textui-display-check-info-stack stack [verbose? #f])
   (define max-name-width (check-info-stack-max-name-width stack))
   (for-each
@@ -171,31 +153,6 @@
     (if verbose?
       stack
       (strip-redundant-params stack)))))
-
-;; display-verbose-check-info : test-result -> void
-(define (display-verbose-check-info result)
-  (cond
-    ((test-failure? result)
-     (let* ((exn (test-failure-result result))
-            (stack (exn:test:check-stack exn)))
-       (for-each
-        (lambda (info)
-          (cond
-            ((check-location? info)
-             (display "location: ")
-             (display (trim-current-directory
-                       (location->string
-                        (check-info-value info)))))
-            (else
-             (display (check-info-name info))
-             (display ": ")
-             (write (check-info-value info))))
-          (newline))
-        (sort-stack stack))))
-    ((test-error? result)
-     (display-exn (test-error-result result)))
-    (else
-     (void))))
 
 (define (std-test/text-ui display-context test)
   (fold-test-results
