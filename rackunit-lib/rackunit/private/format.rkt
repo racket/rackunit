@@ -84,6 +84,11 @@
                                        (location->string
                                         (check-info-value info)))
                                       (λ (x) (printf "~a\n" x))))
+      ((check-expression? info)
+       (display-check-info-name-value max-name-width
+                                      (check-info-name info)
+                                      (check-info-value info)
+                                      (λ (x) (printf "~.s\n" x))))
       (else
        (display-check-info-name-value max-name-width
                                       (check-info-name info)
@@ -96,8 +101,7 @@
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack check-info-stack)
   (display-verbose-check-info-stack
-   (filter (λ (x) (not (check-expression? x)))
-           (strip-redundant-params check-info-stack)))
+   (strip-redundant-params check-info-stack))
   (newline))
 
 ;; display-test-name : (U string #f) -> void
