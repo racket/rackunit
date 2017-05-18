@@ -7,7 +7,7 @@ The @racket[before], @racket[after], and @racket[around]
 macros allow you to specify code that is always run before,
 after, or around expressions in a test case.
 
-@defform[(before before-expr expr1 expr2 ...)]{
+@defform[(before before-expr expr-1 expr-2 ...)]{
 
 Whenever control enters the scope execute the @racket[before-expr]
 before executing @racket[expr-1], and @racket[expr-2 ...]}
