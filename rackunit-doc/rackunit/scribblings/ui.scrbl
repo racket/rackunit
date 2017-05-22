@@ -1,5 +1,7 @@
 #lang scribble/doc
-@(require "base.rkt")
+@require["base.rkt" racket/runtime-path]
+@define-runtime-path[screenshot]{rackunit-screen-shot.png}
+
 
 @title[#:tag  "ui"]{User Interfaces}
 
@@ -38,6 +40,8 @@ information.
 RackUnit also provides a GUI test runner, available from the
 @racketmodname[rackunit/gui] module.
 
+@define-runtime-path[scribblings/rackunit-screen-shot.png
+                     "scribblings/rackunit-screen-shot.png"]
 @defproc[(test/gui [test (or/c test-case? test-suite?)] ...
                    [#:wait? wait? boolean? #f])
          void?]{
@@ -66,7 +70,7 @@ the test runner window has been closed.
     (test-case "append" (check-equal? (string-append "a" "b") "ab"))
     (test-case "ref" (check-equal? (string-ref "abc" 1) #\b)))))]
 
- @image["scribblings/rackunit-screen-shot.png"]{Screenshot of the RackUnit
+ @image[screenshot]{Screenshot of the RackUnit
   window. It features a tree representing the nested test suites (with test
   cases as leaves) on the left pane, and information about the selected test
   failure in the right pane.}
