@@ -11,3 +11,5 @@
 (define pkg-desc "RackUnit testing framework")
 
 (define pkg-authors '(ryanc noel))
+
+(define version "1.1")
