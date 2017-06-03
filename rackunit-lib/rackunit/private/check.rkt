@@ -130,7 +130,7 @@
                                       (list (make-check-message message))
                                       null))
                              (lambda () (begin0 (let () body ...) (test-log! #t))))))
-                       
+
                        ;; All checks should return (void).
                        (void)))]
                    [check-secret-name (datum->syntax stx (gensym (syntax->datum (syntax name))))])
@@ -142,7 +142,7 @@
            ;; received from Ryan Culpepper.
 
            (define check-secret-name check-fn)
-           
+
            (define-syntax (name stx)
              (with-syntax ([loc (datum->syntax #f 'loc stx)])
                (syntax-case stx ()
@@ -157,13 +157,13 @@
                     (check-secret-name actual ... msg
                                        #:location (syntax->location (quote-syntax loc))
                                        #:expression (quote (name actual ...)))))
-                    
+
                  (name
                   (identifier? #'name)
                   (syntax/loc stx
                     (case-lambda
                       [(formal ...)
-                       (check-secret-name formal ... 
+                       (check-secret-name formal ...
                                           #:location (syntax->location (quote-syntax loc))
                                           #:expression (quote (name actual ...)))]
                       [(formal ... msg)
@@ -315,4 +315,3 @@
                        [_ #f]))))))]
     [(_ actual expected)
      (syntax/loc stx (check-match actual expected #t))]))
-
