@@ -267,9 +267,19 @@ the @racket[with-check-info*] function, and the
 @racket[with-check-info] macro.
 
 @defstruct[check-info ([name symbol?] [value any])]{
+ A check-info structure stores information associated with the context of
+ execution of a check. The @racket[value] is written in a check failure message
+ using @racket[write] unless it is a @racket[string-info] value.}
 
-A check-info structure stores information associated
-with the context of execution of a check.}
+@defstruct*[string-info ([value string?])]{
+ A special wrapper around a string for use as a @racket[check-info] value. When
+ displayed in a check failure message, @racket[value] is displayed without
+ quotes. Used to print messages in check infos instead of writing values.
+ @(interaction
+   #:eval rackunit-eval
+   (with-check-info (['value "hello world"]
+                     ['message (string-info "hello world")])
+     (check = 1 2)))}
 
 The are several predefined functions that create check
 information structures with predefined names.  This avoids
