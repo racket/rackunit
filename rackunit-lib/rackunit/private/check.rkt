@@ -38,7 +38,7 @@
 ;; parameter current-check-handler : (-> any any)
 (define current-check-handler
   (make-parameter
-   (λ (e) (display-test-failure/error e))
+   display-test-failure/error
    (lambda (v)
      (if (procedure? v)
          v
