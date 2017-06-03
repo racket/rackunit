@@ -35,14 +35,10 @@
          check-match
          fail)
 
-;; default-check-handler : any -> any
-(define (default-check-handler e)
-  (display-test-failure/error e))
-
 ;; parameter current-check-handler : (-> any any)
 (define current-check-handler
   (make-parameter
-   default-check-handler
+   (λ (e) (display-test-failure/error e))
    (lambda (v)
      (if (procedure? v)
          v
@@ -53,15 +49,10 @@
   (with-handlers ([(lambda (e) #t) (current-check-handler)])
     (thunk)))
 
-;; top-level-check-around : ( -> a) -> a
-(define (top-level-check-around thunk)
-  (check-around thunk)
-  (void))
-
 ;; parameter current-check-around : (( -> a) -> a)
 (define current-check-around
   (make-parameter
-   top-level-check-around
+   (λ (thunk) (check-around thunk) (void))
    (lambda (v)
      (if (procedure? v)
          v
