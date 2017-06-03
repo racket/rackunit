@@ -101,8 +101,7 @@
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack check-info-stack)
   (display-verbose-check-info-stack
-   (strip-redundant-params check-info-stack))
-  (newline))
+   (strip-redundant-params check-info-stack)))
 
 ;; display-test-name : (U string #f) -> void
 (define (display-test-name name)
@@ -158,8 +157,9 @@
     (cond [(exn:test:check? e)
            (display-failure) (newline)
            (display-check-info-stack (exn:test:check-stack e))
-           (when #t
-             (parameterize ((error-print-context-length 0))
+           (unless (equal? (exn-message e) "")
+             (newline)
+             (parameterize ([error-print-context-length 0])
                ((error-display-handler) (exn-message e) e)))]
           [else
            (display-error) (newline)

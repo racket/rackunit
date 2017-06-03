@@ -72,7 +72,7 @@
          marks
          (check-info-stack marks)))))
     ((_)
-     (fail-check "Check failure"))))
+     (fail-check ""))))
 
 (define-syntax fail-internal
   (syntax-rules ()
