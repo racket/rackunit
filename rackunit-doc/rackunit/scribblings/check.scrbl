@@ -279,7 +279,8 @@ the @racket[with-check-info*] function, and the
    #:eval rackunit-eval
    (with-check-info (['value "hello world"]
                      ['message (string-info "hello world")])
-     (check = 1 2)))}
+     (check = 1 2)))
+ @history[#:added "1.2"]}
 
 The are several predefined functions that create check
 information structures with predefined names.  This avoids
