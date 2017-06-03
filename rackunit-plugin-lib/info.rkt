@@ -3,7 +3,6 @@
 (define collection 'multi)
 
 (define deps '("base"
-               "data-lib"
                "rackunit-lib"
                "rackunit-gui"
                "gui-lib"
