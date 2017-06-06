@@ -267,7 +267,7 @@ the @racket[with-check-info*] function, and the
 @racket[with-check-info] macro.
 
 @defstruct[check-info ([name symbol?] [value any])]{
- A check-info structure stores information associated with the context of
+ A check-info structure stores information associated with the context of the
  execution of a check. The @racket[value] is written in a check failure message
  using @racket[write] unless it is a @racket[string-info] value.}
 
