@@ -120,13 +120,13 @@ that checks are conceptually functions.
 For example, the following checks succeed:
 
 @interaction[#:eval rackunit-eval
-  (check-exn 
-   exn:fail? 
+  (check-exn
+   exn:fail?
    (lambda ()
      (raise (make-exn:fail "Hi there"
                            (current-continuation-marks)))))
-  (check-exn 
-   exn:fail? 
+  (check-exn
+   exn:fail?
    (lambda ()
      (error 'hi "there")))
 ]
@@ -288,7 +288,7 @@ misspelling errors:
 
 @defproc*[([(make-check-name (name string?)) check-info?]
            [(make-check-params (params (listof any))) check-info?]
-           [(make-check-location (loc (list/c any (or/c number? #f) (or/c number? #f) 
+           [(make-check-location (loc (list/c any (or/c number? #f) (or/c number? #f)
                                                   (or/c number? #f) (or/c number? #f))))
             check-info?]
            [(make-check-expression (msg any)) check-info?]
@@ -386,7 +386,7 @@ We can use these checks in the usual way:
 
 @interaction[#:eval rackunit-eval
   (check-odd? 3)
-  (check-odd? 2) 
+  (check-odd? 2)
 ]
 
 @defform*[[(define-binary-check (name pred actual expected))
