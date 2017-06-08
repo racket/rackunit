@@ -35,14 +35,10 @@
          check-match
          fail)
 
-;; default-check-handler : any -> any
-(define (default-check-handler e)
-  (display-test-failure/error e))
-
 ;; parameter current-check-handler : (-> any any)
 (define current-check-handler
   (make-parameter
-   default-check-handler
+   display-test-failure/error
    (lambda (v)
      (if (procedure? v)
          v
@@ -53,15 +49,10 @@
   (with-handlers ([(lambda (e) #t) (current-check-handler)])
     (thunk)))
 
-;; top-level-check-around : ( -> a) -> a
-(define (top-level-check-around thunk)
-  (check-around thunk)
-  (void))
-
 ;; parameter current-check-around : (( -> a) -> a)
 (define current-check-around
   (make-parameter
-   top-level-check-around
+   (λ (thunk) (check-around thunk) (void))
    (lambda (v)
      (if (procedure? v)
          v
@@ -81,7 +72,7 @@
          marks
          (check-info-stack marks)))))
     ((_)
-     (fail-check "Check failure"))))
+     (fail-check ""))))
 
 (define-syntax fail-internal
   (syntax-rules ()
@@ -130,7 +121,7 @@
                                       (list (make-check-message message))
                                       null))
                              (lambda () (begin0 (let () body ...) (test-log! #t))))))
-                       
+
                        ;; All checks should return (void).
                        (void)))]
                    [check-secret-name (datum->syntax stx (gensym (syntax->datum (syntax name))))])
@@ -142,7 +133,7 @@
            ;; received from Ryan Culpepper.
 
            (define check-secret-name check-fn)
-           
+
            (define-syntax (name stx)
              (with-syntax ([loc (datum->syntax #f 'loc stx)])
                (syntax-case stx ()
@@ -157,13 +148,13 @@
                     (check-secret-name actual ... msg
                                        #:location (syntax->location (quote-syntax loc))
                                        #:expression (quote (name actual ...)))))
-                    
+
                  (name
                   (identifier? #'name)
                   (syntax/loc stx
                     (case-lambda
                       [(formal ...)
-                       (check-secret-name formal ... 
+                       (check-secret-name formal ...
                                           #:location (syntax->location (quote-syntax loc))
                                           #:expression (quote (name actual ...)))]
                       [(formal ... msg)
@@ -315,4 +306,3 @@
                        [_ #f]))))))]
     [(_ actual expected)
      (syntax/loc stx (check-match actual expected #t))]))
-
