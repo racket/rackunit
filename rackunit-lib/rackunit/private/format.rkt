@@ -50,7 +50,13 @@
    (symbol->string
     (check-info-name check-info))))
 
-(define (display-check-info-name-value max-name-width name value [value-printer (lambda (x) (write x) (newline))])
+(define (print-info-value v)
+  (displayln (info-value->string v)))
+
+(define (display-check-info-name-value max-name-width
+                                       name
+                                       value
+                                       [value-printer print-info-value])
   (display (string-pad-right
             (string-append (symbol->string name) ": ")
             (max minimum-name-width (+ max-name-width 2))))

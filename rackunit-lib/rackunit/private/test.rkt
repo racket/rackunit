@@ -18,6 +18,7 @@
          (struct-out test-success)
          (struct-out rackunit-test-case)
          (struct-out rackunit-test-suite)
+         (struct-out string-info)
 
          with-check-info
          with-check-info*

@@ -120,13 +120,13 @@ that checks are conceptually functions.
 For example, the following checks succeed:
 
 @interaction[#:eval rackunit-eval
-  (check-exn 
-   exn:fail? 
+  (check-exn
+   exn:fail?
    (lambda ()
      (raise (make-exn:fail "Hi there"
                            (current-continuation-marks)))))
-  (check-exn 
-   exn:fail? 
+  (check-exn
+   exn:fail?
    (lambda ()
      (error 'hi "there")))
 ]
@@ -267,9 +267,20 @@ the @racket[with-check-info*] function, and the
 @racket[with-check-info] macro.
 
 @defstruct[check-info ([name symbol?] [value any])]{
+ A check-info structure stores information associated with the context of the
+ execution of a check. The @racket[value] is written in a check failure message
+ using @racket[write] unless it is a @racket[string-info] value.}
 
-A check-info structure stores information associated
-with the context of execution of a check.}
+@defstruct*[string-info ([value string?])]{
+ A special wrapper around a string for use as a @racket[check-info] value. When
+ displayed in a check failure message, @racket[value] is displayed without
+ quotes. Used to print messages in check infos instead of writing values.
+ @(interaction
+   #:eval rackunit-eval
+   (with-check-info (['value "hello world"]
+                     ['message (string-info "hello world")])
+     (check = 1 2)))
+ @history[#:added "1.2"]}
 
 The are several predefined functions that create check
 information structures with predefined names.  This avoids
@@ -277,7 +288,7 @@ misspelling errors:
 
 @defproc*[([(make-check-name (name string?)) check-info?]
            [(make-check-params (params (listof any))) check-info?]
-           [(make-check-location (loc (list/c any (or/c number? #f) (or/c number? #f) 
+           [(make-check-location (loc (list/c any (or/c number? #f) (or/c number? #f)
                                                   (or/c number? #f) (or/c number? #f))))
             check-info?]
            [(make-check-expression (msg any)) check-info?]
@@ -375,7 +386,7 @@ We can use these checks in the usual way:
 
 @interaction[#:eval rackunit-eval
   (check-odd? 3)
-  (check-odd? 2) 
+  (check-odd? 2)
 ]
 
 @defform*[[(define-binary-check (name pred actual expected))

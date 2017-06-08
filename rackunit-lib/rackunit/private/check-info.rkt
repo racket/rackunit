@@ -1,21 +1,32 @@
 #lang racket/base
 (require racket/contract/base
+         racket/port
          "location.rkt"
          (for-syntax racket/base
                      racket/syntax))
+
+(provide
+ (contract-out
+  [struct check-info ([name symbol?]
+                      [value any/c])]
+  [struct string-info ([value string?])]
+  [info-value->string (-> any/c string?)]
+  [check-info-mark symbol?]
+  [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
+  [with-check-info* ((listof check-info?) (-> any) . -> . any)])
+ with-check-info)
 
 ;; Structures --------------------------------------------------
 
 ;; struct check-info : symbol any
 (define-struct check-info (name value))
 
-(provide/contract
- [struct check-info ([name symbol?]
-                     [value any/c])]
- [check-info-mark symbol?]
- [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
- [with-check-info* ((listof check-info?) (-> any) . -> . any)])
-(provide with-check-info)
+(struct string-info (value) #:transparent)
+
+(define (info-value->string info-value)
+  (if (string-info? info-value)
+      (string-info-value info-value)
+      (with-output-to-string (λ () (write info-value)))))
 
 ;; Infrastructure ----------------------------------------------
 
