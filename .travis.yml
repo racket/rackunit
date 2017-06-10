@@ -25,6 +25,6 @@ install:
 - ls $HOME/.racket/download-cache
 
 script:
-- raco test -p $PKG-test
+- raco test --drdr -p $PKG-test
 
 after_script:
