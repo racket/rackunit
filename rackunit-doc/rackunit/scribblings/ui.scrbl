@@ -40,8 +40,6 @@ information.
 RackUnit also provides a GUI test runner, available from the
 @racketmodname[rackunit/gui] module.
 
-@define-runtime-path[scribblings/rackunit-screen-shot.png
-                     "scribblings/rackunit-screen-shot.png"]
 @defproc[(test/gui [test (or/c test-case? test-suite?)] ...
                    [#:wait? wait? boolean? #f])
          void?]{
