@@ -1,5 +1,7 @@
 #lang racket/base
-(require racket/match
+(require racket/function
+         racket/list
+         racket/match
          "base.rkt"
          "check-info.rkt"
          "text-ui-util.rkt"
@@ -131,27 +133,16 @@
 
 ;; ----
 
+(define (binary-check-this-frame? stack)
+  (ormap check-actual? (takef stack (negate check-name?))))
+
 ;; strip-redundant-parms : (list-of check-info) -> (list-of check-info)
 ;;
 ;; Strip any check-params? is there is an
 ;; actual/expected check-info in the same stack frame.  A
 ;; stack frame is delimited by occurrence of a check-name?
-(define (strip-redundant-params start-stack)
-  (define (binary-check-this-frame? stack)
-    (let loop ([stack stack])
-      (cond
-        [(null? stack) #f]
-        [(check-name? (car stack)) #f]
-        [(check-actual? (car stack)) #t]
-        [else (loop (cdr stack))])))
-  (let loop ([stack start-stack])
-    (cond
-      [(null? stack) null]
-      [(check-params? (car stack))
-       (if (binary-check-this-frame? start-stack)
-           (loop (cdr stack))
-           (cons (car stack) (loop (cdr stack))))]
-      [else (cons (car stack) (loop (cdr stack)))])))
+(define (strip-redundant-params stack)
+  (if (binary-check-this-frame? stack) (filter-not check-params? stack) stack))
 
 ;; ----
 
