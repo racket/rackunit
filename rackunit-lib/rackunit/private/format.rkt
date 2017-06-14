@@ -1,6 +1,5 @@
 #lang racket/base
-(require racket/function
-         racket/list
+(require racket/list
          racket/match
          "base.rkt"
          "check-info.rkt"
@@ -131,20 +130,12 @@
         (printf "A value other than an exception was raised: ~e\n" v))
     (newline)))
 
-;; ----
-
-(define (binary-check-this-frame? stack)
-  (ormap check-actual? (takef stack (negate check-name?))))
-
 ;; strip-redundant-parms : (list-of check-info) -> (list-of check-info)
 ;;
-;; Strip any check-params? is there is an
-;; actual/expected check-info in the same stack frame.  A
-;; stack frame is delimited by occurrence of a check-name?
+;; Strip any 'params infos if there are any 'actual infos, as the latter usually
+;; duplicates values in the former.
 (define (strip-redundant-params stack)
-  (if (binary-check-this-frame? stack) (filter-not check-params? stack) stack))
-
-;; ----
+  (if (ormap check-actual? stack) (filter-not check-params? stack) stack))
 
 ;; display-test-failure/error : any string/#f -> void
 (define (display-test-failure/error e [name #f])
