@@ -111,11 +111,7 @@
 
 ;; display-test-name : (U string #f) -> void
 (define (display-test-name name)
-  (if name
-      (begin
-        (display name) (newline))
-      (begin
-        (display "Unnamed test ")(newline))))
+  (displayln (or name "Unnamed test ")))
 
 ;; display-exn : any -> void
 ;;
