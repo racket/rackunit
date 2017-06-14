@@ -10,6 +10,7 @@
   [struct check-info ([name symbol?]
                       [value any/c])]
   [struct string-info ([value string?])]
+  [struct location-info ([value location/c])]
   [info-value->string (-> any/c string?)]
   [check-info-mark symbol?]
   [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
@@ -22,11 +23,19 @@
 (struct check-info (name value) #:constructor-name make-check-info)
 
 (struct string-info (value) #:transparent)
+(struct location-info (value) #:transparent)
 
 (define (info-value->string info-value)
-  (if (string-info? info-value)
-      (string-info-value info-value)
-      (with-output-to-string (λ () (write info-value)))))
+  (cond
+    [(string-info? info-value) (string-info-value info-value)]
+    [(location-info? info-value)
+     (trim-current-directory
+      (location->string (location-info-value info-value)))]
+    [else (with-output-to-string (λ () (write info-value)))]))
+
+(define (trim-current-directory path)
+  (define cd (path->string (current-directory)))
+  (regexp-replace (regexp-quote cd) path ""))
 
 ;; Infrastructure ----------------------------------------------
 
@@ -75,7 +84,7 @@
 
 (define-check-type name any/c)
 (define-check-type params any/c)
-(define-check-type location location/c)
+(define-check-type location location/c #:wrapper location-info)
 (define-check-type expression any/c)
 (define-check-type message any/c)
 (define-check-type actual any/c)

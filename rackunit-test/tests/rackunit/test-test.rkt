@@ -5,6 +5,7 @@
          srfi/1
          srfi/13
          rackunit
+         rackunit/private/check-info
          rackunit/private/util
          rackunit/private/location)
 
@@ -258,8 +259,9 @@
       (check-pred test-failure? failure)
       (let* ([stack (exn:test:check-stack
                      (test-failure-result failure))]
-             [loc (check-info-value
-                   (car (filter check-location? stack)))])
+             [loc (location-info-value
+                   (check-info-value
+                    (car (filter check-location? stack))))])
         (check-regexp-match #rx"test-test\\.rkt" (location->string loc)))))
      
    (test-case
