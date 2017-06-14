@@ -116,8 +116,6 @@
   (for-each
    (lambda (info)
      (cond
-       [(check-name? info)
-        (display-check-info max-name-width info)]
        [(check-location? info)
         (display-check-info-name-value
          max-name-width
