@@ -59,16 +59,19 @@
 
 (define-syntax (define-check-type stx)
   (syntax-case stx ()
-    [(_ id contract)
+    [(_ id contract #:wrapper wrapper-proc)
      (with-syntax
          ([make-check-id (format-id #'id "make-check-~a" #'id)]
           [check-id? (format-id #'id "check-~a?" #'id)])
        (syntax/loc stx
-         (begin (define (make-check-id a) (make-check-info 'id a))
-                (define (check-id? info) (eq? (check-info-name info) 'id))
-                (provide/contract
-                 [make-check-id (contract . -> . check-info?)]
-                 [check-id? (check-info? . -> . boolean?)]))))]))
+         (begin
+           (define (make-check-id a) (make-check-info 'id (wrapper-proc a)))
+           (define (check-id? info) (eq? (check-info-name info) 'id))
+           (provide/contract
+            [make-check-id (contract . -> . check-info?)]
+            [check-id? (check-info? . -> . boolean?)]))))]
+    [(_ id contract)
+     (syntax/loc stx (define-check-type id contract #:wrapper values))]))
 
 (define-check-type name any/c)
 (define-check-type params any/c)
