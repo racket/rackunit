@@ -13,6 +13,7 @@
   [info-value->string (-> any/c string?)]
   [check-info-mark symbol?]
   [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
+  [current-check-info (-> (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
@@ -40,6 +41,10 @@
           [i (in-naturals)])
       (hash-set! ht (check-info-name x) (cons i x)))
     (map cdr (sort (hash-map ht (λ (k v) v)) < #:key car))))
+
+;; Shorthand to get the current check-info.
+(define (current-check-info)
+  (check-info-stack (current-continuation-marks)))
 
 ;; with-check-info* : (list-of check-info) thunk -> any
 (define (with-check-info* info thunk)
