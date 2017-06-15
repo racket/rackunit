@@ -97,6 +97,32 @@
                         (exn-continuation-marks exn)
                         (exn:test:check-stack exn))))
 
+(define (get-filters)
+  (for/fold ([names null] [file #f] [line #f])
+            ([arg (vector->list (current-command-line-arguments))])
+   (cond [(regexp-match-exact? #rx"[Ff][Ii][Ll][Ee]:.+" arg)
+          (values names (regexp (substring arg 5)) line)]
+         [(regexp-match-exact? #px"[Ll][Ii][Nn][Ee]:\\d+" arg)
+          (values names file (string->number (substring arg 5)))]
+         [else (values (cons (regexp arg) names) file line)])))
+
+(define (arguments-say-to-run)
+  (define-values (names-to-run file-to-run line-to-run) (get-filters))
+  (define name
+    (symbol->string
+     (check-info-value
+      (findf (lambda (info) (eq? (check-info-name info) 'name))
+             (current-check-info)))))
+  (define location
+    (check-info-value
+     (findf (lambda (info) (eq? (check-info-name info) 'location))
+            (current-check-info))))
+  (and (or (not file-to-run) (regexp-match? file-to-run (car location)))
+       (or (not line-to-run) (= line-to-run (cadr location)))
+       (or (null? names-to-run)
+           (ormap (lambda (pat) (regexp-match pat name))
+                  names-to-run))))
+
 (define-syntax (define-check stx)
   (syntax-case stx ()
     ((define-check (name formal ...) body ...)
@@ -113,14 +139,16 @@
                        ((current-check-around)
                         (lambda ()
                           (with-check-info*
-                           (list* (make-check-name (quote name))
-                                  (make-check-location location)
-                                  (make-check-expression expression)
-                                  (make-check-params (list formal ...))
-                                  (if message
-                                      (list (make-check-message message))
-                                      null))
-                             (lambda () (begin0 (let () body ...) (test-log! #t))))))
+                              (list* (make-check-name (quote name))
+                                     (make-check-location location)
+                                     (make-check-expression expression)
+                                     (make-check-params (list formal ...))
+                                     (if message
+                                         (list (make-check-message message))
+                                         null))
+                            (lambda ()
+                              (when (arguments-say-to-run)
+                                (begin0 (let () body ...) (test-log! #t)))))))
 
                        ;; All checks should return (void).
                        (void)))]
