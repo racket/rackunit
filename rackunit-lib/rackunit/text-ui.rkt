@@ -29,7 +29,6 @@
 #lang racket/base
 
 (require racket/match
-         racket/pretty
          "private/base.rkt"
          "private/counter.rkt"
          "private/format.rkt"
@@ -115,24 +114,6 @@
   (for-each
    (lambda (info)
      (cond
-       [(check-params? info)
-        (display-check-info-name-value
-         max-name-width
-         'params
-         (check-info-value info)
-         (lambda (v) (map pretty-print v)))]
-       [(check-actual? info)
-        (display-check-info-name-value
-         max-name-width
-         'actual
-         (check-info-value info)
-         pretty-print)]
-       [(check-expected? info)
-        (display-check-info-name-value
-         max-name-width
-         'expected
-         (check-info-value info)
-         pretty-print)]
        [(and (check-expression? info)
              (not verbose?))
         (void)]
@@ -140,8 +121,8 @@
         (display-check-info max-name-width info)]))
    (sort-stack
     (if verbose?
-      stack
-      (strip-redundant-params stack)))))
+        stack
+        (strip-redundant-params stack)))))
 
 (define (std-test/text-ui display-context test)
   (fold-test-results

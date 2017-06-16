@@ -73,9 +73,13 @@
                (check-false (check-expected? (make-check-actual 1))))
               
               (test-case
-               "make-check-actual and make-check-expected store param"
-               (check-equal? (check-info-value (make-check-actual 1)) 1)
-               (check-equal? (check-info-value (make-check-expected 2)) 2))
+               "make-check-actual and make-check-expected store param (prettified)"
+               (check-equal? (check-info-value (make-check-actual 1))
+                             (pretty-info 1))
+               (check-equal? (check-info-value (make-check-expected 2))
+                             (pretty-info 2)))
+              
+              ))
 
               (test-suite
                "All tests for trim-current-directory"
