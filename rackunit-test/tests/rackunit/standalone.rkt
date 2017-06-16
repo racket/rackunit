@@ -48,7 +48,7 @@ Outta here!
 FAILURE
 name:       check
 location:   standalone-check-test.rkt:48:0
-params:     (#<procedure:=> 1 2)
+params:     '(#<procedure:=> 1 2)
 expression: (check = 1 2)
 message:    0.0
 --------------------

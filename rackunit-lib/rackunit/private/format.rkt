@@ -2,9 +2,7 @@
 (require racket/list
          racket/match
          "base.rkt"
-         "check-info.rkt"
-         "text-ui-util.rkt"
-         "location.rkt")
+         "check-info.rkt")
 
 (provide display-check-info-name-value
          display-check-info
@@ -84,13 +82,6 @@
   (define max-name-width (check-info-stack-max-name-width check-info-stack))
   (for ([info (in-list (sort-stack check-info-stack))])
     (cond
-      ((check-location? info)
-       (display-check-info-name-value max-name-width
-                                      'location
-                                      (trim-current-directory
-                                       (location->string
-                                        (check-info-value info)))
-                                      (λ (x) (printf "~a\n" x))))
       ((check-expression? info)
        (display-check-info-name-value max-name-width
                                       (check-info-name info)
