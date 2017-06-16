@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/contract/base
          racket/port
+         racket/pretty
          "location.rkt"
          (for-syntax racket/base
                      racket/syntax))
@@ -11,6 +12,7 @@
                       [value any/c])]
   [struct string-info ([value string?])]
   [struct location-info ([value location/c])]
+  [struct pretty-info ([value any/c])]
   [info-value->string (-> any/c string?)]
   [check-info-mark symbol?]
   [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
@@ -24,6 +26,7 @@
 
 (struct string-info (value) #:transparent)
 (struct location-info (value) #:transparent)
+(struct pretty-info (value) #:transparent)
 
 (define (info-value->string info-value)
   (cond
@@ -31,6 +34,7 @@
     [(location-info? info-value)
      (trim-current-directory
       (location->string (location-info-value info-value)))]
+    [(pretty-info? info-value) (pretty-format (pretty-info-value info-value))]
     [else (with-output-to-string (λ () (write info-value)))]))
 
 (define (trim-current-directory path)
@@ -83,9 +87,9 @@
      (syntax/loc stx (define-check-type id contract #:wrapper values))]))
 
 (define-check-type name any/c)
-(define-check-type params any/c)
+(define-check-type params any/c #:wrapper pretty-info)
 (define-check-type location location/c #:wrapper location-info)
 (define-check-type expression any/c)
 (define-check-type message any/c)
-(define-check-type actual any/c)
-(define-check-type expected any/c)
+(define-check-type actual any/c #:wrapper pretty-info)
+(define-check-type expected any/c #:wrapper pretty-info)
