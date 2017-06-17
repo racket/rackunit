@@ -15,8 +15,9 @@
   [struct location-info ([value location/c])]
   [struct pretty-info ([value any/c])]
   [info-value->string (-> any/c string?)]
-  [check-info-mark symbol?]
-  [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
+  [current-check-info (parameter/c (listof check-info?))]
+  ;;[check-info-mark symbol?]
+  ;;[check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
@@ -47,24 +48,14 @@
 
 ;; Infrastructure ----------------------------------------------
 
+(define current-check-info (make-parameter '()))
+
 ;; The continuation mark under which all check-info is keyed
 (define check-info-mark (gensym 'rackunit))
 
-;; (continuation-mark-set -> (listof check-info))
-(define (check-info-stack marks)
-  (let ([ht (make-hash)])
-    (for ([x (in-list (apply append (continuation-mark-set->list marks check-info-mark)))]
-          [i (in-naturals)])
-      (hash-set! ht (check-info-name x) (cons i x)))
-    (map cdr (sort (hash-map ht (λ (k v) v)) < #:key car))))
-
 ;; with-check-info* : (list-of check-info) thunk -> any
 (define (with-check-info* info thunk)
-  (define current-marks
-    (continuation-mark-set-first #f check-info-mark))
-  (with-continuation-mark
-      check-info-mark
-    (append (if current-marks current-marks null) info)
+  (parameterize ([current-check-info (append (current-check-info) info)])
     (thunk)))
 
 (define-syntax with-check-info
