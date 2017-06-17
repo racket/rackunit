@@ -50,9 +50,6 @@
 
 (define current-check-info (make-parameter '()))
 
-;; The continuation mark under which all check-info is keyed
-(define check-info-mark (gensym 'rackunit))
-
 ;; with-check-info* : (list-of check-info) thunk -> any
 (define (with-check-info* info thunk)
   (parameterize ([current-check-info (append (current-check-info) info)])
