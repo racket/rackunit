@@ -5,6 +5,7 @@
          srfi/1
          srfi/13
          rackunit
+         rackunit/private/check-info
          rackunit/private/util
          rackunit/private/location)
 
@@ -55,7 +56,7 @@
    "Test tests"
    (test-case "Empty test" #t)
 
-   (test-case 
+   (test-case
     "After action is executed"
     (let ((foo 1))
       (after (check = foo 1) (set! foo 2))
@@ -116,7 +117,7 @@
     (check-syntax-error
      "Incorrect use of around macro.  Correct format is (around before-expr expr1 expr2 ... after-expr)"
      '(around 1 2)))
-     
+
    (test-case
     "Test around action"
     (around (with-output-to-file "test.dat"
@@ -163,7 +164,7 @@
          "Test foo"
          (check-equal? foo 2))))
       (check-equal? foo 3)))
-     
+
    (test-case
     "Test simple foldts-test-suite"
     (check-equal?
@@ -205,7 +206,7 @@
      (check-test-results (test-check "dummy" = 1 1) 1 0 0)
      (check-test-results (test-check "dummy" string=? "foo" "bar") 0 1 0)
      (check-test-results (test-check "dummy" string=? 'a 'b) 0 0 1)
-      
+
      (check-test-results (test-pred "dummy" number? 1) 1 0 0)
      (check-test-results (test-pred "dummy" number? #t) 0 1 0)
      (check-test-results (test-pred "dummy" number? (error 'a)) 0 0 1)
@@ -236,7 +237,7 @@
      (check-test-results (test-not-false "dummy" 1) 1 0 0)
      (check-test-results (test-not-false "dummy" #f) 0 1 0)
      (check-test-results (test-not-false "dummy" (error 'a)) 0 0 1)
-      
+
      (check-test-results
       (test-exn "dummy" exn? (lambda () (error 'a))) 1 0 0)
      (check-test-results
@@ -258,10 +259,11 @@
       (check-pred test-failure? failure)
       (let* ([stack (exn:test:check-stack
                      (test-failure-result failure))]
-             [loc (check-info-value
-                   (car (filter check-location? stack)))])
+             [loc (location-info-value
+                   (check-info-value
+                    (car (filter check-location? stack))))])
         (check-regexp-match #rx"test-test\\.rkt" (location->string loc)))))
-     
+
    (test-case
     "Shortcuts capture location"
     (let ((failure
@@ -271,10 +273,11 @@
       (check-pred test-failure? failure)
       (let* ((stack (exn:test:check-stack
                      (test-failure-result failure)))
-             (loc (check-info-value
-                   (car (filter check-location? stack)))))
+             (loc (location-info-value
+                   (check-info-value
+                    (car (filter check-location? stack))))))
         (check-regexp-match #rx"test-test\\.rkt" (location->string loc)))))
-            
+
    (test-case
     "All names that should be exported are exported"
     check-info?

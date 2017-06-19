@@ -39,8 +39,7 @@
          "private/monad.rkt"
          "private/hash-monad.rkt"
          "private/name-collector.rkt"
-         "private/test.rkt"
-         "private/text-ui-util.rkt")
+         "private/test.rkt")
 
 (provide run-tests
          display-context
@@ -116,16 +115,6 @@
   (for-each
    (lambda (info)
      (cond
-       [(check-name? info)
-        (display-check-info max-name-width info)]
-       [(check-location? info)
-        (display-check-info-name-value
-         max-name-width
-         'location
-         (trim-current-directory
-          (location->string
-           (check-info-value info)))
-         displayln)]
        [(check-params? info)
         (display-check-info-name-value
          max-name-width
