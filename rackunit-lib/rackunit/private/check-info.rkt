@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/contract/base
+         racket/format
          racket/port
          "location.rkt"
          (for-syntax racket/base
@@ -34,7 +35,7 @@
     [(location-info? info-value)
      (trim-current-directory
       (location->string (location-info-value info-value)))]
-    [else (with-output-to-string (λ () (write info-value)))]))
+    [else (~s info-value)]))
 
 (define (trim-current-directory path)
   (define cd (path->string (current-directory)))
