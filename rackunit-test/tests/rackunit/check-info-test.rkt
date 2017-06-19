@@ -28,7 +28,8 @@
 #lang racket/base
 
 (require rackunit
-         rackunit/private/check-info)
+         rackunit/private/check-info
+         (submod rackunit/private/check-info for-test))
 
 (provide check-info-tests)
 
@@ -75,6 +76,23 @@
                "make-check-actual and make-check-expected store param"
                (check-equal? (check-info-value (make-check-actual 1)) 1)
                (check-equal? (check-info-value (make-check-expected 2)) 2))
-              
-              ))
 
+              (test-suite
+               "All tests for trim-current-directory"
+   
+               (test-equal?
+                "trim-current-directory leaves directories outside the current directory alone"
+                (trim-current-directory "/foo/bar/")
+                "/foo/bar/")
+   
+               (test-equal?
+                "trim-current-directory strips directory from files in current directory"
+                (trim-current-directory
+                 (path->string (build-path (current-directory) "foo.rkt")))
+                "foo.rkt")
+   
+               (test-equal?
+                "trim-current-directory leaves subdirectories alone"
+                (trim-current-directory
+                 (path->string (build-path (current-directory) "foo" "bar.rkt")))
+                "foo/bar.rkt"))))

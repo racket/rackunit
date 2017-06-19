@@ -17,6 +17,9 @@
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
+(module+ for-test
+  (provide trim-current-directory))
+
 ;; Structures --------------------------------------------------
 
 ;; struct check-info : symbol any
