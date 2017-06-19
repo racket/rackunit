@@ -107,7 +107,7 @@
       [(regexp-match-exact? #rx"[Ll][Ii][Nn][Ee]:.+" arg)
        (define new-lines (cons (string->number (substring arg 5)) lines))
        (values names files new-lines)]
-      [else (values (cons regexp arg) names) files lines])))
+      [else (values (cons (regexp arg) names) files lines)])))
 
 (define (arguments-say-to-run)
   (define-values (names-to-run files-to-run lines-to-run) (get-filters))

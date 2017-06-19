@@ -49,11 +49,25 @@
   ;; Define test.
   (define (go)
     (with-check-info (['name 'foo])
-      (check-equal? 1 2))) (define GO-LINE-NUM (current-line-number)) ;; Keep this on same line!
+      (check-equal? 1 2))) (define GO-LINE (current-line-number)) ;; Keep this on same line!
   ;; Define args for correct and incorrect line numbers.
-  (define go-line-num-arg (format "line:~a" GO-LINE-NUM))
-  (define wrong-go-line-num-arg (format "line:~a" (+ GO-LINE-NUM 100)))
+  (define go-line-num-arg (format "line:~a" GO-LINE))
+  (define wrong-go-line-num-arg (format "line:~a" (+ GO-LINE 100)))
 
-  (with-cmd ("foo") (go))
+  (check-error ("foo") (go))
+  (check-no-error ("baz") (go))
+  (check-error ("foo" "baz") (go))
+  (check-error ("foo" file-name-arg) (go))
+  (check-error ("foo" go-line-num-arg) (go))
+  (check-no-error ("foo" wrong-file-name-arg) (go))
+  (check-no-error ("foo" wrong-go-line-num-arg) (go))
+  (check-no-error ("foo" file-name-arg wrong-go-line-num-arg) (go))
+  (check-no-error ("foo" wrong-file-name-arg go-line-num-arg) (go))
+
+  (define (go2)
+    (check-equal? 2 3))
+
+  (check-error () (go2))
+  (check-no-error ("foo") (go2))
   )
   
