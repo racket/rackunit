@@ -98,16 +98,19 @@
                         (exn:test:check-stack exn))))
 
 (define (get-filters)
-  (for/fold ([names null] [file #f] [line #f])
+  (for/fold ([names null] [files null] [lines null])
             ([arg (vector->list (current-command-line-arguments))])
-   (cond [(regexp-match-exact? #rx"[Ff][Ii][Ll][Ee]:.+" arg)
-          (values names (regexp (substring arg 5)) line)]
-         [(regexp-match-exact? #px"[Ll][Ii][Nn][Ee]:\\d+" arg)
-          (values names file (string->number (substring arg 5)))]
-         [else (values (cons (regexp arg) names) file line)])))
+    (cond
+      [(regexp-match-exact? #rx"[Ff][Ii][Ll][Ee]:.+" arg)
+       (define new-files (cons (regexp (substring arg 5)) files))
+       (values names new-files lines)]
+      [(regexp-match-exact? #rx"[Ll][Ii][Nn][Ee]:.+" arg)
+       (define new-lines (cons (string->number (substring arg 5)) lines))
+       (values names files new-lines)]
+      [else (values (cons regexp arg) names) files lines])))
 
 (define (arguments-say-to-run)
-  (define-values (names-to-run file-to-run line-to-run) (get-filters))
+  (define-values (names-to-run files-to-run lines-to-run) (get-filters))
   (define name
     (symbol->string
      (check-info-value
@@ -117,10 +120,15 @@
     (check-info-value
      (findf (lambda (info) (eq? (check-info-name info) 'location))
             (current-check-info))))
-  (and (or (not file-to-run) (regexp-match? file-to-run (car location)))
-       (or (not line-to-run) (= line-to-run (cadr location)))
+  (define file (if (car location) (path->string (car location)) ""))
+  (define line (cadr location))
+  (and (or (null? files-to-run)
+           (ormap (lambda (file-rex) (regexp-match? file-rex file))
+                  files-to-run))
+       (or (null? lines-to-run)
+           (ormap (lambda (ln) (equal? ln line)) lines-to-run))
        (or (null? names-to-run)
-           (ormap (lambda (pat) (regexp-match pat name))
+           (ormap (lambda (name-rex) (regexp-match? name-rex name))
                   names-to-run))))
 
 (define-syntax (define-check stx)
