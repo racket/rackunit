@@ -8,9 +8,9 @@
 
 @title[#:tag "filtering-tests"]{Filtering Tests with Command-line Arguments}
 
-Sometimes, you might only want to run one test or a handful of tests out of a
-given set. This can be accomplished by using command-line arguments. Before
-each check is run, RackUnit will use the value of
+RackUnit supports test filtering so that one may run one test or a handful of
+tests out of a given set. This can be accomplished by using command-line
+arguments. Before each check is run, RackUnit will use the value of
 @racket[current-command-line-arguments] to construct a list of names, files,
 and lines to run.
 
