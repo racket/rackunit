@@ -16,8 +16,6 @@
   [struct pretty-info ([value any/c])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
-  ;;[check-info-mark symbol?]
-  ;;[check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
