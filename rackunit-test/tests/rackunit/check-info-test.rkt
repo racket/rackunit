@@ -78,8 +78,6 @@
                              (pretty-info 1))
                (check-equal? (check-info-value (make-check-expected 2))
                              (pretty-info 2)))
-              
-              ))
 
               (test-suite
                "All tests for trim-current-directory"
