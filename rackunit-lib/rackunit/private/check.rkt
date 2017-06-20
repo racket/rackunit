@@ -120,7 +120,7 @@
     (check-info-value
      (findf (lambda (info) (eq? (check-info-name info) 'location))
             (current-check-info))))
-  (define file (if (car location) (path->string (car location)) ""))
+  (define file (if (path? (car location)) (path->string (car location)) ""))
   (define line (cadr location))
   (and (or (null? files-to-run)
            (ormap (lambda (file-rex) (regexp-match? file-rex file))
