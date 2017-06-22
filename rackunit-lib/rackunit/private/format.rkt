@@ -1,9 +1,8 @@
 #lang racket/base
-(require racket/match
+(require racket/list
+         racket/match
          "base.rkt"
-         "check-info.rkt"
-         "text-ui-util.rkt"
-         "location.rkt")
+         "check-info.rkt")
 
 (provide display-check-info-name-value
          display-check-info
@@ -83,13 +82,6 @@
   (define max-name-width (check-info-stack-max-name-width check-info-stack))
   (for ([info (in-list (sort-stack check-info-stack))])
     (cond
-      ((check-location? info)
-       (display-check-info-name-value max-name-width
-                                      'location
-                                      (trim-current-directory
-                                       (location->string
-                                        (check-info-value info)))
-                                      (λ (x) (printf "~a\n" x))))
       ((check-expression? info)
        (display-check-info-name-value max-name-width
                                       (check-info-name info)
@@ -125,31 +117,12 @@
         (printf "A value other than an exception was raised: ~e\n" v))
     (newline)))
 
-;; ----
-
 ;; strip-redundant-parms : (list-of check-info) -> (list-of check-info)
 ;;
-;; Strip any check-params? is there is an
-;; actual/expected check-info in the same stack frame.  A
-;; stack frame is delimited by occurrence of a check-name?
-(define (strip-redundant-params start-stack)
-  (define (binary-check-this-frame? stack)
-    (let loop ([stack stack])
-      (cond
-        [(null? stack) #f]
-        [(check-name? (car stack)) #f]
-        [(check-actual? (car stack)) #t]
-        [else (loop (cdr stack))])))
-  (let loop ([stack start-stack])
-    (cond
-      [(null? stack) null]
-      [(check-params? (car stack))
-       (if (binary-check-this-frame? start-stack)
-           (loop (cdr stack))
-           (cons (car stack) (loop (cdr stack))))]
-      [else (cons (car stack) (loop (cdr stack)))])))
-
-;; ----
+;; Strip any 'params infos if there are any 'actual infos, as the latter usually
+;; duplicates values in the former.
+(define (strip-redundant-params stack)
+  (if (ormap check-actual? stack) (filter-not check-params? stack) stack))
 
 ;; display-test-failure/error : any string/#f -> void
 (define (display-test-failure/error e [name #f])

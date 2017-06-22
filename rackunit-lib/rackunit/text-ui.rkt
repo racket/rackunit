@@ -29,7 +29,6 @@
 #lang racket/base
 
 (require racket/match
-         racket/pretty
          "private/base.rkt"
          "private/counter.rkt"
          "private/format.rkt"
@@ -39,8 +38,7 @@
          "private/monad.rkt"
          "private/hash-monad.rkt"
          "private/name-collector.rkt"
-         "private/test.rkt"
-         "private/text-ui-util.rkt")
+         "private/test.rkt")
 
 (provide run-tests
          display-context
@@ -116,34 +114,6 @@
   (for-each
    (lambda (info)
      (cond
-       [(check-name? info)
-        (display-check-info max-name-width info)]
-       [(check-location? info)
-        (display-check-info-name-value
-         max-name-width
-         'location
-         (trim-current-directory
-          (location->string
-           (check-info-value info)))
-         displayln)]
-       [(check-params? info)
-        (display-check-info-name-value
-         max-name-width
-         'params
-         (check-info-value info)
-         (lambda (v) (map pretty-print v)))]
-       [(check-actual? info)
-        (display-check-info-name-value
-         max-name-width
-         'actual
-         (check-info-value info)
-         pretty-print)]
-       [(check-expected? info)
-        (display-check-info-name-value
-         max-name-width
-         'expected
-         (check-info-value info)
-         pretty-print)]
        [(and (check-expression? info)
              (not verbose?))
         (void)]
@@ -151,8 +121,8 @@
         (display-check-info max-name-width info)]))
    (sort-stack
     (if verbose?
-      stack
-      (strip-redundant-params stack)))))
+        stack
+        (strip-redundant-params stack)))))
 
 (define (std-test/text-ui display-context test)
   (fold-test-results

@@ -24,7 +24,8 @@
     (define maybe-location (for/or ([check-info (exn:test:check-stack self)])
                              (and (check-location? check-info) check-info)))
     (cond [maybe-location
-           (list (location->srcloc (check-info-value maybe-location)))]
+           (define loc (location-info-value (check-info-value maybe-location)))
+           (list (location->srcloc loc))]
           [else
            (list)])))
 ;; struct (exn:test:check:internal exn:test:check) : ()

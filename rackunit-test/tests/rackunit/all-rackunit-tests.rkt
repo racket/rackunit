@@ -14,8 +14,7 @@
          "text-ui-test.rkt"
          "monad-test.rkt"
          "hash-monad-test.rkt"
-         "counter-test.rkt"
-         "text-ui-util-test.rkt")
+         "counter-test.rkt")
 
 (provide all-rackunit-tests
          failure-tests)
@@ -37,7 +36,6 @@
    monad-tests
    hash-monad-tests
    counter-tests
-   text-ui-util-tests
    format-tests
    ))
 
@@ -50,4 +48,3 @@
    (test-case "Intended to throw error" (error 'testing "<<This is an error message>>"))
    (test-case "Error within a check" (check error 'foo 'bar))
    ))
-
