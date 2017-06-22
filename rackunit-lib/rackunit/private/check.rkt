@@ -118,9 +118,10 @@
       (findf (lambda (info) (eq? (check-info-name info) 'name))
              (current-check-info)))))
   (define location
-    (check-info-value
-     (findf (lambda (info) (eq? (check-info-name info) 'location))
-            (current-check-info))))
+    (location-info-value
+     (check-info-value
+      (findf (lambda (info) (eq? (check-info-name info) 'location))
+             (current-check-info)))))
   (define file (if (path? (car location)) (path->string (car location)) ""))
   (define line (cadr location))
   (and (or (null? files-to-run)
