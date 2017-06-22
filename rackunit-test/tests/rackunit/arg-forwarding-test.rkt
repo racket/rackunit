@@ -70,4 +70,3 @@
   (check-error () (go2))
   (check-no-error ("foo") (go2))
   )
-  
