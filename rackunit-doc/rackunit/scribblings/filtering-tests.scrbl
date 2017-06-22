@@ -61,5 +61,5 @@ Name, file, and line specifiers can be combined to create more specific filters.
                               ['location loc])
               (check-equal? 1 2)))]
 
-The above example is not run because, even though the test name and file number
+The above example is not run because, even though the test name and line number
 are correct, the file names do not match.
