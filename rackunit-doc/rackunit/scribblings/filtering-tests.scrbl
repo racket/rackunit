@@ -49,7 +49,7 @@ file:@italic{<file>} or line:@italic{<line>}.
 @examples[#:eval e
           (define loc (list (string->path "foo.rkt") 4 0 #f #f))
           (parameterize ([current-command-line-arguments (vector "file:foo.rkt" "line:4")])
-            (with-check-info (['location loc])
+            (with-check-info (['location (location-info loc)])
               (check-equal? 1 2)))]
 
 Name, file, and line specifiers can be combined to create more specific filters.
@@ -58,7 +58,7 @@ Name, file, and line specifiers can be combined to create more specific filters.
           (define loc (list (string->path "baz.rkt") 5 0 #f #f))
           (parameterize ([current-command-line-arguments (vector "foo" "file:bar.rkt" "line:5")])
             (with-check-info (['name 'foo]
-                              ['location loc])
+                              ['location (location-info loc)])
               (check-equal? 1 2)))]
 
 The above example is not run because, even though the test name and line number
