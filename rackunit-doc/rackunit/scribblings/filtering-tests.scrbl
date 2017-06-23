@@ -1,8 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label racket/base syntax/srcloc)
-          scribble/example
-          racket/sandbox)
+          scribble/example)
 
 @(define e (make-base-eval '(require rackunit)))
 
