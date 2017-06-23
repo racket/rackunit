@@ -110,8 +110,23 @@
        (values names files new-lines)]
       [else (values (cons (regexp arg) names) files lines)])))
 
+(struct test-filter (names files lines))
+(define current-filters #f)
+(define last-cmd-args #f)
+
+(define (maybe-load-filters!)
+  (define cmd-args (current-command-line-arguments))
+  (unless (and current-filters (eq? last-cmd-args cmd-args))
+    (set! last-cmd-args cmd-args)
+    (define-values (new-names new-files new-lines) (get-filters))
+    (set! current-filters (test-filter new-names new-files new-lines)))
+  (void))
+
 (define (arguments-say-to-run)
-  (define-values (names-to-run files-to-run lines-to-run) (get-filters))
+  (maybe-load-filters!)
+  (define names-to-run (test-filter-names current-filters))
+  (define files-to-run (test-filter-files current-filters))
+  (define lines-to-run (test-filter-lines current-filters))
   (define name
     (symbol->string
      (check-info-value
