@@ -97,6 +97,57 @@
                         (exn-continuation-marks exn)
                         (exn:test:check-stack exn))))
 
+(define (get-filters)
+  (for/fold ([names null] [files null] [lines null])
+            ([arg (vector->list (current-command-line-arguments))])
+    (cond
+      [(regexp-match-exact? #rx"[Ff][Ii][Ll][Ee]:.+" arg)
+       (define new-files (cons (regexp (substring arg 5)) files))
+       (values names new-files lines)]
+      [(regexp-match-exact? #rx"[Ll][Ii][Nn][Ee]:.+" arg)
+       (define line-num (string->number (substring arg 5)))
+       (define new-lines (if line-num (cons line-num lines) lines))
+       (values names files new-lines)]
+      [else (values (cons (regexp arg) names) files lines)])))
+
+(struct test-filter (names files lines))
+(define current-filters #f)
+(define last-cmd-args #f)
+
+(define (maybe-load-filters!)
+  (define cmd-args (current-command-line-arguments))
+  (unless (and current-filters (eq? last-cmd-args cmd-args))
+    (set! last-cmd-args cmd-args)
+    (define-values (new-names new-files new-lines) (get-filters))
+    (set! current-filters (test-filter new-names new-files new-lines)))
+  (void))
+
+(define (arguments-say-to-run)
+  (maybe-load-filters!)
+  (define names-to-run (test-filter-names current-filters))
+  (define files-to-run (test-filter-files current-filters))
+  (define lines-to-run (test-filter-lines current-filters))
+  (define name
+    (symbol->string
+     (check-info-value
+      (findf (lambda (info) (eq? (check-info-name info) 'name))
+             (current-check-info)))))
+  (define location
+    (location-info-value
+     (check-info-value
+      (findf (lambda (info) (eq? (check-info-name info) 'location))
+             (current-check-info)))))
+  (define file (if (path? (car location)) (path->string (car location)) ""))
+  (define line (cadr location))
+  (and (or (null? files-to-run)
+           (ormap (lambda (file-rex) (regexp-match? file-rex file))
+                  files-to-run))
+       (or (null? lines-to-run)
+           (ormap (lambda (ln) (equal? ln line)) lines-to-run))
+       (or (null? names-to-run)
+           (ormap (lambda (name-rex) (regexp-match? name-rex name))
+                  names-to-run))))
+
 (define-syntax (define-check stx)
   (syntax-case stx ()
     ((define-check (name formal ...) body ...)
@@ -113,14 +164,16 @@
                        ((current-check-around)
                         (lambda ()
                           (with-check-info*
-                           (list* (make-check-name (quote name))
-                                  (make-check-location location)
-                                  (make-check-expression expression)
-                                  (make-check-params (list formal ...))
-                                  (if message
-                                      (list (make-check-message message))
-                                      null))
-                             (lambda () (begin0 (let () body ...) (test-log! #t))))))
+                              (list* (make-check-name (quote name))
+                                     (make-check-location location)
+                                     (make-check-expression expression)
+                                     (make-check-params (list formal ...))
+                                     (if message
+                                         (list (make-check-message message))
+                                         null))
+                            (lambda ()
+                              (when (arguments-say-to-run)
+                                (begin0 (let () body ...) (test-log! #t)))))))
 
                        ;; All checks should return (void).
                        (void)))]
