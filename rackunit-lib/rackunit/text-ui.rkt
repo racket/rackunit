@@ -29,36 +29,16 @@
 #lang racket/base
 
 (require racket/match
-         "private/base.rkt"
          "private/counter.rkt"
          "private/format.rkt"
-         "private/location.rkt"
-         "private/result.rkt"
          "private/check-info.rkt"
          "private/monad.rkt"
          "private/hash-monad.rkt"
          "private/name-collector.rkt"
          "private/test.rkt")
 
-(provide run-tests
-         display-context
-         display-exn
-         display-summary+return
-         display-ticker
-         display-result)
+(provide run-tests)
 
-
-;; display-ticker : test-result -> void
-;;
-;; Prints a summary of the test result
-(define (display-ticker result)
-  (cond
-    ((test-error? result)
-     (display "!"))
-    ((test-failure? result)
-     (display "-"))
-    (else
-     (display "."))))
 
 ;; display-test-preamble : test-result -> (hash-monad-of void)
 (define (display-test-preamble result)
@@ -144,17 +124,6 @@
    test
    #:fdown (lambda (name seed) ((push-suite-name! name) seed))
    #:fup (lambda (name kid-seed) ((pop-suite-name!) kid-seed))))
-
-(define (display-summary+return monad)
-  (monad-value
-   ((compose
-     (sequence*
-      (display-counter*)
-      (counter->vector))
-     (match-lambda
-       ((vector s f e)
-        (return-hash (+ f e)))))
-    monad)))
 
 (define (display-counter*)
   (compose (counter->vector)
