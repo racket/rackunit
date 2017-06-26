@@ -72,7 +72,7 @@
     ((test-failure? result)
      (let* ((exn (test-failure-result result))
             (stack (exn:test:check-stack exn)))
-       (display-verbose-check-info-stack check-info-stack)))
+       (display-verbose-check-info-stack stack)))
     ((test-error? result)
      (display-exn (test-error-result result)))
     (else

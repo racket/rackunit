@@ -70,7 +70,7 @@
         (make-exn:test:check
          message
          marks
-         (check-info-stack marks)))))
+         (current-check-info)))))
     ((_)
      (fail-check ""))))
 
@@ -83,7 +83,7 @@
         (make-exn:test:check:internal
          "Internal failure"
          marks
-         (check-info-stack marks)))))))
+         (current-check-info)))))))
 
 ;; refail-check : exn:test:check -> (exception raised)
 ;;
