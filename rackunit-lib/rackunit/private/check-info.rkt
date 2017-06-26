@@ -3,6 +3,7 @@
 (require racket/contract/base
          racket/format
          racket/list
+         racket/path
          racket/port
          racket/pretty
          "location.rkt"
