@@ -49,8 +49,7 @@
     [else (~s info-value)]))
 
 (define (trim-current-directory path)
-  (define cd (path->string (current-directory)))
-  (regexp-replace (regexp-quote cd) path ""))
+  (path->string (find-relative-path (current-directory) path)))
 
 ;; Infrastructure ----------------------------------------------
 
