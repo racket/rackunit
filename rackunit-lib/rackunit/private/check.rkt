@@ -155,20 +155,9 @@
        (with-check-info*
         (list (make-check-actual expr1)
               (make-check-expected expr2))
-        (lambda ()
-          (let ((result (let () body ...)))
-            (if result
-                result
-                (fail-check))))))]
+        (lambda () (or (let () body ...) (fail-check)))))]
     [(_ (name pred expr1 expr2))
-     (define-check (name expr1 expr2)
-       (with-check-info*
-        (list (make-check-actual expr1)
-              (make-check-expected expr2))
-        (lambda ()
-          (if (pred expr1 expr2)
-              #t
-              (fail-check)))))]))
+     (define-binary-check (name expr1 expr2) (pred expr1 expr2))]))
 
 (define (raise-error-if-not-thunk name thunk)
   (unless (and (procedure? thunk)
