@@ -213,42 +213,25 @@
            (lambda () (fail-check))))])
     (thunk)))
 
-(define-simple-check (check operator expr1 expr2)
-  (operator expr1 expr2))
+(define-syntax-rule (define-simple-check-values [header body ...] ...)
+  (begin (define-simple-check header body ...) ...))
 
-(define-simple-check (check-pred predicate expr)
-  (predicate expr))
+(define-simple-check-values
+  [(check operator expr1 expr2) (operator expr1 expr2)]
+  [(check-pred predicate expr) (predicate expr)]
+  [(check-= expr1 expr2 epsilon)
+   (<= (magnitude (- expr1 expr2)) epsilon)]
+  [(check-true expr) (eq? expr #t)]
+  [(check-false expr) (eq? expr #f)]
+  [(check-not-false expr) expr]
+  [(check-not-eq? expr1 expr2) (not (eq? expr1 expr2))]
+  [(check-not-eqv? expr1 expr2) (not (eqv? expr1 expr2))]
+  [(check-not-equal? expr1 expr2) (not (equal? expr1 expr2))]
+  [(fail) #f])
 
 (define-binary-check (check-eq? eq? expr1 expr2))
-
 (define-binary-check (check-eqv? eqv? expr1 expr2))
-
-(define-binary-check (check-equal? expr1 expr2)
-  (equal? expr1 expr2))
-
-(define-simple-check (check-= expr1 expr2 epsilon)
-  (<= (magnitude (- expr1 expr2)) epsilon))
-
-(define-simple-check (check-true expr)
-  (eq? expr #t))
-
-(define-simple-check (check-false expr)
-  (eq? expr #f))
-
-(define-simple-check (check-not-false expr)
-  expr)
-
-(define-simple-check (check-not-eq? expr1 expr2)
-  (not (eq? expr1 expr2)))
-
-(define-simple-check (check-not-eqv? expr1 expr2)
-  (not (eqv? expr1 expr2)))
-
-(define-simple-check (check-not-equal? expr1 expr2)
-  (not (equal? expr1 expr2)))
-
-(define-simple-check (fail)
-  #f)
+(define-binary-check (check-equal? equal? expr1 expr2))
 
 ;; NOTE(jpolitz): This match form isn't eager like the others, hence the
 ;; define-syntax and the need to carry around location information
