@@ -74,16 +74,6 @@
     ((_)
      (fail-check ""))))
 
-(define-syntax fail-internal
-  (syntax-rules ()
-    ((_)
-     (let ([marks (current-continuation-marks)])
-       (test-log! #f)
-       (raise
-        (make-exn:test:check:internal
-         "Internal failure"
-         marks
-         (current-check-info)))))))
 
 ;; refail-check : exn:test:check -> (exception raised)
 ;;
