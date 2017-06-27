@@ -50,7 +50,7 @@
     [else (~s info-value)]))
 
 (define (trim-current-directory path)
-  (path->string (find-relative-path (current-directory) path)))
+  (path->string (find-relative-path (current-directory) path #:more-than-root? #t)))
 
 ;; Infrastructure ----------------------------------------------
 
