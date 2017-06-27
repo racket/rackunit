@@ -144,14 +144,9 @@
                                           #:expression (quote (name actual ...)))]))))))
            ))))))
 
-(define-syntax define-simple-check
-  (syntax-rules ()
-    ((_ (name param ...) body ...)
-     (define-check (name param ...)
-       (let ((result (let () body ...)))
-         (if result
-             result
-             (fail-check)))))))
+(define-syntax-rule (define-simple-check (name param ...) body ...)
+  (define-check (name param ...)
+    (or (let () body ...) (fail-check))))
 
 (define-syntax define-binary-check
   (syntax-rules ()
