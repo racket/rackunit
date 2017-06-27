@@ -79,28 +79,13 @@
     [(test-failure? result)
      (let* ([exn (test-failure-result result)]
             [stack (exn:test:check-stack exn)])
-       (textui-display-check-info-stack stack verbose?)
+       (display-check-info-stack stack #:verbose? verbose?)
        (parameterize ([error-print-context-length 0])
          ((error-display-handler) (exn-message exn) exn)))]
     [(test-error? result)
      (let ([exn (test-error-result result)])
        (display-exn exn))]
     [else (void)]))
-
-(define (textui-display-check-info-stack stack [verbose? #f])
-  (define max-name-width (check-info-stack-max-name-width stack))
-  (for-each
-   (lambda (info)
-     (cond
-       [(and (check-expression? info)
-             (not verbose?))
-        (void)]
-       [else
-        (display-check-info max-name-width info)]))
-   (sort-stack
-    (if verbose?
-        stack
-        (strip-redundant-params stack)))))
 
 (define (std-test/text-ui display-context test)
   (fold-test-results

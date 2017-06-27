@@ -14,6 +14,7 @@
   [struct string-info ([value string?])]
   [struct location-info ([value location/c])]
   [struct pretty-info ([value any/c])]
+  [struct verbose-info ([value any/c])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
@@ -30,6 +31,7 @@
 (struct string-info (value) #:transparent)
 (struct location-info (value) #:transparent)
 (struct pretty-info (value) #:transparent)
+(struct verbose-info (value) #:transparent)
 
 (define (info-value->string info-value)
   (cond
@@ -38,6 +40,8 @@
      (trim-current-directory
       (location->string (location-info-value info-value)))]
     [(pretty-info? info-value) (pretty-format (pretty-info-value info-value))]
+    [(verbose-info? info-value)
+     (info-value->string (verbose-info-value info-value))]
     [else (~s info-value)]))
 
 (define (trim-current-directory path)
@@ -79,7 +83,7 @@
 (define-check-type name any/c)
 (define-check-type params any/c #:wrapper pretty-info)
 (define-check-type location location/c #:wrapper location-info)
-(define-check-type expression any/c)
+(define-check-type expression any/c #:wrapper verbose-info)
 (define-check-type message any/c)
 (define-check-type actual any/c #:wrapper pretty-info)
 (define-check-type expected any/c #:wrapper pretty-info)
