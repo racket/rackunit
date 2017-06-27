@@ -49,7 +49,6 @@ FAILURE
 name:       check
 location:   standalone-check-test.rkt:48:0
 params:     '(#<procedure:=> 1 2)
-expression: (check = 1 2)
 message:    0.0
 --------------------
 ")
@@ -74,7 +73,6 @@ name:       check-eq?
 location:   standalone-test-case-test.rkt:23:12
 actual:     1
 expected:   2
-expression: (check-eq? 1 2)
 --------------------
 --------------------
 failure
@@ -83,6 +81,5 @@ name:       check-eq?
 location:   standalone-test-case-test.rkt:24:21
 actual:     1
 expected:   2
-expression: (check-eq? 1 2)
 --------------------
 ")

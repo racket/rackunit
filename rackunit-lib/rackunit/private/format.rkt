@@ -4,9 +4,7 @@
          "base.rkt"
          "check-info.rkt")
 
-(provide display-check-info-name-value
-         display-check-info
-         display-check-info-stack
+(provide display-check-info-stack
          display-test-name
          display-exn
 
@@ -14,12 +12,7 @@
          display-failure
          display-error
 
-         display-test-failure/error
-         strip-redundant-params
-         check-info-stack-max-name-width
-
-         display-verbose-check-info
-         sort-stack)
+         display-test-failure/error)
 
 ;; name-width : integer
 ;;
@@ -66,40 +59,21 @@
     [(struct check-info (name value))
      (display-check-info-name-value max-name-width name value)]))
 
-;; display-verbose-check-info : test-result -> void
-(define (display-verbose-check-info result)
-  (cond
-    ((test-failure? result)
-     (let* ((exn (test-failure-result result))
-            (stack (exn:test:check-stack exn)))
-       (display-verbose-check-info-stack stack)))
-    ((test-error? result)
-     (display-exn (test-error-result result)))
-    (else
-     (void))))
-
-(define (display-verbose-check-info-stack check-info-stack)
-  (define max-name-width (check-info-stack-max-name-width check-info-stack))
-  (for ([info (in-list (sort-stack check-info-stack))])
-    (cond
-      ((check-expression? info)
-       (display-check-info-name-value max-name-width
-                                      (check-info-name info)
-                                      (check-info-value info)
-                                      (λ (x) (printf "~.s\n" x))))
-      (else
-       (display-check-info-name-value max-name-width
-                                      (check-info-name info)
-                                      (check-info-value info))))))
-
 (define (check-info-stack-max-name-width check-info-stack)
   (apply max 0
          (map check-info-name-width check-info-stack)))
 
 ;; display-check-info-stack : (listof check-info) -> void
-(define (display-check-info-stack check-info-stack)
-  (display-verbose-check-info-stack
-   (strip-redundant-params check-info-stack)))
+(define (display-check-info-stack check-info-stack #:verbose? [verbose? #f])
+  (define stack
+    (if verbose? check-info-stack (simplify-params check-info-stack)))
+  (define max-name-width (check-info-stack-max-name-width stack))
+  ;; we show all infos in verbose mode, otherwise we show all infos that aren't
+  ;; marked verbose-only (using the verbose-info? info wrapper struct)
+  (for ([info (in-list (sort-stack stack))])
+    (display-check-info-name-value max-name-width
+                                   (check-info-name info)
+                                   (check-info-value info))))
 
 ;; display-test-name : (U string #f) -> void
 (define (display-test-name name)
@@ -117,12 +91,16 @@
         (printf "A value other than an exception was raised: ~e\n" v))
     (newline)))
 
-;; strip-redundant-parms : (list-of check-info) -> (list-of check-info)
+;; simplify-params : (list-of check-info) -> (list-of check-info)
 ;;
-;; Strip any 'params infos if there are any 'actual infos, as the latter usually
-;; duplicates values in the former.
-(define (strip-redundant-params stack)
-  (if (ormap check-actual? stack) (filter-not check-params? stack) stack))
+;; Remove any 'params infos if there are any 'actual infos, as the latter
+;; usually duplicates values in the former. Also removes any verbose infos.
+(define (simplify-params stack)
+  (define has-actual? (ormap check-actual? stack))
+  (define (reject? info)
+    (or (verbose-info? (check-info-value info))
+        (and has-actual? (check-params? info))))
+   (filter-not reject? stack))
 
 ;; display-test-failure/error : any string/#f -> void
 (define (display-test-failure/error e [name #f])
@@ -143,7 +121,7 @@
 
 (define (sort-stack l)
   (sort l <
-        #:key 
+        #:key
         (λ (info)
           (cond
             [(check-name? info)
