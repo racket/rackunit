@@ -227,8 +227,7 @@
 (define-check (check-not-exn thunk)
   (raise-error-if-not-thunk 'check-not-exn thunk)
   (with-handlers
-      ([exn:test:check?
-        (lambda (exn) (refail-check exn))]
+      ([exn:test:check? refail-check]
        [exn?
         (lambda (exn)
           (with-check-info*
