@@ -28,124 +28,80 @@
 
 #lang racket/base
 
-(require racket/match
-         "private/counter.rkt"
+(require racket/contract/base)
+
+(provide
+ (contract-out
+  [run-tests (->* ((or/c test-case? test-suite?))
+                  ((or/c 'quiet 'normal 'verbose))
+                  natural-number/c)]))
+
+(require racket/list
+         racket/match
          "private/format.rkt"
-         "private/check-info.rkt"
-         "private/monad.rkt"
-         "private/hash-monad.rkt"
-         "private/name-collector.rkt"
          "private/test.rkt")
 
-(provide run-tests)
 
+;; As we fold over the test results, there are two pieces of state we must
+;; manage: a counter of failures, errors, and passes, and a stack of names
+;; indicating where we are in the tree of test suites and cases. The former is
+;; used for printing a summary message after running all tests, while the latter
+;; is used in each test to print what cases / suites a test is in.
+(struct fold-state (counter names) #:transparent)
 
-;; display-test-preamble : test-result -> (hash-monad-of void)
-(define (display-test-preamble result)
-  (lambda (hash)
-    (if (test-success? result)
-        hash
-        (begin
-          (display-delimiter)
-          hash))))
+(define init-state (fold-state (hash 'success 0 'failure 0 'error 0) (list)))
 
-;; display-test-postamble : test-result -> (hash-monad-of void)
-(define (display-test-postamble result)
-  (lambda (hash)
-    (if (test-success? result)
-        hash
-        (begin
-          (display-delimiter)
-          hash))))
+(define (push-suite-name name state)
+  (struct-copy fold-state state [names (cons name (fold-state-names state))]))
 
+(define (pop-suite-name name state)
+  (struct-copy fold-state state [names (rest (fold-state-names state))]))
 
-;; display-result : test-result -> void
-(define (display-result result)
-  (cond
-    ((test-error? result)
-     (display-test-name (test-result-test-case-name result))
-     (display-error)
-     (newline))
-    ((test-failure? result)
-     (display-test-name (test-result-test-case-name result))
-     (display-failure)
-     (newline))
-    (else
-     (void))))
+(define (result-type res)
+  (cond [(test-success? res) 'success]
+        [(test-failure? res) 'failure]
+        [(test-error? res) 'error]))
 
-;; display-context : test-result [(U #t #f)] -> void
-(define (display-context result [verbose? #f])
-  (cond
-    [(test-failure? result)
-     (let* ([exn (test-failure-result result)]
-            [stack (exn:test:check-stack exn)])
-       (display-check-info-stack stack #:verbose? verbose?)
-       (parameterize ([error-print-context-length 0])
-         ((error-display-handler) (exn-message exn) exn)))]
-    [(test-error? result)
-     (let ([exn (test-error-result result)])
-       (display-exn exn))]
-    [else (void)]))
+(define (increment-counter res state)
+  (define type (result-type res))
+  (define new-counter (hash-update (fold-state-counter state) type add1))
+  (struct-copy fold-state state [counter new-counter]))
 
-(define (std-test/text-ui display-context test)
-  (fold-test-results
-   (lambda (result seed)
-     (parameterize ([current-output-port (current-error-port)])
-       ((sequence* (update-counter! result)
-                   (display-test-preamble result)
-                   (display-test-case-name result)
-                   (lambda (hash)
-                     (display-result result)
-                     (display-context result)
-                     hash)
-                   (display-test-postamble result))
-        seed)))
-   ((sequence
-     (put-initial-counter)
-     (put-initial-name))
-    (make-empty-hash))
-   test
-   #:fdown (lambda (name seed) ((push-suite-name! name) seed))
-   #:fup (lambda (name kid-seed) ((pop-suite-name!) kid-seed))))
+(define (num-unsuccessful cnt)
+  (+ (hash-ref cnt 'failure) (hash-ref cnt 'error)))
 
-(define (display-counter*)
-  (compose (counter->vector)
-           (match-lambda
-             [(vector s f e)
-              (if (and (zero? f) (zero? e))
-                  (display-counter)
-                  (lambda args
-                    (parameterize ([current-output-port (current-error-port)])
-                      (apply (display-counter) args))))])))
+(define (display-counter cnt)
+  (match cnt
+    [(hash-table ['success s] ['failure f] ['error e])
+     (define total (+ s f e))
+     (define tests-passed? (and (zero? f) (zero? e)))
+     (define (print-msg)
+       (printf "~a success(es) ~a failure(s) ~a error(s) ~a test(s) run\n"
+               s f e total))
+     (if tests-passed?
+         (print-msg)
+         (parameterize ([current-output-port (current-error-port)])
+           (print-msg)))]))
 
-;; run-tests : test [(U 'quiet 'normal 'verbose)] -> integer
 (define (run-tests test [mode 'normal])
-  (unless (or (test-case? test) (test-suite? test))
-    (raise-argument-error 'run-tests "(or/c test-case? test-suite?)" test))
-  (unless (memq mode '(quiet normal verbose))
-    (raise-argument-error 'run-tests "(or/c 'quiet 'normal 'verbose)" mode))
-  (parameterize ((current-custodian (make-custodian)))
-    (monad-value
-     ((compose
-       (sequence*
-        (case mode
-          [(normal verbose)
-           (display-counter*)]
-          [(quiet)
-           (lambda (a) a)])
-        (counter->vector))
-       (match-lambda
-        ((vector s f e)
-         (return-hash (+ f e)))))
-      (case mode
-        ((quiet)
-         (fold-test-results
-          (lambda (result seed)
-            ((update-counter! result) seed))
-          ((put-initial-counter)
-           (make-empty-hash))
-          test))
-        ((normal) (std-test/text-ui display-context test))
-        ((verbose) (std-test/text-ui
-                    (lambda (x) (display-context x #t))
-                    test)))))))
+  (define quiet? (eq? mode 'quiet))
+  (define (print-result result state)
+    (unless quiet?
+      (define verbose? (eq? mode 'verbose))
+      (define names (fold-state-names state))
+      (display-test-result result #:verbose? verbose? #:suite-names names))
+    (increment-counter result state))
+  (define (fold-tests)
+    (fold-test-results print-result init-state test
+                       #:fdown push-suite-name
+                       #:fup pop-suite-name))
+  ;; we install a new custodian to ensure resources handled improperly by tests
+  ;; such as threads, tcp listeners, etc. don't interfere with other tests or
+  ;; the runner itself
+  (define counter (fold-state-counter (call/new-custodian fold-tests)))
+  (unless quiet?
+    (display-counter counter))
+  (num-unsuccessful counter))
+
+(define (call/new-custodian thnk)
+  (parameterize ([current-custodian (make-custodian)]) (thnk)))
