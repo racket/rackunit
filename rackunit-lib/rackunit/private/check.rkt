@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require racket/match
+(require racket/contract/base
+         racket/match
          (for-syntax racket/base)
          rackunit/log
          "base.rkt"
@@ -8,11 +9,13 @@
          "format.rkt"
          "location.rkt")
 
+(provide
+ (contract-out
+  [fail-check (->* () (string?) void?)]))
+
 (provide current-check-handler
          check-around
          current-check-around
-
-         fail-check
 
          define-check
          define-binary-check
@@ -58,22 +61,10 @@
          v
          (raise-type-error 'current-check-around "procedure" v)))))
 
-(define-syntax fail-check
-  (syntax-rules ()
-    ((_ message*)
-     (let ([message message*]
-           [marks (current-continuation-marks)])
-       (unless (string? message)
-         (raise-type-error 'fail-check "string" message))
-       (test-log! #f)
-       (raise
-        (make-exn:test:check
-         message
-         marks
-         (current-check-info)))))
-    ((_)
-     (fail-check ""))))
-
+(define (fail-check [message ""])
+  (define marks (current-continuation-marks))
+  (test-log! #f)
+  (raise (make-exn:test:check message marks (current-check-info))))
 
 ;; refail-check : exn:test:check -> (exception raised)
 ;;
