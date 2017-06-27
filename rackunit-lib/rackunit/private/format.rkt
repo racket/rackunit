@@ -68,8 +68,6 @@
   (define stack
     (if verbose? check-info-stack (simplify-params check-info-stack)))
   (define max-name-width (check-info-stack-max-name-width stack))
-  ;; we show all infos in verbose mode, otherwise we show all infos that aren't
-  ;; marked verbose-only (using the verbose-info? info wrapper struct)
   (for ([info (in-list (sort-stack stack))])
     (display-check-info-name-value max-name-width
                                    (check-info-name info)
