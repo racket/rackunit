@@ -2,14 +2,15 @@
 
 (require rackunit
          rackunit/private/check-info
-         rackunit/private/format)
+         rackunit/private/format
+         (submod rackunit/private/format for-test))
 
 (provide format-tests)
 
 (define format-tests
   (test-suite
    "All tests for format"
-   
+
    (test-case
     "display-check-info-stack"
     (let ([p (open-output-string)])

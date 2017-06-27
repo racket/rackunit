@@ -11,10 +11,7 @@
          "result-test.rkt"
          "test-test.rkt"
          "util-test.rkt"
-         "text-ui-test.rkt"
-         "monad-test.rkt"
-         "hash-monad-test.rkt"
-         "counter-test.rkt")
+         "text-ui-test.rkt")
 
 (provide all-rackunit-tests
          failure-tests)
@@ -33,9 +30,6 @@
    test-tests
    util-tests
    text-ui-tests
-   monad-tests
-   hash-monad-tests
-   counter-tests
    format-tests
    ))
 

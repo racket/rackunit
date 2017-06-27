@@ -1,23 +1,37 @@
 #lang racket/base
 (require racket/list
          racket/match
+         racket/string
          "base.rkt"
          "check-info.rkt")
 
-(provide display-check-info-stack
-         display-test-name
-         display-exn
-
-         display-delimiter
-         display-failure
-         display-error
-
+(provide display-test-result
          display-test-failure/error)
+
+(module+ for-test
+  (provide display-check-info-stack))
 
 ;; name-width : integer
 ;;
 ;; Number of characters we reserve for the check-info name column
 (define minimum-name-width 12)
+
+(define (display-test-result res
+                             #:verbose? [verbose? #f]
+                             #:suite-names [suite-names '()])
+  (define cname (combine-names (test-result-test-case-name res) suite-names))
+  (define (display-err e)
+    (display-test-failure/error e cname #:verbose? verbose?))
+  (cond [(test-failure? res) (display-err (test-failure-result res))]
+        [(test-error? res) (display-err (test-error-result res))]
+        [else (void)]))
+
+(define (combine-names test-name suite-names)
+  (define any-names? (or test-name (not (empty? suite-names))))
+  (and any-names?
+       (string-join (snoc (or test-name "Unnamed test") suite-names) " > ")))
+
+(define (snoc v vs) (append vs (list v)))
 
 (define (display-delimiter)
   (display "--------------------") (newline))
@@ -101,13 +115,14 @@
    (filter-not reject? stack))
 
 ;; display-test-failure/error : any string/#f -> void
-(define (display-test-failure/error e [name #f])
+(define (display-test-failure/error e [name #f] #:verbose? [verbose? #f])
   (parameterize ((current-output-port (current-error-port)))
     (display-delimiter)
     (when name (display-test-name name))
     (cond [(exn:test:check? e)
            (display-failure) (newline)
-           (display-check-info-stack (exn:test:check-stack e))
+           (display-check-info-stack (exn:test:check-stack e)
+                                     #:verbose? verbose?)
            (unless (equal? (exn-message e) "")
              (newline)
              (parameterize ([error-print-context-length 0])
