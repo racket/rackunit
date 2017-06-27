@@ -33,15 +33,6 @@
 
 (define (snoc v vs) (append vs (list v)))
 
-(define (display-delimiter)
-  (display "--------------------") (newline))
-
-(define (display-failure)
-  (display "FAILURE"))
-
-(define (display-error)
-  (display "ERROR"))
-
 (define (string-pad-right s n)
   (define m (string-length s))
   (cond
@@ -91,18 +82,6 @@
 (define (display-test-name name)
   (displayln (or name "Unnamed test ")))
 
-;; display-exn : any -> void
-;;
-;; Outputs a printed representation of the exception to
-;; the current-output-port
-;; If given non-exn value, says so.
-(define (display-exn v)
-  (parameterize ((current-error-port (current-output-port)))
-    (if (exn? v)
-        ((error-display-handler) (exn-message v) v)
-        (printf "A value other than an exception was raised: ~e\n" v))
-    (newline)))
-
 ;; simplify-params : (list-of check-info) -> (list-of check-info)
 ;;
 ;; Remove any 'params infos if there are any 'actual infos, as the latter
@@ -120,17 +99,29 @@
     (display-delimiter)
     (when name (display-test-name name))
     (cond [(exn:test:check? e)
-           (display-failure) (newline)
+           (display-raised-summary "FAILURE" e)
            (display-check-info-stack (exn:test:check-stack e)
                                      #:verbose? verbose?)
-           (unless (equal? (exn-message e) "")
-             (newline)
-             (parameterize ([error-print-context-length 0])
-               ((error-display-handler) (exn-message e) e)))]
+           (display-raised-message e)]
           [else
-           (display-error) (newline)
-           (display-exn e)])
+           (display-raised-summary "ERROR" e)
+           (display-raised-message e)])
     (display-delimiter)))
+
+(define (display-raised-message v)
+  (if (exn? v)
+      (when (not (equal? (exn-message v) ""))
+        (newline)
+        (displayln (exn-message v)))
+      (printf "A value other than an exception was raised: ~e\n" v)))
+
+(define (display-delimiter) (displayln "--------------------"))
+
+(define (display-raised-summary desc raised-value)
+  (if (exn? raised-value)
+      (parameterize ([error-print-context-length 0])
+        ((error-display-handler) desc raised-value))
+      (displayln desc)))
 
 (define (sort-stack l)
   (sort l <
