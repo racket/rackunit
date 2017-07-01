@@ -25,8 +25,8 @@
 
 ;; Structures --------------------------------------------------
 
-;; struct check-info : symbol any
-(struct check-info (name value) #:constructor-name make-check-info)
+(struct check-info (name value)
+  #:transparent #:constructor-name make-check-info)
 
 (struct string-info (value) #:transparent)
 (struct location-info (value) #:transparent)
