@@ -41,8 +41,8 @@
            #"\
 --------------------
 ERROR
-Outta here!
 
+Outta here!
 --------------------
 --------------------
 FAILURE
@@ -58,14 +58,14 @@ message:    0.0
            #"\
 --------------------
 ERROR
-First Outta here!
 
+First Outta here!
 --------------------
 --------------------
 error
 ERROR
-Second Outta here!
 
+Second Outta here!
 --------------------
 --------------------
 FAILURE
