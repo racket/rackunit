@@ -14,7 +14,9 @@
 ;; name-width : integer
 ;;
 ;; Number of characters we reserve for the check-info name column
-(define minimum-name-width 12)
+(define minimum-name-width 9)
+
+(define nested-indent-amount 2)
 
 (define (display-test-result res
                              #:verbose? [verbose? #f]
@@ -33,50 +35,48 @@
 
 (define (snoc v vs) (append vs (list v)))
 
-(define (string-pad-right s n)
-  (define m (string-length s))
-  (cond
-   [(= m n) s]
-   [(m . < . n)
-    (string-append s (make-string (- n m) #\space))]
-   [else
-    (substring s 0 n)]))
+(define (string-padding str desired-len)
+  (make-string (max (- desired-len (string-length str)) 0) #\space))
+
+(define (string-indent str amnt)
+  (define pad (make-string amnt #\space))
+  (string-append pad (string-replace str "\n" (string-append "\n" pad))))
 
 (define (check-info-name-width check-info)
   (string-length
    (symbol->string
     (check-info-name check-info))))
 
-(define (print-info-value v)
-  (displayln (info-value->string v)))
+(define (check-info-stack-name-width check-info-stack)
+  (define widths (map check-info-name-width check-info-stack))
+  (apply max 0 widths))
 
-(define (display-check-info-name-value max-name-width
-                                       name
-                                       value
-                                       [value-printer print-info-value])
-  (display (string-pad-right
-            (string-append (symbol->string name) ": ")
-            (max minimum-name-width (+ max-name-width 2))))
-  (value-printer value))
+(define (check-info-stack->string stack* verbose?
+                                  #:name-width [name-width* minimum-name-width])
+  (define stack (if verbose? stack* (simplify-params stack*)))
+  (define name-width (max name-width* (check-info-stack-name-width stack)))
+  (define (info->str info) (check-info->string info verbose? name-width))
+  (string-join (map info->str stack) "\n"))
 
-(define (display-check-info max-name-width a-check-info)
-  (match a-check-info
-    [(struct check-info (name value))
-     (display-check-info-name-value max-name-width name value)]))
+(define (check-info->string info verbose? name-width)
+  (define name (symbol->string (check-info-name info)))
+  (define value (check-info-value info))
+  (cond [(nested-info? value)
+         (define nested-str (nested-info->string value verbose? name-width))
+         (format "~a:\n~a" name nested-str)]
+        [else
+         (define pad (string-padding name name-width))
+         (format "~a:~a  ~a" name pad (info-value->string value))]))
 
-(define (check-info-stack-max-name-width check-info-stack)
-  (apply max 0
-         (map check-info-name-width check-info-stack)))
+(define (nested-info->string nested verbose? name-width)
+  (define infos (nested-info-values nested))
+  (define nested-str
+    (check-info-stack->string infos verbose? #:name-width name-width))
+  (string-indent nested-str nested-indent-amount))
 
 ;; display-check-info-stack : (listof check-info) -> void
-(define (display-check-info-stack check-info-stack #:verbose? [verbose? #f])
-  (define stack
-    (if verbose? check-info-stack (simplify-params check-info-stack)))
-  (define max-name-width (check-info-stack-max-name-width stack))
-  (for ([info (in-list stack)])
-    (display-check-info-name-value max-name-width
-                                   (check-info-name info)
-                                   (check-info-value info))))
+(define (display-check-info-stack stack #:verbose? [verbose? #f])
+  (displayln (check-info-stack->string stack verbose?)))
 
 ;; display-test-name : (U string #f) -> void
 (define (display-test-name name)
