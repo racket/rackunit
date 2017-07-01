@@ -73,7 +73,7 @@
   (define stack
     (if verbose? check-info-stack (simplify-params check-info-stack)))
   (define max-name-width (check-info-stack-max-name-width stack))
-  (for ([info (in-list (sort-stack stack))])
+  (for ([info (in-list stack)])
     (display-check-info-name-value max-name-width
                                    (check-info-name info)
                                    (check-info-value info))))
@@ -122,21 +122,3 @@
       (parameterize ([error-print-context-length 0])
         ((error-display-handler) desc raised-value))
       (displayln desc)))
-
-(define (sort-stack l)
-  (sort l <
-        #:key
-        (λ (info)
-          (cond
-            [(check-name? info)
-             0]
-            [(check-location? info)
-             1]
-            [(check-params? info)
-             2]
-            [(check-actual? info)
-             3]
-            [(check-expected? info)
-             4]
-            [else
-             5]))))
