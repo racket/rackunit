@@ -113,7 +113,7 @@
       (when (not (equal? (exn-message v) ""))
         (newline)
         (displayln (exn-message v)))
-      (printf "A value other than an exception was raised: ~e\n" v)))
+      (printf "\nA value other than an exception was raised: ~e\n" v)))
 
 (define (display-delimiter) (displayln "--------------------"))
 
