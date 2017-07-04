@@ -1,9 +1,12 @@
 #lang racket/base
 
-(require racket/contract/base
+(require (for-syntax racket/base
+                     racket/syntax
+                     syntax/parse)
+         racket/contract/base
          racket/match
-         (for-syntax racket/base)
          rackunit/log
+         syntax/parse/define
          "base.rkt"
          "check-info.rkt"
          "format.rkt"
@@ -78,71 +81,51 @@
                         (exn-continuation-marks exn)
                         (exn:test:check-stack exn))))
 
-(define-syntax (define-check stx)
-  (syntax-case stx ()
-    ((define-check (name formal ...) body ...)
-     (with-syntax ([reported-name
-                    (symbol->string (syntax->datum (syntax name)))]
-                   [(actual ...)
-                    (generate-temporaries (syntax (formal ...)))]
-                   [check-fn
-                    (syntax
-                     (lambda (formal ...
-                                     [message #f]
-                                     #:location [location (list 'unknown #f #f #f #f)]
-                                     #:expression [expression 'unknown])
-                       ((current-check-around)
-                        (lambda ()
-                          (with-check-info*
-                           (list* (make-check-name (quote name))
-                                  (make-check-location location)
-                                  (make-check-expression expression)
-                                  (make-check-params (list formal ...))
-                                  (if message
-                                      (list (make-check-message message))
-                                      null))
-                             (lambda () (begin0 (let () body ...) (test-log! #t))))))
+(define (list/if . vs) (filter values vs))
 
-                       ;; All checks should return (void).
-                       (void)))]
-                   [check-secret-name (datum->syntax stx (gensym (syntax->datum (syntax name))))])
-       (syntax/loc stx
-         (begin
-           ;; The distinction between formal and actual parameters
-           ;; is made to avoid evaluating the check arguments
-           ;; more than once.  This technique is based on advice
-           ;; received from Ryan Culpepper.
+(define-simple-macro
+  (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
+  (define (name formal ... [message #f]
+                #:location [location (list 'unknown #f #f #f #f)]
+                #:expression [expression 'unknown])
+    ((current-check-around)
+     (lambda ()
+       (with-check-info*
+           (list/if (make-check-name 'pub)
+                    (make-check-location location)
+                    (make-check-expression expression)
+                    (make-check-params (list formal ...))
+                    (and message (make-check-message message)))
+         (lambda () (begin0 (let () body ...) (test-log! #t))))))
+    ;; All checks should return (void)
+    (void)))
 
-           (define check-secret-name check-fn)
+(define-syntax (app-check stx)
+  (syntax-parse stx
+    [(_ chk arg ...)
+     (with-syntax ([loc (datum->syntax #f 'loc stx)])
+       #`(chk arg ...
+              #:location (syntax->location #'loc)
+              #:expression '(chk arg ...)))]))
 
-           (define-syntax (name stx)
-             (with-syntax ([loc (datum->syntax #f 'loc stx)])
-               (syntax-case stx ()
-                 ((name actual ...)
-                  (syntax/loc stx
-                    (check-secret-name actual ...
-                                       #:location (syntax->location (quote-syntax loc))
-                                       #:expression (quote (name actual ...)))))
+(define-syntax (id-check stx)
+  (syntax-parse stx
+    [(_ chk:id)
+     (with-syntax ([loc (datum->syntax #f 'loc stx)])
+       #`(lambda args
+           (apply chk
+                  #:location (syntax->location #'loc)
+                  #:expression 'chk
+                  args)))]))
 
-                 ((name actual ... msg)
-                  (syntax/loc stx
-                    (check-secret-name actual ... msg
-                                       #:location (syntax->location (quote-syntax loc))
-                                       #:expression (quote (name actual ...)))))
-
-                 (name
-                  (identifier? #'name)
-                  (syntax/loc stx
-                    (case-lambda
-                      [(formal ...)
-                       (check-secret-name formal ...
-                                          #:location (syntax->location (quote-syntax loc))
-                                          #:expression (quote (name actual ...)))]
-                      [(formal ... msg)
-                       (check-secret-name formal ... msg
-                                          #:location (syntax->location (quote-syntax loc))
-                                          #:expression (quote (name actual ...)))]))))))
-           ))))))
+(define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
+  (begin
+    (define-check-func (check-impl formal ...) #:public-name name body ...)
+    (define-syntax (name stx)
+      (syntax-parse stx
+        [(_ arg (... ...))
+         (syntax/loc stx (app-check check-impl arg (... ...)))]
+        [chk:id (syntax/loc stx (id-check check-impl))]))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
   (define-check (name param ...)
