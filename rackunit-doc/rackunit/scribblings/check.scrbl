@@ -289,7 +289,7 @@ the @racket[with-check-info*] function, and the
 @defstruct*[nested-info ([values (listof check-info?)]) #:transparent]{
  A special wrapper around a list of infos for use as a @racket[check-info]
  value. A check info whose value is a nested info is displayed as an indented
- sub-list of infos. Nested infos can be placed inside nested infos, yielding
+ subsequence of infos. Nested infos can be placed inside nested infos, yielding
  greater indentation.
  @(interaction
    #:eval rackunit-eval
