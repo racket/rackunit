@@ -15,7 +15,7 @@
       (make-check-info (vector-ref vec name-idx) (vector-ref vec v-idx))))
 
   (define (nested-info* . name+vs) (nested-info (apply info* name+vs)))
-  
+
   (define-check (check-info-stack-output str-or-rx stack)
     (define actual
       (with-output-to-string (thunk (display-check-info-stack stack))))
@@ -30,6 +30,7 @@ nested:
   baz:        3
 ")
     (check-info-stack-output expected-str test-info))
+
   (test-case "Double-nested check info printing"
     (define test-info
       (info* 'nested
@@ -38,5 +39,20 @@ nested:
   double-nested:
     foo:            1
     bar:            2
+")
+    (check-info-stack-output expected-str test-info))
+
+  (test-case "Multiple double-nested check info printing"
+    (define test-info
+      (info* 'nested
+             (nested-info* 'foo (nested-info* 'foo1 1 'foo2 2)
+                           'bar (nested-info* 'bar1 1 'bar2 2))))
+    (define expected-str "nested:
+  foo:
+    foo1:       1
+    foo2:       2
+  bar:
+    bar1:       1
+    bar2:       2
 ")
     (check-info-stack-output expected-str test-info)))
