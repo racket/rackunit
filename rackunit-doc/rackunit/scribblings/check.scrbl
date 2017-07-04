@@ -428,18 +428,13 @@ tests a number if within 0.01 of the expected value:
 
 The @racket[define-check] macro acts in exactly the same way
 as @racket[define-simple-check], except the check only fails
-if the macro @racket[fail-check] is called in the body of
-the check.  This allows more flexible checks, and in
-particular more flexible reporting options.}
+if @racket[fail-check] is called in the body of the check.
+This allows more flexible checks, and in particular more flexible
+reporting options.}
 
-@defform*[[(fail-check)
-           (fail-check message-expr)]]{
-
-The @racket[fail-check] macro raises an @racket[exn:test:check] with
-the contents of the check information stack. The optional message
-is used as the exception's message.
-
-}
-
+@defproc[(fail-check [message string?]) void?]{
+Raises an @racket[exn:test:check] with the contents of the check
+information stack. The optional message is used as the exception's
+message.}
 
 @close-eval[rackunit-eval]

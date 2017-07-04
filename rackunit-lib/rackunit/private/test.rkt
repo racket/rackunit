@@ -109,8 +109,6 @@
          check-match
          fail)
 
-(define (void-thunk) (void))
-
 
 (define-syntax (define-shortcut stx)
   (syntax-case stx ()
