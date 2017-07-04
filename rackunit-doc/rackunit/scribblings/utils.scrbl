@@ -56,4 +56,5 @@ and displaying a summary message.
  When set to @racket[#f], @racket[test-log!] is a no-op. This is useful to
  dynamically disable certain tests whose failures are expected and shouldn't be
  counted in the test log, such as when testing a custom check's failure
- behavior.}
+ behavior.
+ @history[#:added "1.1"]}
