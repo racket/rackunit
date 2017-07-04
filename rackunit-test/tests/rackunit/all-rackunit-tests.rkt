@@ -2,7 +2,6 @@
 
 (require rackunit
          "check-test.rkt"
-         "check-info-test.rkt"
          "format-test.rkt"
          "test-case-test.rkt"
          "test-suite-test.rkt"
@@ -21,7 +20,6 @@
    "All RackUnit Tests"
    check-tests
    base-tests
-   check-info-tests
    test-case-tests
    test-suite-tests
    test-suite-define-provide-test
