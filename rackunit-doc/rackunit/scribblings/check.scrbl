@@ -266,10 +266,11 @@ the check.  Additional information can be stored by using
 the @racket[with-check-info*] function, and the
 @racket[with-check-info] macro.
 
-@defstruct[check-info ([name symbol?] [value any])]{
+@defstruct[check-info ([name symbol?] [value any]) #:transparent]{
  A check-info structure stores information associated with the context of the
  execution of a check. The @racket[value] is written in a check failure message
- using @racket[write] unless it is a @racket[string-info] value.}
+ using @racket[write] unless it is a @racket[string-info] value.
+ @history[#:changed "1.6" "Changed from opaque to transparent"]}
 
 @defstruct*[string-info ([value string?])]{
  A special wrapper around a string for use as a @racket[check-info] value. When
