@@ -273,7 +273,7 @@ the @racket[with-check-info*] function, and the
  @racket[nested-info] value.
  @history[#:changed "1.6" "Changed from opaque to transparent"]}
 
-@defstruct*[string-info ([value string?])]{
+@defstruct*[string-info ([value string?]) #:transparent]{
  A special wrapper around a string for use as a @racket[check-info] value. When
  displayed in a check failure message, @racket[value] is displayed without
  quotes. Used to print messages in check infos instead of writing values.
@@ -286,10 +286,7 @@ the @racket[with-check-info*] function, and the
    (string-info-check))
  @history[#:added "1.2"]}
 
-@deftogether[
- ((defproc (nested-info [info check-info?] ...) nested-info?)
-  (defproc (nested-info? [v any/c]) boolean?)
-  (defproc (nested-info-values [nested nested-info?]) (listof check-info?)))]{
+@defstruct*[nested-info ([values (listof check-info?)]) #:transparent]{
  A special wrapper around a list of infos for use as a @racket[check-info]
  value. A check info whose value is a nested info is displayed as an indented
  sub-list of infos. Nested infos can be placed inside nested infos, yielding
@@ -297,9 +294,9 @@ the @racket[with-check-info*] function, and the
  @(interaction
    #:eval rackunit-eval
    (define-check (nested-info-check)
-     (define nested
-       (nested-info (make-check-info 'foo "foo") (make-check-info 'bar "bar")))
-     (with-check-info (['nested nested]) (fail-check)))
+     (define infos
+       (list (make-check-info 'foo "foo") (make-check-info 'bar "bar")))
+     (with-check-info (['nested (nested-info infos)]) (fail-check)))
    (nested-info-check))
  @history[#:added "1.7"]}
 
