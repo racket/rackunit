@@ -123,8 +123,7 @@
     (define-check-func (check-impl formal ...) #:public-name name body ...)
     (define-syntax (name stx)
       (syntax-parse stx
-        [(_ arg (... ...))
-         (syntax/loc stx (app-check check-impl arg (... ...)))]
+        [(_ . args) (syntax/loc stx (app-check check-impl . args))]
         [chk:id (syntax/loc stx (id-check check-impl))]))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
