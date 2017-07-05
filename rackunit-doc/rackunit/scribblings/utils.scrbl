@@ -38,22 +38,23 @@ as a predicate and passed each export of the module. If @racket[skip] is
 Rackunit provides a general purpose library for tracking test results
 and displaying a summary message.
 
-@defproc[(test-log! [result any/c])
-         void?]{
-
-Adds a test result to the running log. If @racket[result] is false,
-then the test is considered a failure.
-
-}
+@defproc[(test-log! [result any/c]) void?]{
+ Adds a test result to the running log. If @racket[result] is false,
+ then the test is considered a failure.}
 
 @defproc[(test-log [#:display? display? boolean? #t]
                    [#:exit? exit? boolean? #t])
          (cons/c exact-nonnegative-integer?
                  exact-nonnegative-integer?)]{
+ Processes the running test log. The first integer is the failed tests, the
+ second is the total tests. If @racket[display?] is true, then a message is
+ displayed. If there were failures, the message is printed on
+ @racket[(current-error-port)]. If @racket[exit?] is true, then if there were
+ failures, calls @racket[(exit 1)].}
 
-Processes the running test log. The first integer is the failed tests, the second is the total
-tests. If @racket[display?] is true, then a message is displayed. If there were failures, the
-message is printed on @racket[(current-error-port)]. If @racket[exit?] is true, then if there were
-failures, calls @racket[(exit 1)].
-
-}
+@defparam[test-log-enabled? enabled? boolean? #:value #t]{
+ When set to @racket[#f], @racket[test-log!] is a no-op. This is useful to
+ dynamically disable certain tests whose failures are expected and shouldn't be
+ counted in the test log, such as when testing a custom check's failure
+ behavior.
+ @history[#:added "1.1"]}
