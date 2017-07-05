@@ -14,6 +14,7 @@
   [struct string-info ([value string?])]
   [struct location-info ([value location/c])]
   [struct pretty-info ([value any/c])]
+  [struct nested-info ([values (listof check-info?)])]
   [struct verbose-info ([value any/c])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
@@ -32,6 +33,7 @@
 (struct location-info (value) #:transparent)
 (struct pretty-info (value) #:transparent)
 (struct verbose-info (value) #:transparent)
+(struct nested-info (values) #:transparent)
 
 (define (info-value->string info-value)
   (cond
