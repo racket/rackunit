@@ -48,3 +48,10 @@
 (& (test-log #:display? #t) "" "1/2 test failures\n" 0)
 (& (test-log #:exit? #t) "" "" 1)
 (& (test-log #:display? #t #:exit? #t) "" "1/2 test failures\n" 1)
+
+(parameterize ([test-log-enabled? #f])
+  (check-true #t)
+  (& (test-log) "" "" 0)
+  (& (test-log #:display? #t) "" "1/2 test failures\n" 0)
+  (& (test-log #:exit? #t) "" "" 1)
+  (& (test-log #:display? #t #:exit? #t) "" "1/2 test failures\n" 1))
