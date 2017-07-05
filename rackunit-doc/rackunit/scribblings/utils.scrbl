@@ -52,7 +52,7 @@ and displaying a summary message.
  @racket[(current-error-port)]. If @racket[exit?] is true, then if there were
  failures, calls @racket[(exit 1)].}
 
-@defthing[test-log-enabled? (parameter/c boolean?)]{
+@defparam[test-log-enabled? enabled? boolean? #:value #t]{
  When set to @racket[#f], @racket[test-log!] is a no-op. This is useful to
  dynamically disable certain tests whose failures are expected and shouldn't be
  counted in the test log, such as when testing a custom check's failure
