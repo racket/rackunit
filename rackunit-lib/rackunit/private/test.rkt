@@ -4,12 +4,14 @@
          "base.rkt"
          "check.rkt"
          "check-info.rkt"
+         "meta.rkt"
          "result.rkt"
          "test-case.rkt"
          "test-suite.rkt"
          "util.rkt")
 
-(provide (struct-out exn:test)
+(provide (all-from-out "meta.rkt")
+         (struct-out exn:test)
          (struct-out exn:test:check)
          (struct-out check-info)
          (struct-out test-result)

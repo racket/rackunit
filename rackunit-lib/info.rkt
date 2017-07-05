@@ -5,7 +5,7 @@
 (define deps '("base"
                "testing-util-lib"))
 
-(define implies '("testing-util-lib"))
+(define implies '(("testing-util-lib" #:version "1.1")))
 
 (define pkg-desc "RackUnit testing framework")
 
