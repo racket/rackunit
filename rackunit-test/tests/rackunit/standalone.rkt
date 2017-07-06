@@ -21,8 +21,8 @@
   (define err-bs (open-output-bytes))
   (parameterize ([current-output-port out-bs]
                  [current-error-port err-bs]
-                 ;; Don't test context output; it's too fragile.
-                 [error-print-context-length 0])
+                 ;; Don't test error display handler output; it's too fragile.
+                 [error-display-handler (λ (msg exn) (displayln msg))])
     (dynamic-require path #f))
   (close-output-port out-bs)
   (close-output-port err-bs)
