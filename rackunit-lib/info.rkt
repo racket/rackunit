@@ -3,9 +3,9 @@
 (define collection 'multi)
 
 (define deps '("base"
-               "testing-util-lib"))
+               ("testing-util-lib" #:version "1.1")))
 
-(define implies '(("testing-util-lib" #:version "1.1")))
+(define implies '("testing-util-lib"))
 
 (define pkg-desc "RackUnit testing framework")
 
