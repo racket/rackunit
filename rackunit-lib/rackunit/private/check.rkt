@@ -100,31 +100,22 @@
     ;; All checks should return (void)
     (void)))
 
-(define-syntax (app-check stx)
-  (syntax-parse stx
-    [(_ chk arg ...)
-     (with-syntax ([loc (datum->syntax #f 'loc stx)])
-       #`(chk arg ...
-              #:location (syntax->location #'loc)
-              #:expression '(chk arg ...)))]))
-
-(define-syntax (id-check stx)
-  (syntax-parse stx
-    [(_ chk:id)
-     (with-syntax ([loc (datum->syntax #f 'loc stx)])
-       #`(lambda args
-           (apply chk
-                  #:location (syntax->location #'loc)
-                  #:expression 'chk
-                  args)))]))
-
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin
     (define-check-func (check-impl formal ...) #:public-name name body ...)
     (define-syntax (name stx)
-      (syntax-parse stx
-        [(_ . args) (syntax/loc stx (app-check check-impl . args))]
-        [chk:id (syntax/loc stx (id-check check-impl))]))))
+      (with-syntax ([loc (datum->syntax #f 'loc stx)])
+        (syntax-parse stx
+          [(chk . args)
+           #'(check-impl #:location (syntax->location #'loc)
+                         #:expression '(chk . args)
+                         . args)]
+          [chk:id
+           #'(lambda args
+               (apply check-impl
+                      #:location (syntax->location #'loc)
+                      #:expression 'chk
+                      args))])))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
   (define-check (name param ...)
