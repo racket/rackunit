@@ -82,14 +82,14 @@
 
 (define (contract-pred-or-msg! name pred-or-msg)
   (unless (or (procedure? pred-or-msg) (regexp? pred-or-msg))
-    (define ctrct '(or/c (-> any/c boolean?) regexp?))
+    (define ctrct "(or/c (-> any/c boolean?) regexp?)")
     (raise-argument-error name ctrct pred-or-msg)))
 
 (define (contract-thunk! name thnk)
-  (unless (procedure? thnk) (raise-argument-error name '(-> any) thnk)))
+  (unless (procedure? thnk) (raise-argument-error name "(-> any)" thnk)))
 
 (define (contract-info! name info)
-  (unless (check-info? info) (raise-argument-error name 'check-info? info)))
+  (unless (check-info? info) (raise-argument-error name "check-info?" info)))
 
 ;; Extracting raised values from checks
 

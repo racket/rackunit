@@ -83,4 +83,23 @@
     (check-fail #rx"Non-exception check error raised, no message present"
                 (λ () (check-error #rx"foo" raise-foo)))
     (check-fail #rx"A non-error check failure was raised"
-                (λ () (check-error (λ (_) #t) fail)))))
+                (λ () (check-error (λ (_) #t) fail))))
+
+  (test-case "meta checks raise contract errors on invalid arguments"
+    (define ((contract-exn/source source) v)
+      (and (exn:fail:contract? v)
+           (regexp-match? (regexp source) (exn-message v))))
+    (check-error (contract-exn/source "check-fail")
+                 (λ () (check-fail 'not-pred-or-regexp fail)))
+    (check-error (contract-exn/source "check-fail")
+                 (λ () (check-fail #rx"foo" 'not-a-thunk)))
+    (check-error (contract-exn/source "check-fail*")
+                 (λ () (check-fail* 'not-a-thunk)))
+    (check-error (contract-exn/source "check-fail/info")
+                 (λ () (check-fail/info 'not-info fail)))
+    (check-error (contract-exn/source "check-fail/info")
+                 (λ () (check-fail/info foo-info 'not-a-thunk)))
+    (check-error (contract-exn/source "check-error")
+                 (λ () (check-error 'not-pred-or-regexp fail)))
+    (check-error (contract-exn/source "check-error")
+                 (λ () (check-error #rx"foo" 'not-a-thunk)))))
