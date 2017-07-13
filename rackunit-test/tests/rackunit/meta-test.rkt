@@ -49,11 +49,13 @@
   (test-case "check-fail asserts failure matches predicate or regexp"
     (define-check (fail/msg) (fail-check "Message!"))
     (check-fail #rx"sage" fail/msg)
-    (check-fail* (λ () (check-fail #rx"notinmessage" fail/msg)))
+    (check-fail #rx"Wrong exception raised"
+                (λ () (check-fail #rx"notinmessage" fail/msg)))
     (check-fail (λ (e) (equal? (exn-message e) "Message!")) fail/msg)
-    (check-fail*
-     (λ ()
-       (check-fail (λ (e) (equal? (exn-message e) "Not message!")) fail/msg))))
+    (check-fail #rx"Wrong exception raised"
+                (λ ()
+                  (check-fail (λ (e) (equal? (exn-message e) "Not message!"))
+                              fail/msg))))
 
   (test-case "check-fail/info passes on failures with matching info"
     (define-check (fail/foo-info) (with-check-info* (list foo-info) fail-check))
@@ -77,16 +79,16 @@
   (test-case "check-error asserts check raises non-failure error matching predicate or regexp"
     (define-check (raise-foo) (raise 'foo))
     (check-error (λ (v) (equal? v 'foo)) raise-foo)
-    (check-fail #rx"Raised check error didn't pass predicate"
+    (check-fail #rx"Wrong error raised"
                 (λ () (check-error (λ (v) (equal? v 'bar)) raise-foo)))
     (define-check (raise-exn)
       (raise (make-exn "Message!" (current-continuation-marks))))
     (check-error #rx"sage" raise-exn)
-    (check-fail #rx"Raised check error message didn't match regexp"
+    (check-fail #rx"Wrong error raised"
                 (λ () (check-error #rx"notinmessage" raise-exn)))
-    (check-fail #rx"Non-exception check error raised, no message present"
+    (check-fail #rx"Wrong error raised"
                 (λ () (check-error #rx"foo" raise-foo)))
-    (check-fail #rx"A non-error check failure was raised"
+    (check-fail #rx"Wrong error raised"
                 (λ () (check-error (λ (_) #t) fail))))
 
   (test-case "meta checks raise contract errors on invalid arguments"

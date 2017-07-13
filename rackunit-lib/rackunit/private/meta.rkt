@@ -25,11 +25,12 @@
     (if (procedure? pred-or-msg)
         (unless (pred-or-msg failure)
           (with-actual failure
-            (fail-check "Check failure didn't pass predicate")))
+            (fail-check "Wrong exception raised")))
         (let ([msg (exn-message failure)])
           (unless (regexp-match? pred-or-msg msg)
-            (with-actual msg
-              (fail-check "Check failure message didn't match regexp")))))))
+            (with-actual failure
+              (with-check-info (['actual-msg msg])
+                (fail-check "Wrong exception raised"))))))))
 
 (define-check (check-fail/info expected-info chk-thnk)
   (contract-info! 'check-fail/info expected-info)
@@ -67,15 +68,16 @@
       [(procedure? pred-or-msg)
        (unless (pred-or-msg failure)
          (with-actual failure
-           (fail-check "Raised check error didn't pass predicate")))]
+           (fail-check "Wrong error raised")))]
       [(exn? failure)
        (define msg (exn-message failure))
        (unless (regexp-match? pred-or-msg msg)
-         (with-actual msg
-           (fail-check "Raised check error message didn't match regexp")))]
+         (with-actual failure
+           (with-check-info (['actual-msg msg])
+             (fail-check "Wrong error raised"))))]
       [else
        (with-actual failure
-         (fail-check "Non-exception check error raised, no message present"))])))
+         (fail-check "Wrong error raised"))])))
 
 ;; Shorthands for adding infos
 
@@ -126,4 +128,4 @@
 (define (assert-not-check-failure failure)
   (when (exn:test:check? failure)
     (with-actual failure
-      (fail-check "A non-error check failure was raised"))))
+      (fail-check "Wrong error raised"))))
