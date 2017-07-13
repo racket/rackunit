@@ -1,5 +1,6 @@
 #lang scribble/doc
-@(require "base.rkt")
+@(require (except-in "base.rkt" examples)
+          scribble/example)
 
 @(require (for-label racket/match))
 
@@ -511,7 +512,7 @@ expected or that checks add certain information to the check information stack.
  @racket[fail-check], not the optional @racket[message] argument that all checks
  accept. See also @racket[check-exn] and @racket[check-error].
 
- @(interaction
+ @(examples
    #:eval rackunit-eval
    (check-fail values (λ () (check-equal? 'foo 'bar)))
    (check-fail number? (λ () (check-equal? 'foo 'bar)))
@@ -523,7 +524,7 @@ expected or that checks add certain information to the check information stack.
  Like @racket[check-fail], but only checks that @racket[thunk] evaluates a
  failing check without testing the failure against a predicate or regexp.
 
- @(interaction
+ @(examples
    #:eval rackunit-eval
    (check-fail* (λ () (check-equal? 'foo 'bar)))
    (check-fail* (λ () (check-equal? 'foo 'foo))))
@@ -541,7 +542,7 @@ expected or that checks add certain information to the check information stack.
  that case the check passes as long as at least one info is equal to the
  expected info.
 
- @(interaction
+ @(examples
    #:eval rackunit-eval
    (define foo-info (make-check-info 'foo 'foo))
    (define-check (fail-foo) (with-heck-info* (list foo-info) fail-check))
@@ -563,7 +564,7 @@ expected or that checks add certain information to the check information stack.
  is an exception and that the exception's message matches the regexp. See also
  @racket[check-fail] and @racket[check-exn].
 
- @(interaction
+ @(examples
    #:eval rackunit-eval
    (define-check (error-check)
      (raise (make-exn:fail "Kaboom!!!" (current-continuation-marks)))
