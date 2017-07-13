@@ -558,11 +558,12 @@ expected or that checks add certain information to the check information stack.
                       [message string? ""])
          void?]{
  Checks that @racket[thunk] evaluates a check that raises an error value instead
- of passing or failing, and checks that the raised value, if it's a function,
- returns a true value when given the raised value. If
- @racket[fail-exn-predicate] is a regexp, instead checks that the raised value
- is an exception and that the exception's message matches the regexp. See also
- @racket[check-fail] and @racket[check-exn].
+ of passing or failing, and checks that the raised value satisfies
+ @racket[fail-exn-predicate]. Satisfies means that @racket[fail-exn-predicate]
+ return true when given the raised value if @racket[fail-exn-predicate] is a
+ function. If it's a predicate, satisfies means that the raised value is an
+ exception whose message matches the regexp. See also @racket[check-fail] and
+ @racket[check-exn].
 
  @(examples
    #:eval rackunit-eval
