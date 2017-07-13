@@ -88,7 +88,9 @@
 ;; Pseudo-contract helpers, to be replaced with real check contracts eventually
 
 (define (contract-pred-or-msg! name pred-or-msg)
-  (unless (or (procedure? pred-or-msg) (regexp? pred-or-msg))
+  (unless (or (and (procedure? pred-or-msg)
+                   (procedure-arity-includes? pred-or-msg 1))
+              (regexp? pred-or-msg))
     (define ctrct "(or/c (-> any/c boolean?) regexp?)")
     (raise-argument-error name ctrct pred-or-msg)))
 
