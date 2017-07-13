@@ -490,4 +490,78 @@ Raises an @racket[exn:test:check] with the contents of the @tech{check-info stac
 The optional message is used as the exception's
 message.}
 
+@section{Testing Custom Checks}
+
+Custom checks such as those created by @racket[define-check] can contain a fair
+amount of logic. Consequently, custom checks can be buggy and should be tested.
+RackUnit provides a handful of checks explicitly designed for testing the
+behavior of other checks; they allow verifying checks pass and fail when
+expected or that checks add certain information to the check information stack.
+
+@defproc[(check-fail [fail-exn-predicate
+                      (or/c (-> exn:test:check? any/c) regexp?)]
+                     [thunk (-> any)]
+                     [message string? ""])
+         void?]{
+ Checks that @racket[thunk] evaluates a failing check and that
+ @racket[fail-exn-predicate], it it's a function, returns a true value when
+ given the check failure exception. If @racket[fail-exn-predicate] is a regexp,
+ instead checks that the regexp matches the check failure exception's message.
+ Note that a check failure exception's message is the message given to
+ @racket[fail-check], not the optional @racket[message] argument that all checks
+ accept. See also @racket[check-exn] and @racket[check-error].
+
+ @(interaction
+   #:eval rackunit-eval
+   (check-fail values (λ () (check-equal? 'foo 'bar)))
+   (check-fail number? (λ () (check-equal? 'foo 'bar)))
+   (check-fail values (λ () (check-equal? 'foo 'foo))))}
+
+@defproc[(check-fail* [thunk (-> any)] [message string? ""]) void?]{
+ Like @racket[check-fail], but only checks that @racket[thunk] evaluates a
+ failing check without testing the failure against a predicate or regexp.
+
+ @(interaction
+   #:eval rackunit-eval
+   (check-fail* (λ () (check-equal? 'foo 'bar)))
+   (check-fail* (λ () (check-equal? 'foo 'foo))))}
+
+@defproc[(check-fail/info [info check-info?]
+                          [thunk (-> any)]
+                          [message string? ""])
+         void?]{
+ Like @racket[check-fail], but instead of checking that the failure matches a
+ predicate or regexp checks that the failure contains a check info value equal
+ to @racket[info]. Note that the check info stack of the failure may contain
+ multiple infos with the same name as @racket[info] but different values; in
+ that case the check passes as long as at least one info is equal to the
+ expected info.
+
+ @(interaction
+   #:eval rackunit-eval
+   (define foo-info (make-check-info 'foo 'foo))
+   (define-check (fail-foo) (with-heck-info* (list foo-info) fail-check))
+   (check-fail/info foo-info fail-foo)
+   (check-fail/info foo-info void)
+   (check-fail/info foo-info fail))}
+
+@defproc[(check-error [fail-exn-predicate
+                       (or/c (-> exn:test:check? any/c) regexp?)]
+                      [thunk (-> any)]
+                      [message string? ""])
+         void?]{
+ Checks that @racket[thunk] evaluates a check that raises an error value instead
+ of passing or failing, and checks that the raised value, if it it's a function,
+ returns a true value when given the raised value. If
+ @racket[fail-exn-predicate] is a regexp, instead checks that the raised value
+ is an exception and that the exception's message matches the regexp. See also
+ @racket[check-fail] and @racket[check-exn].
+
+ @(interaction
+   #:eval rackunit-eval
+   (define-check (error-check)
+     (raise (make-exn:fail "Kaboom!!!" (current-continuation-marks)))
+     (fail-check "Doesn't get here"))
+   (check-error #rx"boom" error-check))}
+
 @close-eval[rackunit-eval]
