@@ -515,7 +515,9 @@ expected or that checks add certain information to the check information stack.
    #:eval rackunit-eval
    (check-fail values (λ () (check-equal? 'foo 'bar)))
    (check-fail number? (λ () (check-equal? 'foo 'bar)))
-   (check-fail values (λ () (check-equal? 'foo 'foo))))}
+   (check-fail values (λ () (check-equal? 'foo 'foo))))
+
+ @history[#:added "1.8"]}
 
 @defproc[(check-fail* [thunk (-> any)] [message string? ""]) void?]{
  Like @racket[check-fail], but only checks that @racket[thunk] evaluates a
@@ -524,7 +526,9 @@ expected or that checks add certain information to the check information stack.
  @(interaction
    #:eval rackunit-eval
    (check-fail* (λ () (check-equal? 'foo 'bar)))
-   (check-fail* (λ () (check-equal? 'foo 'foo))))}
+   (check-fail* (λ () (check-equal? 'foo 'foo))))
+
+ @history[#:added "1.8"]}
 
 @defproc[(check-fail/info [info check-info?]
                           [thunk (-> any)]
@@ -543,7 +547,9 @@ expected or that checks add certain information to the check information stack.
    (define-check (fail-foo) (with-heck-info* (list foo-info) fail-check))
    (check-fail/info foo-info fail-foo)
    (check-fail/info foo-info void)
-   (check-fail/info foo-info fail))}
+   (check-fail/info foo-info fail))
+
+ @history[#:added "1.8"]}
 
 @defproc[(check-error [fail-exn-predicate
                        (or/c (-> exn:test:check? any/c) regexp?)]
@@ -562,6 +568,8 @@ expected or that checks add certain information to the check information stack.
    (define-check (error-check)
      (raise (make-exn:fail "Kaboom!!!" (current-continuation-marks)))
      (fail-check "Doesn't get here"))
-   (check-error #rx"boom" error-check))}
+   (check-error #rx"boom" error-check))
+
+ @history[#:added "1.8"]}
 
 @close-eval[rackunit-eval]
