@@ -58,7 +58,11 @@
   (test-case "check-fail/info passes on failures with matching info"
     (define-check (fail/foo-info) (with-check-info* (list foo-info) fail-check))
     (check-fail/info foo-info fail/foo-info)
-    (check-fail* (λ () (check-fail/info foo-info fail))))
+    (check-fail* (λ () (check-fail/info foo-info fail)))
+    (define-check (fail/multiple-foo-info)
+      (with-check-info* (list (make-check-info 'foo 'foo2) foo-info)
+        fail-check))
+    (check-fail/info foo-info fail/multiple-foo-info))
 
   (test-case "check-fail/info adds info names on failure without expected info"
     (define info-names (list 'name 'location 'expression 'params))
