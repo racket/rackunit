@@ -111,7 +111,7 @@
   (parameterize ([current-check-handler raise]
                  [test-log-enabled? #f]
                  [current-check-info (list)])
-    (with-handlers ([(λ (e) (not (exn:break? e))) values]) (chk-thnk) #f)))
+    (with-handlers ([(negate exn:break?) values]) (chk-thnk) #f)))
 
 ;; Assertion helpers
 
