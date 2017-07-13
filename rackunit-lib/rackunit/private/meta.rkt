@@ -7,6 +7,7 @@
 
 (require (for-syntax racket/base)
          racket/function
+         racket/list
          rackunit/log
          syntax/parse/define
          "base.rkt"
@@ -37,18 +38,17 @@
   (with-expected expected-info
     (assert-failure failure)
     (assert-check-failure failure)
+    (define (has-expected-name? info)
+      (equal? (check-info-name info) (check-info-name expected-info)))
     (define infos (exn:test:check-stack failure))
     (define info-names (map check-info-name infos))
-    (unless (for/or ([name (in-list info-names)])
-              (equal? name (check-info-name expected-info)))
+    (define matching-infos (filter has-expected-name? infos))
+    (when (empty? matching-infos)
       (with-check-info (['actual-info-names info-names])
         (fail-check "Check failure did not contain the expected info")))
-    (for ([info (in-list infos)])
-      (when (equal? (check-info-name info) (check-info-name expected-info))
-        (unless (equal? info expected-info)
-          (with-actual info
-            (fail-check
-             "Check failure contained an unexpected info value")))))))
+    (unless (member expected-info matching-infos)
+      (with-check-info* (map make-check-actual matching-infos)
+        (λ () (fail-check "Check failure contained info(s) with matching name but unexpected value"))))))
 
 (define-check (check-fail* chk-thnk)
   (contract-thunk! 'check-fail* chk-thnk)
