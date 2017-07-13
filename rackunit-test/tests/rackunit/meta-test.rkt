@@ -19,7 +19,7 @@
     (check-fail #rx"No check failure occurred"
                 (λ () (check-fail/info foo-info void)))
     (check-fail #rx"No check failure occurred"
-                (λ () (check-error (λ (_) #t) void))))
+                (λ () (check-fail/error (λ (_) #t) void))))
 
   (test-case "non-error meta checks fail on non-failure raised values"
     (check-fail #rx"A value other than a check failure was raised"
@@ -76,41 +76,41 @@
     (check-fail/info (make-check-actual (make-check-info 'foo 'bar))
                      (λ () (check-fail/info foo-info fail/foo-bar))))
 
-  (test-case "check-error asserts check raises non-failure error matching predicate or regexp"
+  (test-case "check-fail/error asserts check raises non-failure error matching predicate or regexp"
     (define-check (raise-foo) (raise 'foo))
-    (check-error (λ (v) (equal? v 'foo)) raise-foo)
+    (check-fail/error (λ (v) (equal? v 'foo)) raise-foo)
     (check-fail #rx"Wrong error raised"
-                (λ () (check-error (λ (v) (equal? v 'bar)) raise-foo)))
+                (λ () (check-fail/error (λ (v) (equal? v 'bar)) raise-foo)))
     (define-check (raise-exn)
       (raise (make-exn "Message!" (current-continuation-marks))))
-    (check-error #rx"sage" raise-exn)
+    (check-fail/error #rx"sage" raise-exn)
     (check-fail #rx"Wrong error raised"
-                (λ () (check-error #rx"notinmessage" raise-exn)))
+                (λ () (check-fail/error #rx"notinmessage" raise-exn)))
     (check-fail #rx"Wrong error raised"
-                (λ () (check-error #rx"foo" raise-foo)))
+                (λ () (check-fail/error #rx"foo" raise-foo)))
     (check-fail #rx"Wrong error raised"
-                (λ () (check-error (λ (_) #t) fail))))
+                (λ () (check-fail/error (λ (_) #t) fail))))
 
   (test-case "meta checks raise contract errors on invalid arguments"
     (define ((contract-exn/source source) v)
       (and (exn:fail:contract? v)
            (regexp-match? (regexp source) (exn-message v))))
     (define (not-a-pred v extra) #t)
-    (check-error (contract-exn/source "check-fail")
-                 (λ () (check-fail 'not-pred-or-regexp fail)))
-    (check-error (contract-exn/source "check-fail")
-                 (λ () (check-fail #rx"foo" 'not-a-thunk)))
-    (check-error (contract-exn/source "check-fail")
-                 (λ () (check-fail not-a-pred fail)))
-    (check-error (contract-exn/source "check-fail*")
-                 (λ () (check-fail* 'not-a-thunk)))
-    (check-error (contract-exn/source "check-fail/info")
-                 (λ () (check-fail/info 'not-info fail)))
-    (check-error (contract-exn/source "check-fail/info")
-                 (λ () (check-fail/info foo-info 'not-a-thunk)))
-    (check-error (contract-exn/source "check-error")
-                 (λ () (check-error 'not-pred-or-regexp fail)))
-    (check-error (contract-exn/source "check-error")
-                 (λ () (check-error #rx"foo" 'not-a-thunk)))
-    (check-error (contract-exn/source "check-error")
-                 (λ () (check-error not-a-pred fail)))))
+    (check-fail/error (contract-exn/source "check-fail")
+                      (λ () (check-fail 'not-pred-or-regexp fail)))
+    (check-fail/error (contract-exn/source "check-fail")
+                      (λ () (check-fail #rx"foo" 'not-a-thunk)))
+    (check-fail/error (contract-exn/source "check-fail")
+                      (λ () (check-fail not-a-pred fail)))
+    (check-fail/error (contract-exn/source "check-fail*")
+                      (λ () (check-fail* 'not-a-thunk)))
+    (check-fail/error (contract-exn/source "check-fail/info")
+                      (λ () (check-fail/info 'not-info fail)))
+    (check-fail/error (contract-exn/source "check-fail/info")
+                      (λ () (check-fail/info foo-info 'not-a-thunk)))
+    (check-fail/error (contract-exn/source "check-fail/error")
+                      (λ () (check-fail/error 'not-pred-or-regexp fail)))
+    (check-fail/error (contract-exn/source "check-fail/error")
+                      (λ () (check-fail/error #rx"foo" 'not-a-thunk)))
+    (check-fail/error (contract-exn/source "check-fail/error")
+                      (λ () (check-fail/error not-a-pred fail)))))

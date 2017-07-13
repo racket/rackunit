@@ -1,6 +1,6 @@
 #lang racket/base
 
-(provide check-error
+(provide check-fail/error
          check-fail
          check-fail*
          check-fail/info)
@@ -57,9 +57,9 @@
   (assert-failure failure)
   (assert-check-failure failure))
 
-(define-check (check-error pred-or-msg chk-thnk)
-  (contract-pred-or-msg! 'check-error pred-or-msg)
-  (contract-thunk! 'check-error chk-thnk)
+(define-check (check-fail/error pred-or-msg chk-thnk)
+  (contract-pred-or-msg! 'check-fail/error pred-or-msg)
+  (contract-thunk! 'check-fail/error chk-thnk)
   (define failure (check-raise-value chk-thnk))
   (with-expected pred-or-msg
     (assert-failure failure)

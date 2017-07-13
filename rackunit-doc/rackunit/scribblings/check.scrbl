@@ -510,7 +510,7 @@ expected or that checks add certain information to the check information stack.
  instead checks that the regexp matches the check failure exception's message.
  Note that a check failure exception's message is the message given to
  @racket[fail-check], not the optional @racket[message] argument that all checks
- accept. See also @racket[check-exn] and @racket[check-error].
+ accept. See also @racket[check-exn] and @racket[check-fail/error].
 
  @(examples
    #:eval rackunit-eval
@@ -552,10 +552,10 @@ expected or that checks add certain information to the check information stack.
 
  @history[#:added "1.8"]}
 
-@defproc[(check-error [fail-exn-predicate
-                       (or/c (-> exn:test:check? any/c) regexp?)]
-                      [thunk (-> any)]
-                      [message string? ""])
+@defproc[(check-fail/error [fail-exn-predicate
+                            (or/c (-> exn:test:check? any/c) regexp?)]
+                           [thunk (-> any)]
+                           [message string? ""])
          void?]{
  Checks that @racket[thunk] evaluates a check that raises an error value instead
  of passing or failing, and checks that the raised value satisfies
@@ -570,7 +570,7 @@ expected or that checks add certain information to the check information stack.
    (define-check (error-check)
      (raise (make-exn:fail "Kaboom!!!" (current-continuation-marks)))
      (fail-check "Doesn't get here"))
-   (check-error #rx"boom" error-check))
+   (check-fail/error #rx"boom" error-check))
 
  @history[#:added "1.8"]}
 
