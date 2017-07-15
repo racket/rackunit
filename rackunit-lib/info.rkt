@@ -11,4 +11,4 @@
 
 (define pkg-authors '(ryanc noel))
 
-(define version "1.7")
+(define version "1.8")

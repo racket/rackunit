@@ -1,5 +1,6 @@
 #lang scribble/doc
-@(require "base.rkt")
+@(require (except-in "base.rkt" examples)
+          scribble/example)
 
 @(require (for-label racket/match))
 
@@ -314,47 +315,74 @@ misspelling errors:
            [(make-check-actual (param any)) check-info?]
            [(make-check-expected (param any)) check-info?])]{}
 
+@defform[(with-check-info ([name-expr val-expr] ...) body ...+)
+         #:contracts ([name symbol?] [val-expr any/c])]{
+ Appends the given check infos to the check information stack for the dynamic
+ extent of the @racket[body] expressions. Note that to add a check info with
+ the name @racket[foo], an expression that produces the symbol @racket['foo]
+ must be provided rather than the literal @racket[foo] identifier. Multiple
+ infos with the same name can be added, in which case leftmost infos print
+ first.
+
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/custom-info)
+     (with-check-info (['custom1 'foo] ['custom2 'bar])
+       (fail-check)))
+   (fail/custom-info))
+
+ A nested use of @racket[with-check-info] appends check info after the enclosing
+ use of @racket[with-check-info].
+
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/nested-info)
+     (with-check-info (['outer 'foo])
+       (with-check-info (['inner 'bar])
+         (fail-check))))
+   (fail/nested-info))}
+
 @defproc[(with-check-info* (info (listof check-info?)) (thunk (-> any))) any]{
+ Like @racket[with-check-info], but as a normal procedure instead of a macro.
 
-Stores the given @racket[info] on the check-info stack for
-the duration (the dynamic extent) of the execution of
-@racket[thunk]}
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/proc-info)
+     (define custom-info
+       (list (make-check-info 'foo 1)
+             (make-check-info 'bar 2)))
+     (with-check-info* custom-info fail-check))
+   (fail/proc-info))}
 
-@interaction[#:eval rackunit-eval
-  (with-check-info*
-   (list (make-check-info 'time (current-seconds)))
-   (lambda () (check = 1 2)))
-]
+@defform[(replace-check-info [name-id val-expr] body ...+)
+         #:contracts ([val-expr any/c])]{
+ Replaces the value of the current check info named @racket[name-id] with
+ @racket[val-expr] in the dynamic extent of the @racket[body] expressions. If no
+ check info named @racket[name-id] is present, appends a new check info to the
+ end of the stack. If multiple check infos named @racket[name-id] are present,
+ the first info has its value replaced and the other infos are removed. Unlike
+ @racket[with-check-info], @racket[name-id] is a plain identifier instead of an
+ expression producing a symbol.
 
-When this check fails the message
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/replaced-name)
+     (replace-check-info [name "replaced!!!"]
+       (fail-check)))
+   (fail/replaced-name))
 
-@verbatim{time: <current-seconds-at-time-of-running-check>}
+ @history[#:added "1.8"]}
 
-is printed along with the usual information on an check failure.
+@defproc[(replace-check-info* [info check-info?] [thunk (-> any)]) any]{
+ Like @racket[update-check-info], but as a normal procedure instead of a macro.
 
-@defform[(with-check-info ((name val) ...) body ...)]{
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/replaced-params)
+     (replace-check-info* (make-params-info "replaced!!!") fail-check))
+   (fail/replaced-params))
 
-The @racket[with-check-info] macro stores the given
-information in the check information stack for the duration
-of the execution of the body expressions.  @racket[Name] is
-a quoted symbol and @racket[val] is any value.}
-
-@interaction[#:eval rackunit-eval
- (for-each
-  (lambda (elt)
-    (with-check-info
-     (('current-element elt))
-     (check-pred odd? elt)))
-  (list 1 3 5 7 8))
-]
-
-When this test fails the message
-
-@verbatim{current-element: 8}
-
-is displayed along with the usual information on an check failure.
-
-
+ @history[#:added "1.8"]}
 
 @section{Custom Checks}
 

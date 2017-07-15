@@ -1,8 +1,10 @@
 #lang racket/base
 (require racket/contract/base
          racket/format
+         racket/list
          racket/port
          racket/pretty
+         syntax/parse/define
          "location.rkt"
          (for-syntax racket/base
                      racket/syntax))
@@ -18,7 +20,9 @@
   [struct verbose-info ([value any/c])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
-  [with-check-info* ((listof check-info?) (-> any) . -> . any)])
+  [replace-check-info* (-> check-info? (-> any) any)]
+  [with-check-info* (-> (listof check-info?) (-> any) any)])
+ replace-check-info
  with-check-info)
 
 (module+ for-test
@@ -59,12 +63,29 @@
   (parameterize ([current-check-info (append (current-check-info) info)])
     (thunk)))
 
-(define-syntax with-check-info
-  (syntax-rules ()
-    [(_ ((name val) ...) body ...)
-     (with-check-info*
-         (list (make-check-info name val) ...)
-       (lambda () body ...))]))
+(define-simple-macro (with-check-info ([name:expr val:expr] ...) body ...+)
+  (with-check-info* (list (make-check-info name val) ...) (λ () body ...)))
+
+(define (member-index v lst equal?)
+  (for/or ([item (in-list lst)] [n (in-naturals)])
+    (and (equal? v item) n)))
+
+(define (insert lst v pos)
+  (define-values (before after) (split-at lst pos))
+  (append before (list v) after))
+
+(define (same-name? info1 info2)
+  (equal? (check-info-name info1) (check-info-name info2)))
+
+(define (replace-check-info* info thunk)
+  (define infos (current-check-info))
+  (define insert-index (or (member-index info infos same-name?) (length infos)))
+  (define other-infos (remove* (list info) infos same-name?))
+  (define new-infos (insert other-infos info insert-index))
+  (parameterize ([current-check-info new-infos]) (thunk)))
+
+(define-simple-macro (replace-check-info [name:id value:expr] body:expr ...+)
+  (replace-check-info* (make-check-info 'name value) (λ () body ...)))
 
 (define-syntax (define-check-type stx)
   (syntax-case stx ()

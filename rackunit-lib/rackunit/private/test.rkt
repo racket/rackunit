@@ -24,6 +24,9 @@
          nested-info?
          nested-info-values
 
+         replace-check-info
+         replace-check-info*
+
          with-check-info
          with-check-info*
 

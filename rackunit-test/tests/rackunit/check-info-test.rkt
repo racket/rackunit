@@ -48,6 +48,28 @@
           [expected (in-list (list 'a 'b 'c 'd 'e 'f))])
       (check-eq? (check-info-name actual) expected)))
 
+  (test-case "replace-check-info updates existing check info"
+    (define stack
+      (with-check-info (['a 1] ['b 2])
+        (replace-check-info [a 'new] (current-check-info))))
+    (check-equal? stack
+                  (list (make-check-info 'a 'new) (make-check-info 'b 2))))
+
+  (test-case "replace-check-info appends new check info"
+    (define stack
+      (with-check-info (['a 1] ['b 2])
+        (replace-check-info [new 'new] (current-check-info))))
+    (check-equal? stack
+                  (list (make-check-info 'a 1)
+                        (make-check-info 'b 2)
+                        (make-check-info 'new 'new))))
+
+  (test-case "replace-check-info removes extra check infos"
+    (define stack
+      (with-check-info (['a 1] ['a 2])
+        (replace-check-info [a 'new] (current-check-info))))
+    (check-equal? stack (list (make-check-info 'a 'new))))
+
   (test-case "check-actual? and check-expected? work"
     (check-true (check-actual? (make-check-actual 1)))
     (check-true (check-expected? (make-check-expected 1)))
