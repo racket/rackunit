@@ -369,7 +369,9 @@ misspelling errors:
    (define-check (fail/replaced-name)
      (replace-check-info [name "replaced!!!"]
        (fail-check)))
-   (fail/replaced-name))}
+   (fail/replaced-name))
+
+ @history[#:added "1.8"]}
 
 @defproc[(replace-check-info* [info check-info?] [thunk (-> any)]) any]{
  Like @racket[update-check-info], but as a normal procedure instead of a macro.
@@ -378,7 +380,9 @@ misspelling errors:
    #:eval rackunit-eval
    (define-check (fail/replaced-params)
      (replace-check-info* (make-params-info "replaced!!!") fail-check))
-   (fail/replaced-params))}
+   (fail/replaced-params))
+
+ @history[#:added "1.8"]}
 
 @section{Custom Checks}
 
