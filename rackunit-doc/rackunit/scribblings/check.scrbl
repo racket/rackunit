@@ -353,7 +353,33 @@ misspelling errors:
              (make-check-info 'bar 2)))
      (with-check-info* custom-info fail-check))
    (fail/proc-info))}
-     
+
+@defform[(replace-check-info [name-id val-expr] body ...+)
+         #:contracts ([val-expr any/c])]{
+ Replaces the value of the current check info named @racket[name-id] with
+ @racket[val-expr] in the dynamic extent of the @racket[body] expressions. If no
+ check info named @racket[name-id] is present, appends a new check info to the
+ end of the stack. If multiple check infos named @racket[name-id] are present,
+ the first info has its value replaced and the other infos are removed. Unlike
+ @racket[with-check-info], @racket[name-id] is a plain identifier instead of an
+ expression producing a symbol.
+
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/replaced-name)
+     (replace-check-info [name "replaced!!!"]
+       (fail-check)))
+   (fail/replaced-name))}
+
+@defproc[(replace-check-info* [info check-info?] [thunk (-> any)]) any]{
+ Like @racket[update-check-info], but as a normal procedure instead of a macro.
+
+ @(examples
+   #:eval rackunit-eval
+   (define-check (fail/replaced-params)
+     (replace-check-info* (make-params-info "replaced!!!") fail-check))
+   (fail/replaced-params))}
+
 @section{Custom Checks}
 
 Custom checks can be defined using @racket[define-check] and
