@@ -42,8 +42,8 @@ and displaying a summary message.
  Adds a test result to the running log. If @racket[result] is false,
  then the test is considered a failure.}
 
-@defproc[(test-log [#:display? display? boolean? #t]
-                   [#:exit? exit? boolean? #t])
+@defproc[(test-log [#:display? display? boolean? #f]
+                   [#:exit? exit? boolean? #f])
          (cons/c exact-nonnegative-integer?
                  exact-nonnegative-integer?)]{
  Processes the running test log. The first integer is the failed tests, the
