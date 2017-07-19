@@ -1,6 +1,8 @@
 #lang racket/base
+
 (require racket/contract/base
          racket/format
+         racket/list
          racket/port
          racket/pretty
          "location.rkt"
@@ -56,7 +58,10 @@
 
 ;; with-check-info* : (list-of check-info) thunk -> any
 (define (with-check-info* info thunk)
-  (parameterize ([current-check-info (append (current-check-info) info)])
+  (define all-infos (append (current-check-info) info))
+  (define infos/later-overriding-earlier
+    (reverse (remove-duplicates (reverse all-infos) #:key check-info-name)))
+  (parameterize ([current-check-info infos/later-overriding-earlier])
     (thunk)))
 
 (define-syntax with-check-info
