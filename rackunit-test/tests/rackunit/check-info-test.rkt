@@ -48,6 +48,18 @@
           [expected (in-list (list 'a 'b 'c 'd 'e 'f))])
       (check-eq? (check-info-name actual) expected)))
 
+  (test-case
+      "later with-check-info values override earlier values with same name"
+    (define stack (with-check-info (['a 1] ['a 2]) (current-check-info)))
+    (check-equal? stack (list (make-check-info 'a 2))))
+
+  (test-case "nested uses with-check-info override outer values with same name"
+    (define stack
+      (with-check-info (['a 1])
+        (with-check-info (['a 2])
+          (current-check-info))))
+    (check-equal? stack (list (make-check-info 'a 2))))
+
   (test-case "check-actual? and check-expected? work"
     (check-true (check-actual? (make-check-actual 1)))
     (check-true (check-expected? (make-check-expected 1)))
