@@ -95,6 +95,22 @@
       (list 'name 'location 'expression 'params 'custom1 'custom2))
     (check-equal? (get-foo-info-names) expected-info-names))
 
+  (test-case "check-info-ref / check-info-contains-key"
+    (define info0 (list (make-check-name 'my-name)))
+    (define info1 (list (make-check-message 'my-message)))
+
+    (parameterize ([current-check-info info0])
+      (check-not-false (check-info-ref 'name))
+      (check-false (check-info-ref 'message))
+
+      (check-not-false (check-info-ref info1 'message))
+      (check-false (check-info-ref info1 'name))
+
+      (check-true (check-info-contains-key? 'name))
+      (check-false (check-info-contains-key? 'message))
+      (check-true (check-info-contains-key? info1 'message))
+      (check-false (check-info-contains-key? info1 'name))))
+
   (test-case "All tests for trim-current-directory"
     (test-case "trim-current-directory leaves directories outside the current directory alone"
       (check-equal? (trim-current-directory "/foo/bar/") "/foo/bar/"))
