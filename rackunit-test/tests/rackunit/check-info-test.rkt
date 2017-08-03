@@ -27,7 +27,8 @@
 
 #lang racket/base
 
-(require rackunit
+(require racket/function
+         rackunit
          rackunit/private/check-info
          (submod rackunit/private/check-info for-test))
 
@@ -58,30 +59,50 @@
     (check-equal? (check-info-value (make-check-actual 1)) (pretty-info 1))
     (check-equal? (check-info-value (make-check-expected 2)) (pretty-info 2)))
 
+  ;; Utilities for collecting the info present in a check
+  
+  (define current-info-box (make-parameter #f))
+
+  (define-check (check-foo arg1 arg2 arg3)
+    (set-box! (current-info-box) (current-check-info)))
+
+  (define (call/info-box thnk)
+    (parameterize ([current-info-box (box 'uninitialized)])
+      (thnk)
+      (map check-info-name (unbox (current-info-box)))))
+
   (test-case "define-check adds certain infos automatically in a specific order"
-    (define current-info-box (make-parameter #f))
-    (define-check (check-foo arg1 arg2 arg3)
-      (set-box! (current-info-box) (current-check-info)))
-    (define (get-foo-info-names)
-      (parameterize ([current-info-box (box 'uninitialized)])
-        (check-foo 'arg1 'arg2 'arg3)
-        (map check-info-name (unbox (current-info-box)))))
-    (define expected-info-names
-      (list 'name 'location 'expression 'params))
-    (check-equal? (get-foo-info-names) expected-info-names))
+    (define expected-info-names (list 'name 'location 'expression 'params))
+    (check-equal? (call/info-box (thunk (check-foo 'arg1 'arg2 'arg3)))
+                  expected-info-names))
 
   (test-case "define-check infos are added before custom infos"
-    (define current-info-box (make-parameter #f))
     (define-check (check-foo/custom-info arg1 arg2 arg3)
       (with-check-info (['custom1 'foo] ['custom2 'bar])
         (set-box! (current-info-box) (current-check-info))))
-    (define (get-foo-info-names)
-      (parameterize ([current-info-box (box 'uninitialized)])
-        (check-foo/custom-info 'arg1 'arg2 'arg3)
-        (map check-info-name (unbox (current-info-box)))))
     (define expected-info-names
       (list 'name 'location 'expression 'params 'custom1 'custom2))
-    (check-equal? (get-foo-info-names) expected-info-names))
+    (check-equal? (call/info-box
+                   (thunk (check-foo/custom-info 'arg1 'arg2 'arg3)))
+                  expected-info-names))
+
+  (test-case "define-check infos are added before calling current-check-around"
+    ;; The check infos added by define-check are not considered part of the
+    ;; "check body": the expressions given to define-check that implement the
+    ;; check. The current-check-around param is called with the check body only,
+    ;; not the info-adding expressions. This lets rackunit clients use
+    ;; current-check-around to automatically add infos to certain uses of checks
+    ;; that appear after the default infos, or even override them while still
+    ;; preserving their position in the stack (the way a nested use of
+    ;; with-check-info would).
+    (define (call-check-foo/extra-infos)
+      (define old-around (current-check-around))
+      (define (new-around chk)
+        (with-check-info (['custom 'custom]) (old-around chk)))
+      (parameterize ([current-check-around new-around])
+        (check-foo 'arg1 'arg2 'arg3)))
+    (check-equal? (call/info-box call-check-foo/extra-infos)
+                  (list 'name 'location 'expression 'params 'custom)))
 
   (test-case "All tests for trim-current-directory"
     (test-case "trim-current-directory leaves directories outside the current directory alone"
