@@ -88,15 +88,15 @@
   (define (name formal ... [message #f]
                 #:location [location (list 'unknown #f #f #f #f)]
                 #:expression [expression 'unknown])
-    ((current-check-around)
-     (lambda ()
-       (with-check-info*
-           (list/if (make-check-name 'pub)
-                    (make-check-location location)
-                    (make-check-expression expression)
-                    (make-check-params (list formal ...))
-                    (and message (make-check-message message)))
-         (lambda () (begin0 (let () body ...) (test-log! #t))))))
+    (with-check-info*
+        (list/if (make-check-name 'pub)
+                 (make-check-location location)
+                 (make-check-expression expression)
+                 (make-check-params (list formal ...))
+                 (and message (make-check-message message)))
+      (λ ()
+        ((current-check-around)
+         (λ () (begin0 (let () body ...) (test-log! #t))))))
     ;; All checks should return (void)
     (void)))
 
