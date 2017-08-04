@@ -335,7 +335,7 @@ is printed along with the usual information on an check failure.
 @defform[(with-check-info ((name val) ...) body ...)]{
 
 The @racket[with-check-info] macro pushes the given
-information in the @tech{check-info stack} for the duration
+information onto the @tech{check-info stack} for the duration
 of the execution of the body expressions. Each @racket[name] must be
 a quoted symbol and each @racket[val] must be a value.}
 
@@ -414,8 +414,8 @@ We can use these checks in the usual way:
 
 The @racket[define-binary-check] macro constructs a check
 that tests a binary predicate.  Compared to
-@racket[define-simple-check], does a better job reporting check
-failures.  The first form of the macro accepts a binary
+@racket[define-simple-check], this macro does a better job reporting check
+failures.  The first form of @racket[define-binary-check] accepts a binary
 predicate and tests if the predicate holds for the given
 values.  The second form tests if the last @racket[body]
 evaluates to a non-false value.
