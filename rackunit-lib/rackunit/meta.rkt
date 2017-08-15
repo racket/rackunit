@@ -10,9 +10,8 @@
          racket/list
          rackunit/log
          syntax/parse/define
-         "base.rkt"
-         "check.rkt"
-         "check-info.rkt")
+         rackunit
+         rackunit/private/check-info)
 
 
 (define-check (check-fail pred-or-msg chk-thnk)

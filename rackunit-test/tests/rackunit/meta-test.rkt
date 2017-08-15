@@ -1,7 +1,8 @@
 #lang racket/base
 
 (module+ test
-  (require rackunit)
+  (require rackunit
+           rackunit/meta)
 
   (define foo-info (make-check-info 'foo 'foo))
   (define-check (check-raise) (raise 'foo))

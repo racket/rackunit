@@ -4,14 +4,12 @@
          "base.rkt"
          "check.rkt"
          "check-info.rkt"
-         "meta.rkt"
          "result.rkt"
          "test-case.rkt"
          "test-suite.rkt"
          "util.rkt")
 
-(provide (all-from-out "meta.rkt")
-         (struct-out exn:test)
+(provide (struct-out exn:test)
          (struct-out exn:test:check)
          (struct-out check-info)
          (struct-out test-result)
@@ -55,7 +53,7 @@
          current-test-case-around
          test-suite-test-case-around
          test-suite-check-around
-         
+
          define-test-suite
          define/provide-test-suite
          test-suite*
@@ -91,7 +89,7 @@
          define-check
          define-simple-check
          define-binary-check
-         
+
          current-check-handler
          current-check-around
 

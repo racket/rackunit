@@ -5,7 +5,7 @@
 @(require (for-label racket/match))
 
 @(define rackunit-eval (make-base-eval))
-@(interaction-eval #:eval rackunit-eval (require rackunit))
+@(interaction-eval #:eval rackunit-eval (require rackunit rackunit/meta))
 @(interaction-eval #:eval rackunit-eval (error-print-context-length 0))
 
 @title{Checks}
@@ -492,12 +492,15 @@ The optional message is used as the exception's
 message.}
 
 @section{Testing Custom Checks}
+@defmodule[rackunit/meta]
 
 Custom checks such as those created by @racket[define-check] can contain a fair
 amount of logic. Consequently, custom checks can be buggy and should be tested.
 RackUnit provides a handful of checks explicitly designed for testing the
 behavior of other checks; they allow verifying checks pass and fail when
 expected or that checks add certain information to the check information stack.
+These bindings are provided by @racketmodname[rackunit/meta], not
+@racketmodname[rackunit].
 
 @defproc[(check-fail [fail-exn-predicate
                       (or/c (-> exn:test:check? any/c) regexp?)]
