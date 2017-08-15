@@ -263,10 +263,3 @@ test case that are ignored (not run), or have their execution time
 recorded, and so on.  To do so the functions that run the test cases
 need to know what type the test case has, and hence is is necessary to
 provide this information.
-
-If you've made it this far you truly are a master RackUnit hacker.  As
-a bonus prize we'll just mention that the code in
-@racketfont{hash-monad.rkt} and @racketfont{monad.rkt} might be of
-interest for constructing user interfaces.  The API is still in flux,
-so isn't documented here.  However, do look at the implementation of
-@racket[run-tests] for examples of use.

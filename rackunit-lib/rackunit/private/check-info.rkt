@@ -1,6 +1,8 @@
 #lang racket/base
+
 (require racket/contract/base
          racket/format
+         racket/list
          racket/path
          racket/port
          racket/pretty
@@ -15,9 +17,10 @@
   [struct string-info ([value string?])]
   [struct location-info ([value location/c])]
   [struct pretty-info ([value any/c])]
+  [struct nested-info ([values (listof check-info?)])]
+  [struct verbose-info ([value any/c])]
   [info-value->string (-> any/c string?)]
-  [check-info-mark symbol?]
-  [check-info-stack (continuation-mark-set? . -> . (listof check-info?))]
+  [current-check-info (parameter/c (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
@@ -26,12 +29,14 @@
 
 ;; Structures --------------------------------------------------
 
-;; struct check-info : symbol any
-(struct check-info (name value) #:constructor-name make-check-info)
+(struct check-info (name value)
+  #:transparent #:constructor-name make-check-info)
 
 (struct string-info (value) #:transparent)
 (struct location-info (value) #:transparent)
 (struct pretty-info (value) #:transparent)
+(struct verbose-info (value) #:transparent)
+(struct nested-info (values) #:transparent)
 
 (define (info-value->string info-value)
   (cond
@@ -40,6 +45,8 @@
      (trim-current-directory
       (location->string (location-info-value info-value)))]
     [(pretty-info? info-value) (pretty-format (pretty-info-value info-value))]
+    [(verbose-info? info-value)
+     (info-value->string (verbose-info-value info-value))]
     [else (~s info-value)]))
 
 (define (trim-current-directory path)
@@ -47,24 +54,14 @@
 
 ;; Infrastructure ----------------------------------------------
 
-;; The continuation mark under which all check-info is keyed
-(define check-info-mark (gensym 'rackunit))
-
-;; (continuation-mark-set -> (listof check-info))
-(define (check-info-stack marks)
-  (let ([ht (make-hash)])
-    (for ([x (in-list (apply append (continuation-mark-set->list marks check-info-mark)))]
-          [i (in-naturals)])
-      (hash-set! ht (check-info-name x) (cons i x)))
-    (map cdr (sort (hash-map ht (λ (k v) v)) < #:key car))))
+(define current-check-info (make-parameter '()))
 
 ;; with-check-info* : (list-of check-info) thunk -> any
 (define (with-check-info* info thunk)
-  (define current-marks
-    (continuation-mark-set-first #f check-info-mark))
-  (with-continuation-mark
-      check-info-mark
-    (append (if current-marks current-marks null) info)
+  (define all-infos (append (current-check-info) info))
+  (define infos/later-overriding-earlier
+    (reverse (remove-duplicates (reverse all-infos) #:key check-info-name)))
+  (parameterize ([current-check-info infos/later-overriding-earlier])
     (thunk)))
 
 (define-syntax with-check-info
@@ -93,7 +90,7 @@
 (define-check-type name any/c)
 (define-check-type params any/c #:wrapper pretty-info)
 (define-check-type location location/c #:wrapper location-info)
-(define-check-type expression any/c)
+(define-check-type expression any/c #:wrapper verbose-info)
 (define-check-type message any/c)
 (define-check-type actual any/c #:wrapper pretty-info)
 (define-check-type expected any/c #:wrapper pretty-info)

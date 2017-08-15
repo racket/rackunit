@@ -21,8 +21,8 @@
   (define err-bs (open-output-bytes))
   (parameterize ([current-output-port out-bs]
                  [current-error-port err-bs]
-                 ;; Don't test context output; it's too fragile.
-                 [error-print-context-length 0])
+                 ;; Don't test error display handler output; it's too fragile.
+                 [error-display-handler (λ (msg exn) (displayln msg))])
     (dynamic-require path #f))
   (close-output-port out-bs)
   (close-output-port err-bs)
@@ -41,15 +41,14 @@
            #"\
 --------------------
 ERROR
-Outta here!
 
+Outta here!
 --------------------
 --------------------
 FAILURE
 name:       check
 location:   standalone-check-test.rkt:48:0
 params:     '(#<procedure:=> 1 2)
-expression: (check = 1 2)
 message:    0.0
 --------------------
 ")
@@ -59,14 +58,14 @@ message:    0.0
            #"\
 --------------------
 ERROR
-First Outta here!
 
+First Outta here!
 --------------------
 --------------------
 error
 ERROR
-Second Outta here!
 
+Second Outta here!
 --------------------
 --------------------
 FAILURE
@@ -74,7 +73,6 @@ name:       check-eq?
 location:   standalone-test-case-test.rkt:23:12
 actual:     1
 expected:   2
-expression: (check-eq? 1 2)
 --------------------
 --------------------
 failure
@@ -83,6 +81,5 @@ name:       check-eq?
 location:   standalone-test-case-test.rkt:24:21
 actual:     1
 expected:   2
-expression: (check-eq? 1 2)
 --------------------
 ")

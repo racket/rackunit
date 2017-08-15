@@ -2,7 +2,6 @@
 
 (require rackunit
          "check-test.rkt"
-         "check-info-test.rkt"
          "format-test.rkt"
          "test-case-test.rkt"
          "test-suite-test.rkt"
@@ -11,10 +10,7 @@
          "result-test.rkt"
          "test-test.rkt"
          "util-test.rkt"
-         "text-ui-test.rkt"
-         "monad-test.rkt"
-         "hash-monad-test.rkt"
-         "counter-test.rkt")
+         "text-ui-test.rkt")
 
 (provide all-rackunit-tests
          failure-tests)
@@ -24,7 +20,6 @@
    "All RackUnit Tests"
    check-tests
    base-tests
-   check-info-tests
    test-case-tests
    test-suite-tests
    test-suite-define-provide-test
@@ -33,9 +28,6 @@
    test-tests
    util-tests
    text-ui-tests
-   monad-tests
-   hash-monad-tests
-   counter-tests
    format-tests
    ))
 

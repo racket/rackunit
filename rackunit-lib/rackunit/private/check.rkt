@@ -1,18 +1,24 @@
 #lang racket/base
 
-(require racket/match
-         (for-syntax racket/base)
+(require (for-syntax racket/base
+                     racket/syntax
+                     syntax/parse)
+         racket/contract/base
+         racket/match
          rackunit/log
+         syntax/parse/define
          "base.rkt"
          "check-info.rkt"
          "format.rkt"
          "location.rkt")
 
+(provide
+ (contract-out
+  [fail-check (->* () (string?) void?)]))
+
 (provide current-check-handler
          check-around
          current-check-around
-
-         fail-check
 
          define-check
          define-binary-check
@@ -58,32 +64,10 @@
          v
          (raise-type-error 'current-check-around "procedure" v)))))
 
-(define-syntax fail-check
-  (syntax-rules ()
-    ((_ message*)
-     (let ([message message*]
-           [marks (current-continuation-marks)])
-       (unless (string? message)
-         (raise-type-error 'fail-check "string" message))
-       (test-log! #f)
-       (raise
-        (make-exn:test:check
-         message
-         marks
-         (check-info-stack marks)))))
-    ((_)
-     (fail-check ""))))
-
-(define-syntax fail-internal
-  (syntax-rules ()
-    ((_)
-     (let ([marks (current-continuation-marks)])
-       (test-log! #f)
-       (raise
-        (make-exn:test:check:internal
-         "Internal failure"
-         marks
-         (check-info-stack marks)))))))
+(define (fail-check [message ""])
+  (define marks (current-continuation-marks))
+  (test-log! #f)
+  (raise (make-exn:test:check message marks (current-check-info))))
 
 ;; refail-check : exn:test:check -> (exception raised)
 ;;
@@ -97,80 +81,45 @@
                         (exn-continuation-marks exn)
                         (exn:test:check-stack exn))))
 
-(define-syntax (define-check stx)
-  (syntax-case stx ()
-    ((define-check (name formal ...) body ...)
-     (with-syntax ([reported-name
-                    (symbol->string (syntax->datum (syntax name)))]
-                   [(actual ...)
-                    (generate-temporaries (syntax (formal ...)))]
-                   [check-fn
-                    (syntax
-                     (lambda (formal ...
-                                     [message #f]
-                                     #:location [location (list 'unknown #f #f #f #f)]
-                                     #:expression [expression 'unknown])
-                       ((current-check-around)
-                        (lambda ()
-                          (with-check-info*
-                           (list* (make-check-name (quote name))
-                                  (make-check-location location)
-                                  (make-check-expression expression)
-                                  (make-check-params (list formal ...))
-                                  (if message
-                                      (list (make-check-message message))
-                                      null))
-                             (lambda () (begin0 (let () body ...) (test-log! #t))))))
+(define (list/if . vs) (filter values vs))
 
-                       ;; All checks should return (void).
-                       (void)))]
-                   [check-secret-name (datum->syntax stx (gensym (syntax->datum (syntax name))))])
-       (syntax/loc stx
-         (begin
-           ;; The distinction between formal and actual parameters
-           ;; is made to avoid evaluating the check arguments
-           ;; more than once.  This technique is based on advice
-           ;; received from Ryan Culpepper.
+(define-simple-macro
+  (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
+  (define (name formal ... [message #f]
+                #:location [location (list 'unknown #f #f #f #f)]
+                #:expression [expression 'unknown])
+    (with-check-info*
+        (list/if (make-check-name 'pub)
+                 (make-check-location location)
+                 (make-check-expression expression)
+                 (make-check-params (list formal ...))
+                 (and message (make-check-message message)))
+      (λ ()
+        ((current-check-around)
+         (λ () (begin0 (let () body ...) (test-log! #t))))))
+    ;; All checks should return (void)
+    (void)))
 
-           (define check-secret-name check-fn)
+(define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
+  (begin
+    (define-check-func (check-impl formal ...) #:public-name name body ...)
+    (define-syntax (name stx)
+      (with-syntax ([loc (datum->syntax #f 'loc stx)])
+        (syntax-parse stx
+          [(chk . args)
+           #'(check-impl #:location (syntax->location #'loc)
+                         #:expression '(chk . args)
+                         . args)]
+          [chk:id
+           #'(lambda args
+               (apply check-impl
+                      #:location (syntax->location #'loc)
+                      #:expression 'chk
+                      args))])))))
 
-           (define-syntax (name stx)
-             (with-syntax ([loc (datum->syntax #f 'loc stx)])
-               (syntax-case stx ()
-                 ((name actual ...)
-                  (syntax/loc stx
-                    (check-secret-name actual ...
-                                       #:location (syntax->location (quote-syntax loc))
-                                       #:expression (quote (name actual ...)))))
-
-                 ((name actual ... msg)
-                  (syntax/loc stx
-                    (check-secret-name actual ... msg
-                                       #:location (syntax->location (quote-syntax loc))
-                                       #:expression (quote (name actual ...)))))
-
-                 (name
-                  (identifier? #'name)
-                  (syntax/loc stx
-                    (case-lambda
-                      [(formal ...)
-                       (check-secret-name formal ...
-                                          #:location (syntax->location (quote-syntax loc))
-                                          #:expression (quote (name actual ...)))]
-                      [(formal ... msg)
-                       (check-secret-name formal ... msg
-                                          #:location (syntax->location (quote-syntax loc))
-                                          #:expression (quote (name actual ...)))]))))))
-           ))))))
-
-(define-syntax define-simple-check
-  (syntax-rules ()
-    ((_ (name param ...) body ...)
-     (define-check (name param ...)
-       (let ((result (let () body ...)))
-         (if result
-             result
-             (fail-check)))))))
+(define-syntax-rule (define-simple-check (name param ...) body ...)
+  (define-check (name param ...)
+    (or (let () body ...) (fail-check))))
 
 (define-syntax define-binary-check
   (syntax-rules ()
@@ -179,20 +128,9 @@
        (with-check-info*
         (list (make-check-actual expr1)
               (make-check-expected expr2))
-        (lambda ()
-          (let ((result (let () body ...)))
-            (if result
-                result
-                (fail-check))))))]
+        (lambda () (or (let () body ...) (fail-check)))))]
     [(_ (name pred expr1 expr2))
-     (define-check (name expr1 expr2)
-       (with-check-info*
-        (list (make-check-actual expr1)
-              (make-check-expected expr2))
-        (lambda ()
-          (if (pred expr1 expr2)
-              #t
-              (fail-check)))))]))
+     (define-binary-check (name expr1 expr2) (pred expr1 expr2))]))
 
 (define (raise-error-if-not-thunk name thunk)
   (unless (and (procedure? thunk)
@@ -237,8 +175,7 @@
 (define-check (check-not-exn thunk)
   (raise-error-if-not-thunk 'check-not-exn thunk)
   (with-handlers
-      ([exn:test:check?
-        (lambda (exn) (refail-check exn))]
+      ([exn:test:check? refail-check]
        [exn?
         (lambda (exn)
           (with-check-info*
@@ -249,42 +186,25 @@
            (lambda () (fail-check))))])
     (thunk)))
 
-(define-simple-check (check operator expr1 expr2)
-  (operator expr1 expr2))
+(define-syntax-rule (define-simple-check-values [header body ...] ...)
+  (begin (define-simple-check header body ...) ...))
 
-(define-simple-check (check-pred predicate expr)
-  (predicate expr))
+(define-simple-check-values
+  [(check operator expr1 expr2) (operator expr1 expr2)]
+  [(check-pred predicate expr) (predicate expr)]
+  [(check-= expr1 expr2 epsilon)
+   (<= (magnitude (- expr1 expr2)) epsilon)]
+  [(check-true expr) (eq? expr #t)]
+  [(check-false expr) (eq? expr #f)]
+  [(check-not-false expr) expr]
+  [(check-not-eq? expr1 expr2) (not (eq? expr1 expr2))]
+  [(check-not-eqv? expr1 expr2) (not (eqv? expr1 expr2))]
+  [(check-not-equal? expr1 expr2) (not (equal? expr1 expr2))]
+  [(fail) #f])
 
 (define-binary-check (check-eq? eq? expr1 expr2))
-
 (define-binary-check (check-eqv? eqv? expr1 expr2))
-
-(define-binary-check (check-equal? expr1 expr2)
-  (equal? expr1 expr2))
-
-(define-simple-check (check-= expr1 expr2 epsilon)
-  (<= (magnitude (- expr1 expr2)) epsilon))
-
-(define-simple-check (check-true expr)
-  (eq? expr #t))
-
-(define-simple-check (check-false expr)
-  (eq? expr #f))
-
-(define-simple-check (check-not-false expr)
-  expr)
-
-(define-simple-check (check-not-eq? expr1 expr2)
-  (not (eq? expr1 expr2)))
-
-(define-simple-check (check-not-eqv? expr1 expr2)
-  (not (eqv? expr1 expr2)))
-
-(define-simple-check (check-not-equal? expr1 expr2)
-  (not (equal? expr1 expr2)))
-
-(define-simple-check (fail)
-  #f)
+(define-binary-check (check-equal? equal? expr1 expr2))
 
 ;; NOTE(jpolitz): This match form isn't eager like the others, hence the
 ;; define-syntax and the need to carry around location information

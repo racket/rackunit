@@ -20,6 +20,10 @@
          (struct-out rackunit-test-suite)
          (struct-out string-info)
 
+         nested-info
+         nested-info?
+         nested-info-values
+
          with-check-info
          with-check-info*
 
@@ -108,8 +112,6 @@
          check-regexp-match
          check-match
          fail)
-
-(define (void-thunk) (void))
 
 
 (define-syntax (define-shortcut stx)
