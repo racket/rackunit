@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require (for-syntax racket/base)
+         rackunit/log
          "base.rkt"
          "test-case.rkt"
          "check.rkt")
@@ -39,15 +40,15 @@
       (current-seed (fhere test name thunk seed)))))
 
 
-(define delayed-test-case-around
-  (lambda (thunk)
-    (let ([name (current-test-name)])
-      (make-rackunit-test-case name thunk))))
+(define (delayed-test-case-around thunk)
+  (define name (current-test-name))
+  (define (thunk/nolog)
+    (parameterize ([test-log-enabled? #f])
+      (thunk)))
+  (make-rackunit-test-case name thunk/nolog))
 
-(define delayed-check-around
-  (lambda (thunk)
-    (let ([name #f])
-      (make-rackunit-test-case name thunk))))
+(define (delayed-check-around thunk)
+  (make-rackunit-test-case #f thunk))
 
 (define-syntax delay-test
   (syntax-rules ()

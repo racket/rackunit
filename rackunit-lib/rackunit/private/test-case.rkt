@@ -28,9 +28,11 @@
 ;;
 ;; Run a test-case immediately, printing information on failure
 (define (default-test-case-around thunk)
-  (with-handlers ([(lambda (e) (not (exn:break? e))) default-test-case-handler])
-    (parameterize ((current-custodian (make-custodian)))
-      (thunk))))
+  (begin0
+    (with-handlers ([(λ (_) #t) log-and-handle!])
+      (parameterize ((current-custodian (make-custodian)))
+        (thunk)))
+    (test-log! #t)))
 
 ;; default-test-case-handler : any -> any
 (define (default-test-case-handler e)
@@ -44,23 +46,21 @@
          v
          (raise-type-error 'current-test-case-around "procedure" v)))))
 
+(define (log-and-handle! e)
+  (test-log! #f)
+  (if (exn:break? e)
+      (raise e)
+      (default-test-case-handler e)))
+
 (define-syntax (test-begin stx)
   (syntax-case stx ()
     [(_ expr ...)
      (syntax/loc stx
        ((current-test-case-around)
         (lambda ()
-          (with-handlers ([(λ (e)
-                             (and (exn:fail? e)
-                                  (not (exn:test? e))))
-                           (λ (e)
-                             (test-log! #f)
-                             (raise e))])
-          (parameterize
-              ([current-check-handler raise]
-               [current-check-around  check-around])
+          (parameterize ([current-check-around plain-check-around])
             (void)
-            expr ...)))))]
+            expr ...))))]
     [_
      (raise-syntax-error
       #f

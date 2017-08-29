@@ -38,6 +38,7 @@
 
 (require racket/list
          racket/match
+         rackunit/log
          "private/format.rkt"
          "private/test.rkt")
 
@@ -70,6 +71,10 @@
 (define (num-unsuccessful cnt)
   (+ (hash-ref cnt 'failure) (hash-ref cnt 'error)))
 
+(define (log-counter! cnt)
+  (for ([_ (in-range (hash-ref cnt 'success))]) (test-log! #t))
+  (for ([_ (in-range (num-unsuccessful cnt))]) (test-log! #f)))
+
 (define (display-counter cnt)
   (match cnt
     [(hash-table ['success s] ['failure f] ['error e])
@@ -98,10 +103,11 @@
   ;; we install a new custodian to ensure resources handled improperly by tests
   ;; such as threads, tcp listeners, etc. don't interfere with other tests or
   ;; the runner itself
-  (define counter (fold-state-counter (call/new-custodian fold-tests)))
+  (define final-counter (fold-state-counter (call/new-custodian fold-tests)))
+  (log-counter! final-counter)
   (unless quiet?
-    (display-counter counter))
-  (num-unsuccessful counter))
+    (display-counter final-counter))
+  (num-unsuccessful final-counter))
 
 (define (call/new-custodian thnk)
   (parameterize ([current-custodian (make-custodian)]) (thnk)))
