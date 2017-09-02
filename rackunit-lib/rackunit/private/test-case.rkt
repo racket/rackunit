@@ -54,13 +54,15 @@
 
 (define-syntax (test-begin stx)
   (syntax-case stx ()
-    [(_ expr ...)
+    [(_ body ...)
      (syntax/loc stx
        ((current-test-case-around)
         (lambda ()
           (parameterize ([current-check-around plain-check-around])
+            ;; empty parameterize body is a syntax error, but an empty
+            ;; test-begin body is allowed
             (void)
-            expr ...))))]
+            body ...))))]
     [_
      (raise-syntax-error
       #f
