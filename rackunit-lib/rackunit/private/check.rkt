@@ -81,7 +81,6 @@
 ;; given exception.  Useful for propogating internal
 ;; errors to the outside world.
 (define (refail-check exn)
-  (test-log! #f)
   (raise
    (make-exn:test:check (exn-message exn)
                         (exn-continuation-marks exn)
