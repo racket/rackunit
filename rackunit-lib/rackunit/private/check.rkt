@@ -51,14 +51,11 @@
 ;; plain-check-around.
 (define (check-around thunk)
   (define handler (current-check-handler))
-  (with-handlers ([(λ (_) #t) handler]) (thunk))
-  (void))
+  (with-handlers ([(λ (_) #t) handler]) (thunk)))
 
 ;; Evaluates a check just like a normal function, with no calls to test-log!
 ;; or the current check handler. Check failures are raised as plain exceptions.
-(define (plain-check-around chk-thunk)
-  (chk-thunk)
-  (void))
+(define (plain-check-around chk-thunk) (chk-thunk))
 
 ;; This is the default for current-check-around, and ensures a check logs
 ;; test results appropriately.
