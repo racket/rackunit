@@ -20,4 +20,31 @@
                 (thunk (display-check-info-stack
                         (list (make-check-name "foo")
                               (make-check-actual 1)
-                              (make-check-expected 2))))))
+                              (make-check-expected 2)))))
+  (test-case "string-info"
+    (check-output "name:       foo\n"
+                  (thunk (display-check-info-stack
+                          (list (make-check-info 'name (string-info "foo")))))))
+  (test-case "nested-info"
+    (check-output "name:\n  foo:        1\n  bar:        2\n"
+                  (thunk
+                   (display-check-info-stack
+                    (list (make-check-name
+                           (nested-info
+                            (list (make-check-info 'foo 1)
+                                  (make-check-info 'bar 2)))))))))
+  (test-case "dynamic-info"
+    (check-output "foo:        1\n"
+                  (thunk
+                   (display-check-info-stack
+                    (list (make-check-info 'foo (dynamic-info (thunk 1)))))))
+    (test-case "with-nested-info"
+      (check-output "name:\n  foo:        1\n  bar:        2\n"
+                    (thunk
+                     (display-check-info-stack
+                      (list (make-check-name
+                             (dynamic-info
+                              (thunk
+                               (nested-info
+                                (list (make-check-info 'foo 1)
+                                      (make-check-info 'bar 2)))))))))))))
