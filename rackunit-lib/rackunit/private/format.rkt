@@ -61,7 +61,12 @@
 (define (check-info->string info verbose? name-width)
   (define name (symbol->string (check-info-name info)))
   (define value (check-info-value info))
-  (cond [(nested-info? value)
+  (cond [(dynamic-info? value)
+         (define new-info
+           (make-check-info (check-info-name info)
+                            ((dynamic-info-proc value))))
+         (check-info->string new-info verbose? name-width)]
+        [(nested-info? value)
          (define nested-str (nested-info->string value verbose? name-width))
          (format "~a:\n~a" name nested-str)]
         [else

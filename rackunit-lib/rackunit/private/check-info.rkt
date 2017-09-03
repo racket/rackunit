@@ -48,8 +48,6 @@
     [(pretty-info? info-value) (pretty-format (pretty-info-value info-value))]
     [(verbose-info? info-value)
      (info-value->string (verbose-info-value info-value))]
-    [(dynamic-info? info-value)
-     (info-value->string ((dynamic-info-proc info-value)))]
     [else (~s info-value)]))
 
 (define (trim-current-directory path)
