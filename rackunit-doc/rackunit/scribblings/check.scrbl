@@ -267,16 +267,19 @@ the @racket[with-check-info*] function, and the
 @racket[with-check-info] macro.
 
 @defstruct[check-info ([name symbol?] [value any]) #:transparent]{
- A @deftech[#:key "check-info"]{check-info structure} stores information associated with the context of the
- execution of a check. The @racket[value] is written in a check failure message
- using @racket[write] unless it is a @racket[string-info] value or a
- @racket[nested-info] value.
+ A @deftech[#:key "check-info"]{check-info structure} stores information
+ associated with the context of the execution of a check. The @racket[value]
+ is normally written in a check failure message using @racket[write], but the
+ @racketmodname[rackunit] library provides several special formatting wrappers
+ that can influence how the check info value is printed.
+
  @history[#:changed "1.6" "Changed from opaque to transparent"]}
 
 @defstruct*[string-info ([value string?]) #:transparent]{
  A special wrapper around a string for use as a @tech{check-info} value. When
  displayed in a check failure message, @racket[value] is displayed without
  quotes. Used to print messages instead of writing values.
+ 
  @(interaction
    #:eval rackunit-eval
    (define-check (string-info-check)
@@ -284,13 +287,15 @@ the @racket[with-check-info*] function, and the
                        ['message (string-info "hello world")])
        (fail-check)))
    (string-info-check))
+
  @history[#:added "1.2"]}
 
 @defstruct*[nested-info ([values (listof check-info?)]) #:transparent]{
- A special wrapper around a list of @tech{check-infos} for use as a @racket[check-info]
- value. A check info whose value is a nested info is displayed as an indented
- subsequence of infos. Nested infos can be placed inside nested infos, yielding
- greater indentation.
+ A special wrapper around a list of @tech{check-infos} for use as a
+ @racket[check-info] value. A check info whose value is a nested info is
+ displayed as an indented subsequence of infos. Nested infos can be placed
+ inside nested infos, yielding greater indentation.
+ 
  @(interaction
    #:eval rackunit-eval
    (define-check (nested-info-check)
@@ -298,7 +303,22 @@ the @racket[with-check-info*] function, and the
        (list (make-check-info 'foo "foo") (make-check-info 'bar "bar")))
      (with-check-info (['nested (nested-info infos)]) (fail-check)))
    (nested-info-check))
+ 
  @history[#:added "1.7"]}
+
+@defstruct*[dynamic-info ([proc (-> any/c)]) #:transparent]{
+ A special wrapper around a procedure that produces a value for a
+ @tech{check-info}. When a @racket[dynamic-info] is displayed in a check info
+ stack, @racket[proc] is called to determine what value to display.
+
+ @(interaction
+   #:eval rackunit-eval
+   (with-check-info (['current-dir (dynamic-info current-directory)])
+     (check-equal? 1 2)
+     (parameterize ([current-directory "/tmp"])
+       (check-equal? 1 2))))
+
+ @history[#:added "1.9"]}
 
 The are several predefined functions that create @tech{check-info}
 structures with predefined names.  This avoids

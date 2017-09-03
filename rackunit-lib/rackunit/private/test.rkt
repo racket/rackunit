@@ -19,10 +19,8 @@
          (struct-out rackunit-test-case)
          (struct-out rackunit-test-suite)
          (struct-out string-info)
-
-         nested-info
-         nested-info?
-         nested-info-values
+         (struct-out nested-info)
+         (struct-out dynamic-info)
 
          with-check-info
          with-check-info*
