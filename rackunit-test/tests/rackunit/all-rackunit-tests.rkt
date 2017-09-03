@@ -2,7 +2,6 @@
 
 (require rackunit
          "check-test.rkt"
-         "format-test.rkt"
          "test-case-test.rkt"
          "test-suite-test.rkt"
          "base-test.rkt"
@@ -26,7 +25,6 @@
    test-tests
    util-tests
    text-ui-tests
-   format-tests
    ))
 
 (define failure-tests
