@@ -14,7 +14,8 @@
     (define stdout-ev stdout-e)
     (define stdout-av stdout-p)
     (unless (equal? stdout-ev stdout-av)
-      (error 'log "Bad ~a: ~v vs ~v" label stdout-ev stdout-av))))
+      (error 'log "bad ~a\n actual: ~v\n expected: ~v"
+             label stdout-av stdout-ev))))
 
 (define-syntax-rule (& test-e stdout-e stderr-e exit-e)
   (let ()

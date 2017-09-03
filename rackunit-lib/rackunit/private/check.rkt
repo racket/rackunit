@@ -14,12 +14,13 @@
 
 (provide
  (contract-out
-  [fail-check (->* () (string?) void?)]))
+  [fail-check (->* () (string?) void?)]
+  [current-check-handler (parameter/c (-> any/c any))]
+  [current-check-around (parameter/c (-> (-> void?) any))]
+  [plain-check-around (-> (-> void?) void?)]))
 
-(provide current-check-handler
-         check-around
-         current-check-around
-
+(provide check-around
+         
          define-check
          define-binary-check
          define-simple-check
@@ -41,32 +42,37 @@
          check-match
          fail)
 
-;; parameter current-check-handler : (-> any any)
-(define current-check-handler
-  (make-parameter
-   display-test-failure/error
-   (lambda (v)
-     (if (procedure? v)
-         v
-         (raise-type-error 'current-check-handler "procedure" v)))))
+(define current-check-handler (make-parameter display-test-failure/error))
 
-;; check-around : ( -> a) -> a
+;; Like default-check-around, except without test logging. This used to be used
+;; by test-case, and is currently undocumented. Typed Racket's wrapper around
+;; rackunit uses this (although it shouldn't) so we can't get rid of it yet.
+;; Setting (current-check-handler) to `raise` makes this equivalent to
+;; plain-check-around.
 (define (check-around thunk)
-  (with-handlers ([(lambda (e) #t) (current-check-handler)])
-    (thunk)))
+  (define handler (current-check-handler))
+  (with-handlers ([(λ (_) #t) handler]) (thunk)))
 
-;; parameter current-check-around : (( -> a) -> a)
-(define current-check-around
-  (make-parameter
-   (λ (thunk) (check-around thunk) (void))
-   (lambda (v)
-     (if (procedure? v)
-         v
-         (raise-type-error 'current-check-around "procedure" v)))))
+;; Evaluates a check just like a normal function, with no calls to test-log!
+;; or the current check handler. Check failures are raised as plain exceptions.
+(define (plain-check-around chk-thunk) (chk-thunk))
+
+;; This is the default for current-check-around, and ensures a check logs
+;; test results appropriately.
+(define (default-check-around chk-thunk)
+  (define handler (current-check-handler))
+  (define (log-and-handle! e) (test-log! #f) (handler e))
+  ;; Nested checks should be evaluated as normal functions, to avoid double
+  ;; counting test results.
+  (parameterize ([current-check-around plain-check-around])
+    (with-handlers ([(λ (_) #t) log-and-handle!])
+      (chk-thunk)
+      (test-log! #t))))
+
+(define current-check-around (make-parameter default-check-around))
 
 (define (fail-check [message ""])
   (define marks (current-continuation-marks))
-  (test-log! #f)
   (raise (make-exn:test:check message marks (current-check-info))))
 
 ;; refail-check : exn:test:check -> (exception raised)
@@ -75,7 +81,6 @@
 ;; given exception.  Useful for propogating internal
 ;; errors to the outside world.
 (define (refail-check exn)
-  (test-log! #f)
   (raise
    (make-exn:test:check (exn-message exn)
                         (exn-continuation-marks exn)
@@ -88,17 +93,14 @@
   (define (name formal ... [message #f]
                 #:location [location (list 'unknown #f #f #f #f)]
                 #:expression [expression 'unknown])
-    (with-check-info*
-        (list/if (make-check-name 'pub)
-                 (make-check-location location)
-                 (make-check-expression expression)
-                 (make-check-params (list formal ...))
-                 (and message (make-check-message message)))
-      (λ ()
-        ((current-check-around)
-         (λ () (begin0 (let () body ...) (test-log! #t))))))
-    ;; All checks should return (void)
-    (void)))
+    (define infos
+      (list/if (make-check-name 'pub)
+               (make-check-location location)
+               (make-check-expression expression)
+               (make-check-params (list formal ...))
+               (and message (make-check-message message))))
+    (with-check-info* infos
+      (λ () ((current-check-around) (λ () body ... (void)))))))
 
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin

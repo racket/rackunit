@@ -18,13 +18,11 @@
 (define all-rackunit-tests
   (test-suite
    "All RackUnit Tests"
-   check-tests
    base-tests
    test-case-tests
    test-suite-tests
    test-suite-define-provide-test
    location-tests
-   result-tests
    test-tests
    util-tests
    text-ui-tests
