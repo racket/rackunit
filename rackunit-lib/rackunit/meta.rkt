@@ -57,14 +57,10 @@
 ;; Extracting raised values from checks
 
 (define (check-raise-value chk-thnk)
-  ;; To fully isolate the evaluation of a check inside another check,
-  ;; we have to ensure that 1) the inner check raises its failure normally
-  ;; instead of writing to stdout / stderr, 2) the inner check doesn't log
-  ;; any pass or fail information to rackunit/log, and 3) the inner check's info
-  ;; stack is independent of the outer check's info stack.
-  (or (parameterize ([current-check-handler raise]
-                     [test-log-enabled? #f]
-                     [current-check-info (list)])
+  ;; Checks called inside other checks raise their values normally and don't
+  ;; log test failures, so all we have to do is ensure the check is executed
+  ;; with an info stack that is independent of the outer check.
+  (or (parameterize ([current-check-info (list)])
         (with-handlers ([(negate exn:break?) values]) (chk-thnk) #f))
       (fail-check "Check passed unexpectedly")))
 
