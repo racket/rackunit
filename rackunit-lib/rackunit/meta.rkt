@@ -1,9 +1,6 @@
 #lang racket/base
 
-(provide check-fail/error
-         check-fail
-         check-fail*
-         check-fail/info)
+(provide check-fail)
 
 (require (for-syntax racket/base)
          racket/function
@@ -11,95 +8,51 @@
          rackunit/log
          syntax/parse/define
          rackunit
-         rackunit/private/check-info)
+         (only-in rackunit/private/check-info
+                  current-check-info
+                  pretty-info))
 
 
-(define-check (check-fail pred-or-msg chk-thnk)
-  (contract-pred-or-msg! 'check-fail pred-or-msg)
+(define-check (check-fail tree chk-thnk)
+  (contract-tree! 'check-fail tree)
   (contract-thunk! 'check-fail chk-thnk)
   (define failure (check-raise-value chk-thnk))
-  (with-expected pred-or-msg
-    (assert-failure failure)
-    (assert-check-failure failure)
-    (if (procedure? pred-or-msg)
-        (unless (pred-or-msg failure)
-          (with-actual failure
-            (fail-check "Wrong exception raised")))
-        (let ([msg (exn-message failure)])
-          (unless (regexp-match? pred-or-msg msg)
-            (with-actual failure
-              (with-check-info (['actual-msg msg])
-                (fail-check "Wrong exception raised"))))))))
-
-(define-check (check-fail/info expected-info chk-thnk)
-  (contract-info! 'check-fail/info expected-info)
-  (contract-thunk! 'check-fail/info chk-thnk)
-  (define failure (check-raise-value chk-thnk))
-  (with-expected expected-info
-    (assert-failure failure)
-    (assert-check-failure failure)
-    (define (has-expected-name? info)
-      (equal? (check-info-name info) (check-info-name expected-info)))
-    (define infos (exn:test:check-stack failure))
-    (define info-names (map check-info-name infos))
-    (define matching-infos (filter has-expected-name? infos))
-    (when (empty? matching-infos)
-      (with-check-info (['actual-info-names info-names])
-        (fail-check "Check failure did not contain the expected info")))
-    (unless (member expected-info matching-infos)
-      (with-check-info* (map make-check-actual matching-infos)
-        (λ () (fail-check "Check failure contained info(s) with matching name but unexpected value"))))))
-
-(define-check (check-fail* chk-thnk)
-  (contract-thunk! 'check-fail* chk-thnk)
-  (define failure (check-raise-value chk-thnk))
-  (assert-failure failure)
-  (assert-check-failure failure))
-
-(define-check (check-fail/error pred-or-msg chk-thnk)
-  (contract-pred-or-msg! 'check-fail/error pred-or-msg)
-  (contract-thunk! 'check-fail/error chk-thnk)
-  (define failure (check-raise-value chk-thnk))
-  (with-expected pred-or-msg
-    (assert-failure failure)
-    (assert-not-check-failure failure)
-    (cond
-      [(procedure? pred-or-msg)
-       (unless (pred-or-msg failure)
-         (with-actual failure
-           (fail-check "Wrong error raised")))]
-      [(exn? failure)
-       (define msg (exn-message failure))
-       (unless (regexp-match? pred-or-msg msg)
-         (with-actual failure
-           (with-check-info (['actual-msg msg])
-             (fail-check "Wrong error raised"))))]
-      [else
-       (with-actual failure
-         (fail-check "Wrong error raised"))])))
+  (unless (exn:test:check? failure)
+    (with-actual failure
+      (fail-check "Check raised error instead of failing")))
+  (check-tree-assert tree failure))
 
 ;; Shorthands for adding infos
 
 (define-simple-macro (with-actual act:expr body:expr ...)
-  (with-check-info* (list (make-check-actual act)) (λ () body ...)))
+  (with-check-info* (error-info act) (λ () body ...)))
 
-(define-simple-macro (with-expected exp:expr body:expr ...)
-  (with-check-info* (list (make-check-expected exp)) (λ () body ...)))
+(define (list/if . vs) (filter values vs))
+
+(define (error-info raised)
+  (list/if (make-check-actual raised)
+           (and (exn? raised)
+                (make-check-info 'actual-message (exn-message raised)))
+           (and (exn:test:check? raised)
+                (make-check-info 'actual-info
+                                 (nested-info
+                                  (exn:test:check-stack raised))))))
 
 ;; Pseudo-contract helpers, to be replaced with real check contracts eventually
 
-(define (contract-pred-or-msg! name pred-or-msg)
-  (unless (or (and (procedure? pred-or-msg)
-                   (procedure-arity-includes? pred-or-msg 1))
-              (regexp? pred-or-msg))
-    (define ctrct "(or/c (-> any/c boolean?) regexp?)")
-    (raise-argument-error name ctrct pred-or-msg)))
-
 (define (contract-thunk! name thnk)
-  (unless (procedure? thnk) (raise-argument-error name "(-> any)" thnk)))
+  (unless (and (procedure? thnk)
+               (procedure-arity-includes? thnk 0))
+    (raise-argument-error name "(-> any)" thnk)))
 
-(define (contract-info! name info)
-  (unless (check-info? info) (raise-argument-error name "check-info?" info)))
+(define (contract-tree! name tree)
+  (for ([v (in-list (flatten tree))])
+    (unless (or (and (procedure? v)
+                     (procedure-arity-includes? v 1))
+                (regexp? v)
+                (check-info? v))
+      (define ctrct "(or/c (-> any/c boolean?) regexp? check-info?)")
+      (raise-argument-error name ctrct v))))
 
 ;; Extracting raised values from checks
 
@@ -109,22 +62,58 @@
   ;; instead of writing to stdout / stderr, 2) the inner check doesn't log
   ;; any pass or fail information to rackunit/log, and 3) the inner check's info
   ;; stack is independent of the outer check's info stack.
-  (parameterize ([current-check-handler raise]
-                 [test-log-enabled? #f]
-                 [current-check-info (list)])
-    (with-handlers ([(negate exn:break?) values]) (chk-thnk) #f)))
+  (or (parameterize ([current-check-handler raise]
+                     [test-log-enabled? #f]
+                     [current-check-info (list)])
+        (with-handlers ([(negate exn:break?) values]) (chk-thnk) #f))
+      (fail-check "Check passed unexpectedly")))
 
 ;; Assertion helpers
 
-(define (assert-failure maybe-failure)
-  (unless maybe-failure (fail-check "No check failure occurred")))
+(struct failure (type expected) #:transparent)
 
-(define (assert-check-failure failure)
-  (unless (exn:test:check? failure)
-    (with-actual failure
-      (fail-check "A value other than a check failure was raised"))))
+(define (assert-pred raised pred)
+  (and (not (pred raised))
+       (failure 'predicate pred)))
 
-(define (assert-not-check-failure failure)
-  (when (exn:test:check? failure)
-    (with-actual failure
-      (fail-check "Wrong error raised"))))
+(define (assert-regexp exn rx)
+  (and (not (regexp-match? rx (exn-message exn)))
+       (failure 'message rx)))
+
+(define (assert-info exn info)
+  (and (not (member info (exn:test:check-stack exn)))
+       (failure 'info info)))
+
+(define (assert assertion raised)
+  ((cond [(procedure? assertion) assert-pred]
+         [(regexp? assertion) assert-regexp]
+         [(check-info? assertion) assert-info])
+   raised assertion))
+
+(define (assertions-adjust assertions raised)
+  (define is-exn? (exn? raised))
+  (define has-regexps? (ormap regexp? assertions))
+  (define adjust-regexps? (and has-regexps? (not is-exn?)))
+  (if adjust-regexps?
+      (cons exn? (filter-not regexp? assertions))
+      assertions))
+
+(define (assertion-tree-apply tree raised)
+  (define assertions (assertions-adjust (flatten tree) raised))
+  (filter-map (λ (a) (assert a raised)) assertions))
+
+(define (failure-list->info failures)
+  (define vs
+    (if (equal? (length failures) 1)
+        (pretty-info (failure-expected (first failures)))
+        (nested-info (for/list ([f (in-list failures)])
+                       (make-check-info (failure-type f)
+                                        (pretty-info (failure-expected f)))))))
+  (make-check-info 'expected vs))
+
+(define (check-tree-assert tree raised)
+  (with-actual raised
+    (define failures (assertion-tree-apply tree raised))
+    (unless (empty? failures)
+      (with-check-info* (list (failure-list->info failures))
+        fail-check))))

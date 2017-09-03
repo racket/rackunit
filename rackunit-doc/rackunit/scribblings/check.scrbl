@@ -496,84 +496,45 @@ message.}
 
 Custom checks such as those created by @racket[define-check] can contain a fair
 amount of logic. Consequently, custom checks can be buggy and should be tested.
-RackUnit provides a handful of checks explicitly designed for testing the
-behavior of other checks; they allow verifying checks pass and fail when
-expected or that checks add certain information to the check information stack.
-These bindings are provided by @racketmodname[rackunit/meta], not
-@racketmodname[rackunit].
+RackUnit provides a few checks explicitly designed for testing the behavior of
+other checks; they allow verifying checks pass and fail when expected or that
+checks add certain information to the check information stack. These bindings
+are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
 
-@defproc[(check-fail [fail-exn-predicate
-                      (or/c (-> exn:test:check? any/c) regexp?)]
+@defproc[(check-fail [assertion-tree
+                      (treeof (or/c (-> exn:test:check? any/c)
+                                    regexp?
+                                    check-info?))]
                      [thunk (-> any)]
                      [message string? ""])
          void?]{
- Checks that @racket[thunk] evaluates a failing check and that
- @racket[fail-exn-predicate], if it's a function, returns a true value when
- given the check failure exception. If @racket[fail-exn-predicate] is a regexp,
- instead checks that the regexp matches the check failure exception's message.
- Note that a check failure exception's message is the message given to
- @racket[fail-check], not the optional @racket[message] argument that all checks
- accept. See also @racket[check-exn] and @racket[check-fail/error].
+ Checks that @racket[thunk] raises a check failure and that the failure
+ satisfies @racket[assertion-tree]. The tree is checked in the following manner:
+
+ @(itemlist
+   @item{If the tree is a predicate, it must return a true value when applied to
+  the raised check failure.}
+   @item{If the tree is a regexp, it must match the check failure's message (as
+  provided by @racket[fail-check]).}
+   @item{If the tree is a @racket[check-info] value, the check failure's
+  @racket[exn:test:check-stack] value must contain the expected info value.}
+   @item{If the tree is a list, every assertion in the list is checked.})
 
  @(examples
    #:eval rackunit-eval
-   (check-fail values (λ () (check-equal? 'foo 'bar)))
+   (check-fail '() (λ () (check-equal? 'foo 'bar)))
    (check-fail number? (λ () (check-equal? 'foo 'bar)))
-   (check-fail values (λ () (check-equal? 'foo 'foo))))
+   (check-fail (list string? (check-info 'info 10))
+               (λ () (check-equal? 'foo 'foo))))
 
- @history[#:added "1.8"]}
-
-@defproc[(check-fail* [thunk (-> any)] [message string? ""]) void?]{
- Like @racket[check-fail], but only checks that @racket[thunk] evaluates a
- failing check without testing the failure against a predicate or regexp.
-
- @(examples
-   #:eval rackunit-eval
-   (check-fail* (λ () (check-equal? 'foo 'bar)))
-   (check-fail* (λ () (check-equal? 'foo 'foo))))
-
- @history[#:added "1.8"]}
-
-@defproc[(check-fail/info [info check-info?]
-                          [thunk (-> any)]
-                          [message string? ""])
-         void?]{
- Like @racket[check-fail], but instead of checking that the failure matches a
- predicate or regexp checks that the failure contains a check info value equal
- to @racket[info]. Note that the check info stack of the failure may contain
- multiple infos with the same name as @racket[info] but different values; in
- that case the check passes as long as at least one info is equal to the
- expected info.
+ Additionally, a failure is reported if @racket[thunk] raises something other
+ than an @racket[exn:test:check] value. The optional @racket[message] argument
+ is included in the output if the check fails.
 
  @(examples
    #:eval rackunit-eval
-   (define foo-info (make-check-info 'foo 'foo))
-   (define-check (fail-foo) (with-heck-info* (list foo-info) fail-check))
-   (check-fail/info foo-info fail-foo)
-   (check-fail/info foo-info void)
-   (check-fail/info foo-info fail))
-
- @history[#:added "1.8"]}
-
-@defproc[(check-fail/error [fail-exn-predicate
-                            (or/c (-> exn:test:check? any/c) regexp?)]
-                           [thunk (-> any)]
-                           [message string? ""])
-         void?]{
- Checks that @racket[thunk] evaluates a check that raises an error value instead
- of passing or failing, and checks that the raised value satisfies
- @racket[fail-exn-predicate]. Satisfies means that @racket[fail-exn-predicate]
- return true when given the raised value if @racket[fail-exn-predicate] is a
- function. If it's a predicate, satisfies means that the raised value is an
- exception whose message matches the regexp. See also @racket[check-fail] and
- @racket[check-exn].
-
- @(examples
-   #:eval rackunit-eval
-   (define-check (error-check)
-     (raise (make-exn:fail "Kaboom!!!" (current-continuation-marks)))
-     (fail-check "Doesn't get here"))
-   (check-fail/error #rx"boom" error-check))
+   (check-fail '() (λ () (raise 'foo)))
+   (check-fail number? (λ () (check-equal? 'foo 'bar)) "my message"))
 
  @history[#:added "1.8"]}
 
