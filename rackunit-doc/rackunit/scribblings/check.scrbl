@@ -318,6 +318,20 @@ the @racket[with-check-info*] function, and the
      (parameterize ([current-directory (find-system-path 'temp-dir)])
        (check-equal? 1 2))))
 
+ The value returned by @racket[proc] may itself be a special formatting value
+ such as @racket[nested-info] (or even another @racket[dynamic-info]), in which
+ case that value is rendered as it would be if it had not been wrapped in
+ @racket[dynamic-info].
+
+ @(interaction
+   #:eval rackunit-eval
+   (define current-foo (make-parameter #f))
+   (with-check-info (['foo (dynamic-info current-foo)])
+     (check-equal? 1 2)
+     (parameterize ([current-foo
+                     (nested-info (list (make-check-info 'nested 'foo)))])
+       (check-equal? 1 2))))
+
  @history[#:added "1.9"]}
 
 The are several predefined functions that create @tech{check-info}
