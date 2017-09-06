@@ -315,7 +315,7 @@ the @racket[with-check-info*] function, and the
    #:eval rackunit-eval
    (with-check-info (['current-dir (dynamic-info current-directory)])
      (check-equal? 1 2)
-     (parameterize ([current-directory "/tmp"])
+     (parameterize ([current-directory (find-system-path 'temp-dir)])
        (check-equal? 1 2))))
 
  @history[#:added "1.9"]}
