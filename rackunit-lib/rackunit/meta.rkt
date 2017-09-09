@@ -100,11 +100,15 @@
   (define assertions (assertions-adjust (flatten tree) raised))
   (filter-map (λ (a) (assert a raised)) assertions))
 
+(define (failure-sort-key f)
+  (case (failure-type f) [(predicate) 0] [(message) 1] [(info) 2]))
+
 (define (failure-list->info failures)
+  (define failures* (sort failures < #:key failure-sort-key))
   (define vs
-    (if (equal? (length failures) 1)
-        (pretty-info (failure-expected (first failures)))
-        (nested-info (for/list ([f (in-list failures)])
+    (if (equal? (length failures*) 1)
+        (pretty-info (failure-expected (first failures*)))
+        (nested-info (for/list ([f (in-list failures*)])
                        (make-check-info (failure-type f)
                                         (pretty-info (failure-expected f)))))))
   (make-check-info 'expected vs))
