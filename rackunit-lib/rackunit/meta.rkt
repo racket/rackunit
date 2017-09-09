@@ -29,13 +29,16 @@
   (with-check-info* (error-info act) (λ () body ...)))
 
 (define (error-info raised)
-  (list/if (make-check-actual raised)
-           (and (exn? raised)
-                (make-check-info 'actual-message (exn-message raised)))
-           (and (exn:test:check? raised)
-                (make-check-info 'actual-info
-                                 (nested-info
-                                  (exn:test:check-stack raised))))))
+  (define (exn-info) (make-check-info 'exn (pretty-info raised)))
+  (define (msg-info) (make-check-info 'message (exn-message raised)))
+  (define (info-info)
+    (make-check-info 'info (nested-info (exn:test:check-stack raised))))
+  (define info-value
+    (cond [(exn:test:check? raised)
+           (nested-info (list (exn-info) (msg-info) (info-info)))]
+          [(exn? raised) (nested-info (list (exn-info) (msg-info)))]
+          [else (pretty-info raised)]))
+  (list (make-check-info 'actual info-value)))
 
 ;; Pseudo-contract helpers, to be replaced with real check contracts eventually
 
