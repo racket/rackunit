@@ -498,7 +498,7 @@ Custom checks such as those created by @racket[define-check] can contain a fair
 amount of logic. Consequently, custom checks can be buggy and should be tested.
 RackUnit provides a few checks explicitly designed for testing the behavior of
 other checks; they allow verifying checks pass and fail when expected or that
-checks add certain information to the check information stack. These bindings
+checks add certain information to the @tech{check-info stack}. These bindings
 are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
 
 @defproc[(check-fail [assertion-tree
