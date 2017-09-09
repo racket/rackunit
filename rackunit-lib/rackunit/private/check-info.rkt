@@ -18,6 +18,7 @@
   [struct pretty-info ([value any/c])]
   [struct nested-info ([values (listof check-info?)])]
   [struct verbose-info ([value any/c])]
+  [struct dynamic-info ([proc (-> any/c)])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
@@ -36,6 +37,7 @@
 (struct pretty-info (value) #:transparent)
 (struct verbose-info (value) #:transparent)
 (struct nested-info (values) #:transparent)
+(struct dynamic-info (proc) #:transparent)
 
 (define (info-value->string info-value)
   (cond
