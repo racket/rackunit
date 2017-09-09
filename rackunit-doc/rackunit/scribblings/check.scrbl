@@ -511,30 +511,28 @@ are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
  Checks that @racket[thunk] raises a check failure and that the failure
  satisfies @racket[assertion-tree]. The tree is checked in the following manner:
 
- @(itemlist
-   @item{If the tree is a predicate, it must return a true value when applied to
-  the raised check failure.}
-   @item{If the tree is a regexp, it must match the check failure's message (as
-  provided by @racket[fail-check]).}
-   @item{If the tree is a @racket[check-info] value, the check failure's
-  @racket[exn:test:check-stack] value must contain the expected info value.}
-   @item{If the tree is a list, every assertion in the list is checked.})
+ @itemlist[
+ @item{If the tree is a predicate, it must return a true value when applied to
+   the raised check failure.}
+ @item{If the tree is a regexp, it must match the check failure's message (as
+   provided by @racket[fail-check]).}
+ @item{If the tree is a @racket[check-info] value, the check failure's
+   @racket[exn:test:check-stack] value must contain the expected info value.}
+ @item{If the tree is a list, every assertion in the list is checked.}]
 
- @(examples
-   #:eval rackunit-eval
-   (check-fail '() (λ () (check-equal? 'foo 'bar)))
-   (check-fail number? (λ () (check-equal? 'foo 'bar)))
-   (check-fail (list string? (check-info 'info 10))
-               (λ () (check-equal? 'foo 'foo))))
+ @examples[#:eval rackunit-eval
+           (check-fail '() (λ () (check-equal? 'foo 'bar)))
+           (check-fail number? (λ () (check-equal? 'foo 'bar)))
+           (check-fail (list string? (check-info 'info 10))
+                       (λ () (check-equal? 'foo 'foo)))]
 
  Additionally, a failure is reported if @racket[thunk] raises something other
  than an @racket[exn:test:check] value. The optional @racket[message] argument
  is included in the output if the check fails.
 
- @(examples
-   #:eval rackunit-eval
-   (check-fail '() (λ () (raise 'foo)))
-   (check-fail number? (λ () (check-equal? 'foo 'bar)) "my message"))
+ @examples[#:eval rackunit-eval
+           (check-fail '() (λ () (raise 'foo)))
+           (check-fail number? (λ () (check-equal? 'foo 'bar)) "my message")]
 
  @history[#:added "1.9"]}
 
