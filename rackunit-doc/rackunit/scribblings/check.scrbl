@@ -2,7 +2,8 @@
 @(require (except-in "base.rkt" examples)
           scribble/example)
 
-@(require (for-label racket/match))
+@(require (for-label racket/match
+                     rackunit/meta))
 
 @(define rackunit-eval (make-base-eval))
 @(interaction-eval #:eval rackunit-eval (require rackunit rackunit/meta))
