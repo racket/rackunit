@@ -42,4 +42,12 @@
                (λ () (check-fail (list #rx"foo" 'partial-nonsense)
                                  fail-check)))
     (check-exn exn:fail:contract?
-               (λ () (check-fail accepts-no-args fail-check)))))
+               (λ () (check-fail accepts-no-args fail-check)))
+    (define (hello-world-exn? e) (equal? (exn-message e) "hello world"))
+    (define-check (fail/hello-world)
+      (with-check-info (['hello 'world])
+        (fail-check "hello world")))
+    (check-fail (list hello-world-exn?
+                      (list '(#rx"hello") '() (make-check-info 'hello 'world))
+                      #rx"world")
+                fail/hello-world)))
