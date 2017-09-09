@@ -51,7 +51,7 @@
                      (procedure-arity-includes? v 1))
                 (regexp? v)
                 (check-info? v))
-      (define ctrct "(or/c (-> any/c boolean?) regexp? check-info?)")
+      (define ctrct "(or/c (-> any/c any/c) regexp? check-info?)")
       (raise-argument-error name ctrct v))))
 
 ;; Extracting raised values from checks
