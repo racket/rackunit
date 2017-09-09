@@ -10,7 +10,8 @@
          rackunit
          (only-in rackunit/private/check-info
                   current-check-info
-                  pretty-info))
+                  pretty-info)
+         "private/util-list.rkt")
 
 
 (define-check (check-fail tree chk-thnk)
@@ -26,8 +27,6 @@
 
 (define-simple-macro (with-actual act:expr body:expr ...)
   (with-check-info* (error-info act) (λ () body ...)))
-
-(define (list/if . vs) (filter values vs))
 
 (define (error-info raised)
   (list/if (make-check-actual raised)
