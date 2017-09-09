@@ -508,17 +508,21 @@ are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
                      [thunk (-> any)]
                      [message string? ""])
          void?]{
- Checks that @racket[thunk] raises a check failure and that the failure
- satisfies @racket[assertion-tree]. The tree is checked in the following manner:
+ Checks that @racket[thunk] raises a check failure with @racket[fail-check] and
+ that the failure satisfies every assertion value in @racket[assertion-tree].
+ A failure can satisfy an assertion value in one of three ways, depending on the
+ type of assertion value:
 
  @itemlist[
- @item{If the tree is a predicate, it must return a true value when applied to
-   the raised check failure.}
- @item{If the tree is a regexp, it must match the check failure's message (as
-   provided by @racket[fail-check]).}
- @item{If the tree is a @racket[check-info] value, the check failure's
-   @racket[exn:test:check-stack] value must contain the expected info value.}
- @item{If the tree is a list, every assertion in the list is checked.}]
+ @item{A predicate assertion value @racket[p] is satisfied by a failure
+   @racket[f] if @racket[(p f)] returns a true value.}
+ @item{A regular expression assertion value @racket[r] is satisfied by a failure
+   if @racket[r] matches the failure's message (as returned by
+   @racket[exn-message]).}
+ @item{A @racket[check-info] assertion value @racket[i] is satisfied by a
+   failure if the @tech{check-info stack} returned by
+   @racket[exn:test:check-stack] contains a @racket[check-info] value that is
+   @racket[equal?] to @racket[i].}]
 
  @examples[#:eval rackunit-eval
            (check-fail '() (λ () (check-equal? 'foo 'bar)))
@@ -526,7 +530,10 @@ are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
            (check-fail (list string? (check-info 'info 10))
                        (λ () (check-equal? 'foo 'foo)))]
 
- Additionally, a failure is reported if @racket[thunk] raises something other
+ Note that a single predicate, regular expression, or @tech{check-info} value is
+ considered a legal tree, as well as the empty list.
+
+ In addition, a failure is reported if @racket[thunk] raises something other
  than an @racket[exn:test:check] value. The optional @racket[message] argument
  is included in the output if the check fails.
 
