@@ -20,7 +20,7 @@
   (define failure (check-raise-value chk-thnk))
   (unless (exn:test:check? failure)
     (with-actual failure
-      (fail-check "Check raised error instead of failing")))
+      (fail-check "Check raised error instead of calling fail-check")))
   (check-tree-assert tree failure))
 
 ;; Shorthands for adding infos

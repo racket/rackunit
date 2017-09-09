@@ -28,7 +28,7 @@
     (check-fail #rx"foo" fail-foo)
     (check-fail some-info fail/info)
     (check-fail #rx"Check passed unexpectedly" (λ () (check-fail '() void)))
-    (check-fail #rx"Check raised error instead of failing"
+    (check-fail #rx"Check raised error instead of calling fail-check"
                 (λ () (check-fail '() fail/raise)))
     (check-fail (make-check-info 'expected (pretty-info foo-fail?))
                 (λ () (check-fail foo-fail? fail-not-foo)))
