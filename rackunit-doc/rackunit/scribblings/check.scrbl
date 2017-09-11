@@ -539,6 +539,10 @@ are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
            (check-fail '() (λ () (raise 'foo)))
            (check-fail number? (λ () (check-equal? 'foo 'bar)) "my message")]
 
+ Proceed with caution when passing a complex tree to @racket[check-fail].
+ Semantically, a single check expression should assert "one thing"; consider
+ splitting the complex tree into multiple simpler calls to @racket[check-fail].
+
  @history[#:added "1.9"]}
 
 @close-eval[rackunit-eval]
