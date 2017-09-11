@@ -531,9 +531,6 @@ are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
            (check-fail (list string? (check-info 'info 10))
                        (λ () (check-equal? 'foo 'foo)))]
 
- Note that a single predicate, regular expression, or @tech{check-info} value is
- considered a legal tree, as well as the empty list.
-
  In addition, a failure is reported if @racket[thunk] raises something other
  than an @racket[exn:test:check] value. The optional @racket[message] argument
  is included in the output if the check fails.
