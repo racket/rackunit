@@ -88,6 +88,12 @@
 
 (define (list/if . vs) (filter values vs))
 
+(begin-for-syntax
+  (require racket/syntax)
+  (define-syntax-class check-name
+    (pattern i:id
+             #:with impl-name (format-id #f "~a-impl" #'i))))
+
 (define-simple-macro
   (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
   (define (name formal ... [message #f]
@@ -102,19 +108,21 @@
     (with-check-info* infos
       (λ () ((current-check-around) (λ () body ... (void)))))))
 
-(define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
+
+
+(define-simple-macro (define-check (name:check-name formal:id ...) body:expr ...)
   (begin
-    (define-check-func (check-impl formal ...) #:public-name name body ...)
+    (define-check-func (name.impl-name formal ...) #:public-name name body ...)
     (define-syntax (name stx)
       (with-syntax ([loc (datum->syntax #f 'loc stx)])
         (syntax-parse stx
           [(chk . args)
-           #'(check-impl #:location (syntax->location #'loc)
+           #'(name.impl-name #:location (syntax->location #'loc)
                          #:expression '(chk . args)
                          . args)]
           [chk:id
            #'(lambda args
-               (apply check-impl
+               (apply name.impl-name
                       #:location (syntax->location #'loc)
                       #:expression 'chk
                       args))])))))
