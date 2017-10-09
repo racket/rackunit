@@ -90,6 +90,16 @@
 
 (begin-for-syntax
   (require racket/syntax)
+  ;; xform is the actual macro transformer procedure
+  ;; impl-name is an identifier naming the `check-impl` procedure
+  (struct check-transformer (xform impl)
+    #:property prop:procedure 0)
+  (provide check-transformer-impl-name check-transformer?)
+  (define (check-transformer-impl-name s)
+    (unless (check-transformer? s)
+      (raise-argument-error
+       'check-transformer-impl-name "check-transformer" s))
+    (check-transformer-impl s))
   (define-syntax-class check-name
     (pattern i:id
              #:with impl-name (format-id #f "~a-impl" #'i))))
@@ -113,19 +123,22 @@
 (define-simple-macro (define-check (name:check-name formal:id ...) body:expr ...)
   (begin
     (define-check-func (name.impl-name formal ...) #:public-name name body ...)
-    (define-syntax (name stx)
-      (with-syntax ([loc (datum->syntax #f 'loc stx)])
-        (syntax-parse stx
-          [(chk . args)
-           #'(name.impl-name #:location (syntax->location #'loc)
-                         #:expression '(chk . args)
-                         . args)]
-          [chk:id
-           #'(lambda args
-               (apply name.impl-name
-                      #:location (syntax->location #'loc)
-                      #:expression 'chk
-                      args))])))))
+    (define-syntax name
+      (check-transformer
+       (λ (stx)
+         (with-syntax ([loc (datum->syntax #f 'loc stx)])
+           (syntax-parse stx
+             [(chk . args)
+              #'(name.impl-name #:location (syntax->location #'loc)
+                                #:expression '(chk . args)
+                                . args)]
+             [chk:id
+              #'(lambda args
+                  (apply name.impl-name
+                         #:location (syntax->location #'loc)
+                         #:expression 'chk
+                         args))])))
+       #'name.impl-name))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
   (define-check (name param ...)
