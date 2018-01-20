@@ -24,6 +24,7 @@
 
          with-check-info
          with-check-info*
+         with-default-check-info*
 
          make-check-name
          make-check-params

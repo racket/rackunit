@@ -23,7 +23,8 @@
   [current-check-info (parameter/c (listof check-info?))]
   [check-info-contains-key? (check-info-> symbol? boolean?)]
   [check-info-ref (check-info-> symbol? (or/c check-info? #f))]
-  [with-check-info* ((listof check-info?) (-> any) . -> . any)])
+  [with-check-info* ((listof check-info?) (-> any) . -> . any)]
+  [with-default-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
 (module+ for-test
@@ -69,7 +70,20 @@
   (define all-infos (append (current-check-info) info))
   (define infos/later-overriding-earlier
     (reverse (remove-duplicates (reverse all-infos) #:key check-info-name)))
-  (parameterize ([current-check-info infos/later-overriding-earlier])
+  (force/info infos/later-overriding-earlier thunk))
+
+;; with-default-check-info* : (listof check-info) thunk -> any
+(define (with-default-check-info* info thunk)
+  (define old-info (current-check-info))
+  (define old-keys (map check-info-name old-info))
+  (define (has-new-key? info)
+    (not (memq (check-info-name info) old-keys)))
+  (define new-info (filter has-new-key? info))
+  (force/info (append old-info new-info) thunk))
+
+;; force/info : (listof check-info) thunk -> any
+(define (force/info info thunk)
+  (parameterize ([current-check-info info])
     (thunk)))
 
 (define-syntax with-check-info

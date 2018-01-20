@@ -99,7 +99,7 @@
                (make-check-expression expression)
                (make-check-params (list formal ...))
                (and message (make-check-message message))))
-    (with-check-info* infos
+    (with-default-check-info* infos
       (λ () ((current-check-around) (λ () body ... (void)))))))
 
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
@@ -127,7 +127,7 @@
   (syntax-rules ()
     [(_ (name expr1 expr2) body ...)
      (define-check (name expr1 expr2)
-       (with-check-info*
+       (with-default-check-info*
         (list (make-check-actual expr1)
               (make-check-expected expr2))
         (lambda () (or (let () body ...) (fail-check)))))]
@@ -163,18 +163,15 @@
            ;; failure
            [exn:fail?
             (lambda (exn)
-              (with-check-info*
-               (list/if
-                (and (not (check-info-contains-key? 'message))
-                     (make-check-message "Wrong exception raised"))
-                (make-check-info 'exception-message (exn-message exn))
-                (make-check-info 'exception exn))
+              (with-default-check-info*
+               (list
+                (make-check-message "Wrong exception raised")
+                (make-check-info 'exn-message (exn-message exn))
+                (make-check-info 'exn exn))
                (lambda () (fail-check))))])
         (thunk))
-      (with-check-info*
-       (list/if
-         (and (not (check-info-contains-key? 'message))
-              (make-check-message "No exception raised")))
+      (with-default-check-info*
+       (list (make-check-message "No exception raised"))
        (lambda () (fail-check))))))
 
 (define-check (check-not-exn thunk)
@@ -183,10 +180,9 @@
       ([exn:test:check? refail-check]
        [exn?
         (lambda (exn)
-          (with-check-info*
-           (list/if
-            (and (not (check-info-contains-key? 'message))
-                 (make-check-message "Exception raised"))
+          (with-default-check-info*
+           (list
+            (make-check-message "Exception raised")
             (make-check-info 'exception-message (exn-message exn))
             (make-check-info 'exception exn))
            (lambda () (fail-check))))])
@@ -219,10 +215,10 @@
     [(_ actual expected pred)
      (quasisyntax
       (let ([actual-val actual])
-       (with-check-info*
+       (with-default-check-info*
         (list (make-check-name 'check-match)
               (make-check-location
-               (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
+                (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
               (make-check-expression '#,(syntax->datum stx))
               (make-check-actual actual-val)
               (make-check-expected 'expected))
