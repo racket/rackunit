@@ -21,11 +21,17 @@
   [struct dynamic-info ([proc (-> any/c)])]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
+  [check-info-contains-key? (check-info-> symbol? boolean?)]
+  [check-info-ref (check-info-> symbol? (or/c check-info? #f))]
   [with-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
 (module+ for-test
   (provide trim-current-directory))
+
+(define (check-info-> dom cod)
+  (case-> (-> dom cod)
+          (-> (listof check-info?) dom cod)))
 
 ;; Structures --------------------------------------------------
 
@@ -96,3 +102,17 @@
 (define-check-type message any/c)
 (define-check-type actual any/c #:wrapper pretty-info)
 (define-check-type expected any/c #:wrapper pretty-info)
+
+(define check-info-ref
+  (case-lambda
+   [(k)
+    (check-info-ref (current-check-info) k)]
+   [(info k)
+    (findf (λ (i) (eq? k (check-info-name i))) info)]))
+
+(define check-info-contains-key?
+  (case-lambda
+   [(k)
+    (check-info-contains-key? (current-check-info) k)]
+   [(info k)
+    (and (check-info-ref info k) #t)]))

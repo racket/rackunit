@@ -164,14 +164,17 @@
            [exn:fail?
             (lambda (exn)
               (with-check-info*
-               (list
-                (make-check-message "Wrong exception raised")
+               (list/if
+                (and (not (check-info-contains-key? 'message))
+                     (make-check-message "Wrong exception raised"))
                 (make-check-info 'exn-message (exn-message exn))
                 (make-check-info 'exn exn))
                (lambda () (fail-check))))])
         (thunk))
       (with-check-info*
-       (list (make-check-message "No exception raised"))
+       (list/if
+         (and (not (check-info-contains-key? 'message))
+              (make-check-message "No exception raised")))
        (lambda () (fail-check))))))
 
 (define-check (check-not-exn thunk)
@@ -181,8 +184,9 @@
        [exn?
         (lambda (exn)
           (with-check-info*
-           (list
-            (make-check-message "Exception raised")
+           (list/if
+            (and (not (check-info-contains-key? 'message))
+                 (make-check-message "Exception raised"))
             (make-check-info 'exception-message (exn-message exn))
             (make-check-info 'exception exn))
            (lambda () (fail-check))))])
