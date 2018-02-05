@@ -30,6 +30,7 @@
 (require racket/function
          rackunit
          rackunit/private/check-info
+         syntax/srcloc
          (submod rackunit/private/check-info for-test))
 
 (module+ test
@@ -144,4 +145,28 @@
      "trim-current-directory leaves subdirectories alone"
      (trim-current-directory
       (path->string (build-path (current-directory) "foo" "bar.rkt")))
-     "foo/bar.rkt")))
+     "foo/bar.rkt"))
+
+  (test-case "Do not trample check-info location"
+    (let ([srcloc #f] [LINE 1][COL 2][POS 3][SPAN 4])
+      ;; first test set!'s `srcloc` var
+      ;; check-exn (and others) should not overwrite my line, col vals
+      (with-check-info*
+        (list (make-check-location (list 'here LINE COL POS SPAN)))
+        (λ ()
+          (check-exn 
+           exn:fail?
+           (λ ()
+             (set! srcloc
+              (location-info-value
+               (check-info-value
+                (car
+                 (memf
+                  check-location? (current-check-info))))))
+             (error "err")))))
+      ;; check that check-exn did not overwrite my vals
+      (check-equal? (source-location-line srcloc) LINE)
+      (check-equal? (source-location-column srcloc) COL)
+      (check-equal? (source-location-position srcloc) POS)
+      (check-equal? (source-location-span srcloc) SPAN)))
+  )
