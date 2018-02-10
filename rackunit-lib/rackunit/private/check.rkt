@@ -167,8 +167,8 @@
                (list/if
                 (and (not (check-info-contains-key? 'message))
                      (make-check-message "Wrong exception raised"))
-                (make-check-info 'exn-message (exn-message exn))
-                (make-check-info 'exn exn))
+                (make-check-info 'exception-message (exn-message exn))
+                (make-check-info 'exception exn))
                (lambda () (fail-check))))])
         (thunk))
       (with-check-info*
