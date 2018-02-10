@@ -26,12 +26,12 @@ source locations if you do so.
 The following are the basic checks RackUnit provides.  You
 can create your own checks using @racket[define-check].
 
-@defproc*[([(check-eq? (v1 any) (v2 any) (message string? "")) void?]
-           [(check-not-eq? (v1 any) (v2 any) (message string? "")) void?]
-           [(check-eqv? (v1 any) (v2 any) (message string? "")) void?]
-           [(check-not-eqv? (v1 any) (v2 any) (message string? "")) void?]
-           [(check-equal? (v1 any) (v2 any) (message string? "")) void?]
-           [(check-not-equal? (v1 any) (v2 any) (message string? "")) void?])]{
+@defproc*[([(check-eq? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
+           [(check-not-eq? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
+           [(check-eqv? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
+           [(check-not-eqv? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
+           [(check-equal? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
+           [(check-not-equal? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?])]{
 
 Checks that @racket[v1] is equal (or not equal) to @racket[v2], using
 @racket[eq?], @racket[eqv?], or @racket[equal?], respectively. The
@@ -50,7 +50,7 @@ For example, the following checks all fail:
 ]
 }
 
-@defproc[(check-pred (pred (-> any any)) (v any) (message string? ""))
+@defproc[(check-pred (pred (-> any any)) (v any) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[pred] returns a value that is not @racket[#f] when
@@ -68,7 +68,7 @@ The following check fails:
 ]
 }
 
-@defproc[(check-= (v1 any) (v2 any) (epsilon number?) (message string? ""))
+@defproc[(check-= (v1 any) (v2 any) (epsilon number?) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[v1] and @racket[v2] are numbers within
@@ -87,9 +87,9 @@ The following check fails:
 ]
 }
 
-@defproc*[([(check-true (v any) (message string? "")) void?]
-           [(check-false (v any) (message string? "")) void?]
-           [(check-not-false (v any) (message string? "")) void?])]{
+@defproc*[([(check-true (v any) (message (or/c string? #f) #f)) void?]
+           [(check-false (v any) (message (or/c string? #f) #f)) void?]
+           [(check-not-false (v any) (message (or/c string? #f) #f)) void?])]{
 
 Checks that @racket[v] is @racket[#t], is @racket[#f], or is not
 @racket[#f], respectively.  The optional @racket[message] is included
@@ -105,7 +105,7 @@ For example, the following checks all fail:
 }
 
 @defproc[(check-exn (exn-predicate (or/c (-> any any/c) regexp?))
-                    (thunk (-> any)) (message string? ""))
+                    (thunk (-> any)) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[thunk] raises an exception and that either
@@ -150,7 +150,7 @@ entirely.
 ]
 }
 
-@defproc[(check-not-exn (thunk (-> any)) (message string? "")) void?]{
+@defproc[(check-not-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
 
 Checks that @racket[thunk] does not raise any exceptions.
 The optional @racket[message] is included in the output if
@@ -228,7 +228,7 @@ This check fails because of a failure to match:
 @defproc[(check (op (-> any any any))
                 (v1 any)
                 (v2 any)
-                (message string? ""))
+                (message (or/c string? #f) #f))
          void?]{
 
 The most generic check.  Succeeds if @racket[op] applied to
@@ -249,7 +249,7 @@ The following check fails:
 ]
 }
 
-@defproc[(fail (message string? ""))
+@defproc[(fail (message (or/c string? #f) #f))
          void?]{
 
 This check fails unconditionally.  Good for creating test stubs that
