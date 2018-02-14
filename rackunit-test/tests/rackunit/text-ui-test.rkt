@@ -78,6 +78,15 @@
                (check-false
                 (list (iota 15) (iota 15) (iota 15)))))))
 
+(define (failing-test/issue-91)
+  (run-tests
+   (test-suite
+    "Dummy"
+    (test-case "Dummy"
+               (check-equal?
+                (make-list 10 'xfdjkalf)
+                (make-list 11 'xfdjkalf))))))
+
 (define (quiet-failing-test)
   (run-tests
    (test-suite
@@ -132,6 +141,37 @@
              "  '(((0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
      (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
      (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)))")))
+
+   (test-case
+    "Pretty printing test from github issue #91"
+     (let ([op (parameterize ([pretty-print-columns 80])
+                 (with-all-output-to-string (failing-test/issue-91)))])
+       (check string-contains
+              op
+              "
+actual:
+  '(xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf)
+expected:
+  '(xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf)")))
    
    (test-case
     "Location trimmed when file is under current directory"
