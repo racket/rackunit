@@ -2,6 +2,7 @@
 (require racket/list
          racket/match
          racket/string
+         racket/pretty
          "base.rkt"
          "check-info.rkt")
 
@@ -17,6 +18,7 @@
 (define minimum-name-width 9)
 
 (define nested-indent-amount 2)
+(define multi-line-indent-amount 2)
 
 (define (display-test-result res
                              #:verbose? [verbose? #f]
@@ -71,7 +73,16 @@
          (format "~a:\n~a" name nested-str)]
         [else
          (define pad (string-padding name name-width))
-         (format "~a:~a  ~a" name pad (info-value->string value))]))
+         (define one-line-candidate
+           (parameterize ([pretty-print-columns 'infinity])
+             (format "~a:~a  ~a" name pad (info-value->string value))))
+         (if (<= (string-length one-line-candidate) (pretty-print-columns))
+             one-line-candidate
+             (format "~a:\n~a"
+                     name
+                     (string-indent
+                      (info-value->string value)
+                      multi-line-indent-amount)))]))
 
 (define (nested-info->string nested verbose? name-width)
   (define infos (nested-info-values nested))
