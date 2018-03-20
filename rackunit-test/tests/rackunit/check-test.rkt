@@ -92,6 +92,12 @@
     (check-not-false 3))
   (test-case "Simple check-= test"
     (check-= 1.0 1.0 0.0001))
+  (test-case "Simple check-within test"
+    (check-within 1.0 1.0 0.0001))
+  (test-case "Simple check-within test with structure"
+    (check-within (list (list 1.0) '() (list 2.0 3.0))
+                  (list (list 1.0) '() (list 2.0 3.0))
+                  0.001))
    
   (test-case "Use of check as expression"
     (for-each check-false '(#f #f #f)))
@@ -152,6 +158,10 @@
                      check-not-false #f)
   (make-failure-test "check-= failure"
                      check-= 1.0 2.0 0.0)
+  (make-failure-test "check-within failure"
+                     check-within 1.0 2.0 0.0)
+  (make-failure-test "check-within failure with structure"
+                     check-within (list 1.0 2.0) (list 1.0 3.0) 0.0)
 
   (make-failure-test/stx "check-match failure pred"
                          check-match 5 x (even? x))
@@ -161,9 +171,18 @@
    
   (test-case "check-= allows differences within epsilon"
     (check-= 1.0 1.09 1.1))
+  (test-case "check-within allows differences within epsilon"
+    (check-within (list (list 1.0) '() (list 2.0 3.0))
+                  (list (list 0.9999) '() (list 2.001 3.0))
+                  0.1))
    
   (make-failure-test "check-= failure > epsilon"
                      check-= 1 12/10 1/10)
+  (make-failure-test "check-within failure > epsilon"
+                     check-within
+                     (list (list 1.0) '() (list 2.0 3.0))
+                     (list (list 1.0) '() (list 2.5 3.0))
+                     0.1)
    
   (test-case "check-as-expression failure"
     (check-exn exn:test:check?

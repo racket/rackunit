@@ -8,6 +8,7 @@
          rackunit/log
          syntax/parse/define
          "base.rkt"
+         "equal-within.rkt"
          "check-info.rkt"
          "format.rkt"
          "location.rkt")
@@ -35,6 +36,7 @@
          check-eqv?
          check-equal?
          check-=
+         check-within
          check-not-false
          check-not-eq?
          check-not-eqv?
@@ -196,6 +198,8 @@
   [(check-pred predicate expr) (predicate expr)]
   [(check-= expr1 expr2 epsilon)
    (<= (magnitude (- expr1 expr2)) epsilon)]
+  [(check-within expr1 expr2 epsilon)
+   (equal?/within expr1 expr2 epsilon)]
   [(check-true expr) (eq? expr #t)]
   [(check-false expr) (eq? expr #f)]
   [(check-not-false expr) expr]
