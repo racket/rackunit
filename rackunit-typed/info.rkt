@@ -3,7 +3,8 @@
 (define collection 'multi)
 
 (define deps
-  '("base"))
+  '("base"
+    "typed-racket-more"))
 
 (define implies
   '("typed-racket-more"))
