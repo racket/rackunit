@@ -9,3 +9,7 @@
 (define implies
   '("typed-racket-more"))
 
+(define pkg-desc "Typed Racket types for RackUnit")
+
+(define pkg-authors '(samth stamourv))
+
