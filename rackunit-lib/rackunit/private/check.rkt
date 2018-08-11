@@ -90,36 +90,34 @@
 
 (define (list/if . vs) (filter values vs))
 
-(define-simple-macro
-  (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
-  (define (name formal ... [message #f]
-                #:location [location (list 'unknown #f #f #f #f)]
-                #:expression [expression 'unknown])
-    (define infos
-      (list/if (make-check-name 'pub)
-               (make-check-location location)
-               (make-check-expression expression)
-               (make-check-params (list formal ...))
-               (and message (make-check-message message))))
-    (with-default-check-info* infos
-      (λ () ((current-check-around) (λ () body ... (void)))))))
+(define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
+  (λ (#:location [location (list 'unknown #f #f #f #f)]
+      #:expression [expression 'unknown])
+    (procedure-rename
+      (λ (formal ... [message #f])
+          (define infos
+            (list/if (make-check-name 'pub)
+                     (make-check-location location)
+                     (make-check-expression expression)
+                     (make-check-params (list formal ...))
+                     (and message (make-check-message message))))
+          (with-default-check-info* infos
+            (λ () ((current-check-around) (λ () body ... (void))))))
+      'pub)))
 
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin
-    (define-check-func (check-impl formal ...) #:public-name name body ...)
+    (define check-impl (make-check-func (check-impl formal ...) #:public-name name body ...))
     (define-syntax (name stx)
       (with-syntax ([loc (datum->syntax #f 'loc stx)])
         (syntax-parse stx
           [(chk . args)
-           #'(check-impl #:location (syntax->location #'loc)
-                         #:expression '(chk . args)
-                         . args)]
+           #'((check-impl #:location (syntax->location #'loc)
+                          #:expression '(chk . args))
+              . args)]
           [chk:id
-           #'(lambda args
-               (apply check-impl
-                      #:location (syntax->location #'loc)
-                      #:expression 'chk
-                      args))])))))
+           #'(check-impl #:location (syntax->location #'loc)
+                         #:expression 'chk)])))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
   (define-check (name param ...)
