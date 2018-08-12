@@ -103,6 +103,10 @@
     (check-within (list (list 1.0) '() (flvector 2.0 3.0))
                   (list (list 1.0) '() (flvector 2.0 3.0))
                   0.001))
+  (test-case "Simple check-within test with hash-tables"
+    (check-within (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  0.001))
    
   (test-case "Use of check as expression"
     (for-each check-false '(#f #f #f)))
@@ -169,6 +173,11 @@
                      check-within (list 1.0 2.0) (list 1.0 3.0) 0.0)
   (make-failure-test "check-within failure with flvectors"
                      check-within (flvector 1.0 2.0) (flvector 1.0 3.0) 0.0)
+  (make-failure-test "check-within failure with hash-tables"
+                     check-within
+                     (hash 'a 3.0 'b 10.0)
+                     (hash 'a 3.0 'b 98.6)
+                     0.0)
 
   (make-failure-test/stx "check-match failure pred"
                          check-match 5 x (even? x))
@@ -186,6 +195,10 @@
     (check-within (list (flvector 1.0) '() (flvector 2.0 3.0))
                   (list (flvector 0.9999) '() (flvector 2.001 3.0))
                   0.1))
+  (test-case "check-within allows differences within eplison inside hash-tables"
+    (check-within (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  (hash 'a (list 2.98) 'b (flvector 9.99 20.01))
+                  0.1))
    
   (make-failure-test "check-= failure > epsilon"
                      check-= 1 12/10 1/10)
@@ -198,6 +211,11 @@
                      check-within
                      (list 'a (flvector 2.0 3.0))
                      (list 'a (flvector 2.5 3.0))
+                     0.1)
+  (make-failure-test "check-within failure > epsilon inside a hash-table"
+                     check-within
+                     (hash 'a 3.0 'b 10.0)
+                     (hash 'a 3.7 'b 10.0)
                      0.1)
    
   (test-case "check-as-expression failure"
