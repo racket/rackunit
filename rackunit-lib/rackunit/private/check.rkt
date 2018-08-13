@@ -10,7 +10,8 @@
          "base.rkt"
          "check-info.rkt"
          "format.rkt"
-         "location.rkt")
+         "location.rkt"
+         "util-list.rkt")
 
 (provide
  (contract-out
@@ -85,8 +86,6 @@
    (make-exn:test:check (exn-message exn)
                         (exn-continuation-marks exn)
                         (exn:test:check-stack exn))))
-
-(define (list/if . vs) (filter values vs))
 
 (define-simple-macro
   (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)

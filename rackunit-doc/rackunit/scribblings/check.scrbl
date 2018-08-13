@@ -1,10 +1,12 @@
 #lang scribble/doc
-@(require "base.rkt")
+@(require (except-in "base.rkt" examples)
+          scribble/example)
 
-@(require (for-label racket/match))
+@(require (for-label racket/match
+                     rackunit/meta))
 
 @(define rackunit-eval (make-base-eval))
-@(interaction-eval #:eval rackunit-eval (require rackunit))
+@(interaction-eval #:eval rackunit-eval (require rackunit rackunit/meta))
 @(interaction-eval #:eval rackunit-eval (error-print-context-length 0))
 
 @title{Checks}
@@ -530,5 +532,58 @@ Checks defined with @racket[define-check] add the source location and source
 Raises an @racket[exn:test:check] with the contents of the @tech{check-info stack}.
 The optional message is used as the exception's
 message.}
+
+@section{Testing Custom Checks}
+@defmodule[rackunit/meta]
+
+Custom checks such as those created by @racket[define-check] can contain a fair
+amount of logic. Consequently, custom checks can be buggy and should be tested.
+RackUnit provides a few checks explicitly designed for testing the behavior of
+other checks; they allow verifying checks pass and fail when expected or that
+checks add certain information to the @tech{check-info stack}. These bindings
+are provided by @racketmodname[rackunit/meta], not @racketmodname[rackunit].
+
+@defproc[(check-fail [assertion-tree
+                      (treeof (or/c (-> exn:test:check? any/c)
+                                    regexp?
+                                    check-info?))]
+                     [thunk (-> any)]
+                     [message string? ""])
+         void?]{
+ Checks that @racket[thunk] raises a check failure with @racket[fail-check] and
+ that the failure satisfies every assertion value in @racket[assertion-tree].
+ A failure can satisfy an assertion value in one of three ways, depending on the
+ type of assertion value:
+
+ @itemlist[
+ @item{A predicate assertion value @racket[p] is satisfied by a failure
+   @racket[f] if @racket[(p f)] returns a true value.}
+ @item{A regular expression assertion value @racket[r] is satisfied by a failure
+   if @racket[r] matches the failure's message (as returned by
+   @racket[exn-message]).}
+ @item{A @racket[check-info] assertion value @racket[i] is satisfied by a
+   failure if the @tech{check-info stack} returned by
+   @racket[exn:test:check-stack] contains a @racket[check-info] value that is
+   @racket[equal?] to @racket[i].}]
+
+ @examples[#:eval rackunit-eval
+           (check-fail '() (λ () (check-equal? 'foo 'bar)))
+           (check-fail number? (λ () (check-equal? 'foo 'bar)))
+           (check-fail (list string? (check-info 'info 10))
+                       (λ () (check-equal? 'foo 'foo)))]
+
+ In addition, a failure is reported if @racket[thunk] raises something other
+ than an @racket[exn:test:check] value. The optional @racket[message] argument
+ is included in the output if the check fails.
+
+ @examples[#:eval rackunit-eval
+           (check-fail '() (λ () (raise 'foo)))
+           (check-fail number? (λ () (check-equal? 'foo 'bar)) "my message")]
+
+ Proceed with caution when passing a complex tree to @racket[check-fail].
+ Semantically, a single check expression should assert "one thing"; consider
+ splitting the complex tree into multiple simpler calls to @racket[check-fail].
+
+ @history[#:added "1.9"]}
 
 @close-eval[rackunit-eval]

@@ -54,7 +54,7 @@
          current-test-case-around
          test-suite-test-case-around
          test-suite-check-around
-         
+
          define-test-suite
          define/provide-test-suite
          test-suite*
@@ -90,7 +90,7 @@
          define-check
          define-simple-check
          define-binary-check
-         
+
          current-check-handler
          current-check-around
 
