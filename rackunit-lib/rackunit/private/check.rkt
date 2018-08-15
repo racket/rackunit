@@ -8,6 +8,7 @@
          rackunit/log
          syntax/parse/define
          "base.rkt"
+         "equal-within.rkt"
          "check-info.rkt"
          "format.rkt"
          "location.rkt")
@@ -35,6 +36,7 @@
          check-eqv?
          check-equal?
          check-=
+         check-within
          check-not-false
          check-not-eq?
          check-not-eqv?
@@ -203,6 +205,14 @@
   [(check-not-eqv? expr1 expr2) (not (eqv? expr1 expr2))]
   [(check-not-equal? expr1 expr2) (not (equal? expr1 expr2))]
   [(fail) #f])
+
+(define-check (check-within expr1 expr2 epsilon)
+  (with-check-info*
+   (list (make-check-actual expr1)
+         (make-check-expected expr2))
+   (lambda ()
+     (unless (equal?/within expr1 expr2 epsilon)
+       (fail-check)))))
 
 (define-binary-check (check-eq? eq? expr1 expr2))
 (define-binary-check (check-eqv? eqv? expr1 expr2))

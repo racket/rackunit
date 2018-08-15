@@ -1,10 +1,10 @@
 #lang scribble/doc
 @(require "base.rkt")
 
-@(require (for-label racket/match))
+@(require (for-label racket/match racket/flonum))
 
 @(define rackunit-eval (make-base-eval))
-@(interaction-eval #:eval rackunit-eval (require rackunit))
+@(interaction-eval #:eval rackunit-eval (require rackunit racket/flonum))
 @(interaction-eval #:eval rackunit-eval (error-print-context-length 0))
 
 @title{Checks}
@@ -70,7 +70,7 @@ The following check fails:
 ]
 }
 
-@defproc[(check-= (v1 any) (v2 any) (epsilon number?) (message (or/c string? #f) #f))
+@defproc[(check-= (v1 number?) (v2 number?) (epsilon number?) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[v1] and @racket[v2] are numbers within
@@ -86,6 +86,29 @@ For example, the following check passes:
 The following check fails:
 @interaction[#:eval rackunit-eval
   (check-= 1.0 1.01 0.005 "I fail")
+]
+}
+
+@defproc[(check-within [v1 any] [v2 any] [epsilon number?] [message (or/c string? #f) #f])
+         void?]{
+
+Checks that @racket[v1] and @racket[v2] are @racket[equal?] to each
+other, while allowing numbers @italic{inside} of them to be different by
+at most @racket[epsilon] from one another. If @racket[(equal? v1 v2)] would
+call @racket[equal?] on sub-pieces that are numbers, then those numbers are
+considered "good enough" if they're within @racket[epsilon].
+
+For example, the following checks pass:
+
+@interaction[#:eval rackunit-eval
+  (check-within (list 6 10) (list 6.02 9.99) 0.05)
+  (check-within (flvector 3.0 4.0 5.0) (flvector 3.01 4.01 5.014) 0.02)
+  (check-within (hash 'C 20 'F 68) (hash 'C 25 'F 77) 10)
+]
+And the following checks fail:
+@interaction[#:eval rackunit-eval
+  (check-within (list 6.0e23 10.0) (list 6.02e23 9.8) 0.05)
+  (check-within (hash 'C 18 'F 64) (hash 'C 25 'F 77) 10)
 ]
 }
 
@@ -279,7 +302,7 @@ function, and the @racket[with-check-info] macro.
  A special wrapper around a string for use as a @tech{check-info} value. When
  displayed in a check failure message, @racket[value] is displayed without
  quotes. Used to print messages instead of writing values.
- 
+
  @(interaction
    #:eval rackunit-eval
    (define-check (string-info-check)
@@ -295,7 +318,7 @@ function, and the @racket[with-check-info] macro.
  @racket[check-info] value. A check info whose value is a nested info is
  displayed as an indented subsequence of infos. Nested infos can be placed
  inside nested infos, yielding greater indentation.
- 
+
  @(interaction
    #:eval rackunit-eval
    (define-check (nested-info-check)
@@ -303,7 +326,7 @@ function, and the @racket[with-check-info] macro.
        (list (make-check-info 'foo "foo") (make-check-info 'bar "bar")))
      (with-check-info (['nested (nested-info infos)]) (fail-check)))
    (nested-info-check))
- 
+
  @history[#:added "1.7"]}
 
 @defstruct*[dynamic-info ([proc (-> any/c)]) #:transparent]{
