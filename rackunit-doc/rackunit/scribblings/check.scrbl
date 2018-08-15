@@ -110,7 +110,8 @@ And the following checks fail:
   (check-within (list 6.0e23 10.0) (list 6.02e23 9.8) 0.05)
   (check-within (hash 'C 18 'F 64) (hash 'C 25 'F 77) 10)
 ]
-}
+
+@history[#:added "1.10"]}
 
 @defproc*[([(check-true (v any) (message (or/c string? #f) #f)) void?]
            [(check-false (v any) (message (or/c string? #f) #f)) void?]
