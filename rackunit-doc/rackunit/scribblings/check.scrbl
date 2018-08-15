@@ -94,8 +94,8 @@ The following check fails:
 
 Checks that @racket[v1] and @racket[v2] are @racket[equal?] to each
 other, while allowing numbers @italic{inside} of them to be different by
-@racket[epsilon] from one another. If @racket[(equal? v1 v2)] would call
-@racket[equal?] on sub-pieces that are numbers, then those numbers are
+at most @racket[epsilon] from one another. If @racket[(equal? v1 v2)] would
+call @racket[equal?] on sub-pieces that are numbers, then those numbers are
 considered "good enough" if they're within @racket[epsilon].
 
 For example, the following checks pass:
