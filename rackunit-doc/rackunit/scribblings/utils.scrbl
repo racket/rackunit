@@ -10,7 +10,7 @@
 @section{Checking documentation completeness}
 @defmodule[rackunit/docs-complete]
 
-@defproc[(check-docs [lib symbol?]
+@defproc[(check-docs [lib module-path?]
                      [#:skip skip 
                              (or/c regexp? 
                                    symbol?
