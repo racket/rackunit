@@ -30,7 +30,8 @@ it is a list of symbols and regexps, then any exporting matching any of the
 symbols or regexps are ignored. If it is a function, the function is treated
 as a predicate and passed each export of the module. If @racket[skip] is
 @racket[#f], no exports are skipped.
-}
+
+@history[#:changed "1.10" @elem{Changed @racket[lib] to accept any module path.}]}
 
 @section{Logging Test Results}
 @defmodule[rackunit/log]
