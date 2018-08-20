@@ -335,7 +335,11 @@
             (('name "name") ('info "info"))
           #t)
         (fail-check))))
-   
+
+  (define (raise-sample-arity-error)
+    ;; expected 1 argument, got 0
+    (raise-arity-error 'check-test 1))
+
   ;; If check-exn isn't working correctly many tests above will
   ;; silently fail.  Here we test check-exn is working.
   (test-case
@@ -344,7 +348,7 @@
         ((exn?
           (lambda (exn) (fail "Received exception"))))
       (check-exn exn:fail:contract:arity?
-                 (lambda () (= 1)))))
+                 raise-sample-arity-error)))
   (test-case
       "check-exn fails if no exception raised"
     (with-handlers
@@ -353,7 +357,7 @@
          (exn:fail:contract:arity?
           (lambda (exn) (fail "check-exn didn't fail"))))
       (check-exn exn? (lambda () (= 1 1)))
-      (= 1)))
+      (raise-sample-arity-error)))
    
   (test-case
       "check-not-exn captures exception information if one raised"
