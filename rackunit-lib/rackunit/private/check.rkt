@@ -3,6 +3,7 @@
 (require (for-syntax racket/base
                      racket/syntax
                      syntax/parse)
+         racket/function
          racket/contract/base
          racket/match
          rackunit/log
@@ -89,21 +90,31 @@
                         (exn:test:check-stack exn))))
 
 (define (list/if . vs) (filter values vs))
+(define (thunk? v) (and (procedure? v) (arity=? (procedure-arity v) 0)))
 
 (define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
   (λ (#:location [location (list 'unknown #f #f #f #f)]
       #:expression [expression 'unknown])
     (procedure-rename
-      (λ (formal ... [message #f])
-          (define infos
-            (list/if (make-check-name 'pub)
-                     (make-check-location location)
-                     (make-check-expression expression)
-                     (make-check-params (list formal ...))
-                     (and message (make-check-message message))))
-          (with-default-check-info* infos
-            (λ () ((current-check-around) (λ () body ... (void))))))
-      'pub)))
+     (λ (formal ... [message #f])
+       (define infos
+         (list/if (make-check-name 'pub)
+                  (make-check-location location)
+                  (make-check-expression expression)
+                  ;; NOTE(vkz) although we push the expression above on the
+                  ;; check-info stack it doesn't appear in any error messages.
+                  ;; Since check args (formals) are now delayed with thunks we'll
+                  ;; piggieback on that expression to show nice context:
+                  (make-check-params expression)
+                  (and message (make-check-message message))))
+       (with-default-check-info* infos
+         (λ () ((current-check-around) (λ ()
+                                         (set! formal (if (thunk? formal) (formal) formal))
+                                         ...
+                                         body
+                                         ...
+                                         (void))))))
+     'pub)))
 
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin
@@ -112,9 +123,14 @@
       (with-syntax ([loc (datum->syntax #f 'loc stx)])
         (syntax-parse stx
           [(chk . args)
-           #'((check-impl #:location (syntax->location #'loc)
-                          #:expression '(chk . args))
-              . args)]
+           (with-syntax ([thunks (datum->syntax #'args
+                                                (map
+                                                 (λ (arg) (quasisyntax (thunk #,arg)))
+                                                 (syntax->list #'args))
+                                                #'args)])
+             #'((check-impl #:location (syntax->location #'loc)
+                            #:expression '(chk . args))
+                . thunks))]
           [chk:id
            #'(check-impl #:location (syntax->location #'loc)
                          #:expression 'chk)])))))
