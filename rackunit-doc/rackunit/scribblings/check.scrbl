@@ -52,7 +52,7 @@ For example, the following checks all fail:
 ]
 }
 
-@defproc[(check-pred (pred (-> any/c any)) (v any/c) (message (or/c string? #f) #f))
+@defproc[(check-pred (pred (-> any/c any/c)) (v any/c) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[pred] returns a value that is not @racket[#f] when
@@ -251,7 +251,7 @@ This check fails because of a failure to match:
 }
 
 
-@defproc[(check (op (-> any/c any/c any))
+@defproc[(check (op (-> any/c any/c any/c))
                 (v1 any/c)
                 (v2 any/c)
                 (message (or/c string? #f) #f))
