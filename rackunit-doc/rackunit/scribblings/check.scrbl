@@ -130,7 +130,7 @@ For example, the following checks all fail:
 ]
 }
 
-@defproc[(check-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
+@defproc[(check-exn (exn-predicate (or/c (-> any/c any) regexp?))
                     (thunk (-> any)) (message (or/c string? #f) #f))
          void?]{
 
