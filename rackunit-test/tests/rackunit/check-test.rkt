@@ -138,7 +138,30 @@
       (check-match (data 1 2 (data 1 2 3))
                    (data _ _ (data x y z))
                    (equal? (+ x y z) 6))))
-   
+
+  (test-case "Trivial check-match/values test"
+    (check-match/values "whatever" (values _)))
+
+  (test-case "Simple check-match/values test"
+    (check-match/values (values 1 2 3) (values _ _ 3)))
+
+  (test-case "Using check-match/values with ellipses"
+    (check-match/values (values 1 2 4 5)
+                        (values 1 (? even? es) ... 5)
+                        #:when (equal? (apply + es) 6)))
+
+  (test-case "check-match/values with nested struct"
+    (let ()
+      (struct data (f1 f2 f3))
+      (define (f)
+        (values (data 1 2 (data 1 2 3))
+                (data 4 5 (data 6 7 8))))
+      (check-match/values (f)
+                          (values (data _ 2 (data x y z))
+                                  (data _ 5 (data a b c)))
+                          #:when (equal? (+ x y z a b c) 27))))
+
+
   ;; Failures
   (make-failure-test "check-equal? failure"
                      check-equal? 1 2)
@@ -180,12 +203,31 @@
                      (hash 'a 3.0 'b 98.6)
                      0.0)
 
+
+  ;; check-match
   (make-failure-test/stx "check-match failure pred"
                          check-match 5 x (even? x))
 
   (make-failure-test/stx "check-match failure match"
                          check-match (list 4 5) (list _))
-   
+
+  ;; check-match/values
+  (make-failure-test/stx "check-match/values: wrong number of values"
+                         check-match/values (values 3 4) (values _))
+
+  (make-failure-test/stx "check-match/values: right number, one value wrong"
+                         check-match/values (values 1 2 3) (values 1 2 4))
+
+  (make-failure-test/stx "check-match/values: when-condition failure"
+                         check-match/values (values 1 2 3) (values x y z)
+                         #:when (odd? (+ x y z)))
+
+  (make-failure-test/stx "check-match/values: failure with ellipses"
+                         check-match/values
+                         (values 1 2 4 5)
+                         (values 1 (? even? es) ...))
+
+
   (test-case "check-= allows differences within epsilon"
     (check-= 1.0 1.09 1.1))
   (test-case "check-within allows differences within epsilon"
