@@ -231,7 +231,7 @@
                 (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
               (make-check-expression '#,(syntax->datum stx))
               (make-check-actual actual-val)
-              (make-check-expected 'expected))
+              (make-check-expected (written 'expected)))
         (lambda ()
           (check-not-false (match actual-val
                              [expected pred]
@@ -254,8 +254,8 @@
                  (make-check-location
                   (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
                  (make-check-expression '#,(syntax->datum stx))
-                 (make-check-actual (cons 'values (map printed actual-lst)))
-                 (make-check-expected (cons 'values (map printed expected-lst))))
+                 (make-check-actual (written (cons 'values (map printed actual-lst))))
+                 (make-check-expected (written (cons 'values (map printed expected-lst)))))
            (lambda ()
              (check-equal? actual-lst expected-lst)))))])))
 
@@ -280,14 +280,18 @@
                  (make-check-location
                   (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
                  (make-check-expression '#,(syntax->datum stx))
-                 (make-check-actual (cons 'values (map printed actual-lst)))
-                 (make-check-expected '(values expected ...)))
+                 (make-check-actual (written (cons 'values (map printed actual-lst))))
+                 (make-check-expected (written '(values expected ...))))
            (lambda ()
              (check-not-false (match actual-lst
                                 [(list expected ...) pred]
                                 [_ #f]))))))])))
 
-;; A helper struct for check-equal?/values and check-match/values
+;; Helper structs for check-equal?/values and check-match/values
+(struct written (val) #:transparent
+  #:property prop:custom-write
+  (lambda (this out mode) (write (written-val this) out)))
+
 (struct printed (val) #:transparent
   #:property prop:custom-write
   (lambda (this out mode)
