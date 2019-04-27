@@ -47,7 +47,7 @@ so the test can be named.
 ]
 
 
-@defproc[(test-case? (obj any)) boolean?]{
+@defproc[(test-case? (obj any/c)) boolean?]{
  True if @racket[obj] is a test case, and false otherwise.
 }
 
@@ -69,7 +69,7 @@ so the test can be named.
            [(test-true [name string?] [v any/c]) void?]
            [(test-false [name string?] [v any/c]) void?]
            [(test-not-false [name string?] [v any/c]) void?]
-           [(test-exn [name string?] [pred (or/c (-> any any/c) regexp?)] [thunk (-> any)]) void?]
+           [(test-exn [name string?] [pred (or/c (-> any/c any/c) regexp?)] [thunk (-> any)]) void?]
            [(test-not-exn [name string?] [thunk (-> any)]) void?])]{
 
 Creates a test case with the given @racket[name] that performs the
@@ -136,7 +136,7 @@ given @racket[tests]. Unlike the @racket[test-suite] form, the tests
 are represented as a list of test values.
 }
 
-@defproc[(test-suite? (obj any)) boolean?]{ True if
+@defproc[(test-suite? (obj any/c)) boolean?]{ True if
 @racket[obj] is a test suite, and false otherwise}
 
 

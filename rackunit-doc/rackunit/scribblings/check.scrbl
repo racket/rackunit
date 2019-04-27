@@ -28,12 +28,12 @@ function, though this will affect the source location that the check grabs.
 The following are the basic checks RackUnit provides.  You
 can create your own checks using @racket[define-check].
 
-@defproc*[([(check-eq? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
-           [(check-not-eq? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
-           [(check-eqv? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
-           [(check-not-eqv? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
-           [(check-equal? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?]
-           [(check-not-equal? (v1 any) (v2 any) (message (or/c string? #f) #f)) void?])]{
+@defproc*[([(check-eq? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?]
+           [(check-not-eq? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?]
+           [(check-eqv? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?]
+           [(check-not-eqv? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?]
+           [(check-equal? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?]
+           [(check-not-equal? (v1 any/c) (v2 any/c) (message (or/c string? #f) #f)) void?])]{
 
 Checks that @racket[v1] is equal (or not equal) to @racket[v2], using
 @racket[eq?], @racket[eqv?], or @racket[equal?], respectively. The
@@ -52,7 +52,7 @@ For example, the following checks all fail:
 ]
 }
 
-@defproc[(check-pred (pred (-> any any)) (v any) (message (or/c string? #f) #f))
+@defproc[(check-pred (pred (-> any/c any/c)) (v any/c) (message (or/c string? #f) #f))
          void?]{
 
 Checks that @racket[pred] returns a value that is not @racket[#f] when
@@ -89,7 +89,7 @@ The following check fails:
 ]
 }
 
-@defproc[(check-within [v1 any] [v2 any] [epsilon number?] [message (or/c string? #f) #f])
+@defproc[(check-within [v1 any/c] [v2 any/c] [epsilon number?] [message (or/c string? #f) #f])
          void?]{
 
 Checks that @racket[v1] and @racket[v2] are @racket[equal?] to each
@@ -113,9 +113,9 @@ And the following checks fail:
 
 @history[#:added "1.10"]}
 
-@defproc*[([(check-true (v any) (message (or/c string? #f) #f)) void?]
-           [(check-false (v any) (message (or/c string? #f) #f)) void?]
-           [(check-not-false (v any) (message (or/c string? #f) #f)) void?])]{
+@defproc*[([(check-true (v any/c) (message (or/c string? #f) #f)) void?]
+           [(check-false (v any/c) (message (or/c string? #f) #f)) void?]
+           [(check-not-false (v any/c) (message (or/c string? #f) #f)) void?])]{
 
 Checks that @racket[v] is @racket[#t], is @racket[#f], or is not
 @racket[#f], respectively.  The optional @racket[message] is included
@@ -130,7 +130,7 @@ For example, the following checks all fail:
 ]
 }
 
-@defproc[(check-exn (exn-predicate (or/c (-> any any/c) regexp?))
+@defproc[(check-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
                     (thunk (-> any)) (message (or/c string? #f) #f))
          void?]{
 
@@ -251,9 +251,9 @@ This check fails because of a failure to match:
 }
 
 
-@defproc[(check (op (-> any any any))
-                (v1 any)
-                (v2 any)
+@defproc[(check (op (-> any/c any/c any/c))
+                (v1 any/c)
+                (v2 any/c)
                 (message (or/c string? #f) #f))
          void?]{
 
@@ -290,7 +290,7 @@ the failure to RackUnit's @tech{check-info stack}.
 Additional information can be stored by using the @racket[with-check-info*]
 function, and the @racket[with-check-info] macro.
 
-@defstruct[check-info ([name symbol?] [value any]) #:transparent]{
+@defstruct[check-info ([name symbol?] [value any/c]) #:transparent]{
  A @deftech[#:key "check-info"]{check-info structure} stores information
  associated with the context of the execution of a check. The @racket[value]
  is normally written in a check failure message using @racket[write], but the
@@ -363,14 +363,14 @@ structures with predefined names.  This avoids
 misspelling errors:
 
 @defproc*[([(make-check-name (name string?)) check-info?]
-           [(make-check-params (params (listof any))) check-info?]
-           [(make-check-location (loc (list/c any (or/c number? #f) (or/c number? #f)
+           [(make-check-params (params (listof any/c))) check-info?]
+           [(make-check-location (loc (list/c any/c (or/c number? #f) (or/c number? #f)
                                                   (or/c number? #f) (or/c number? #f))))
             check-info?]
-           [(make-check-expression (msg any)) check-info?]
+           [(make-check-expression (msg any/c)) check-info?]
            [(make-check-message (msg string?)) check-info?]
-           [(make-check-actual (param any)) check-info?]
-           [(make-check-expected (param any)) check-info?])]{}
+           [(make-check-actual (param any/c)) check-info?]
+           [(make-check-expected (param any/c)) check-info?])]{}
 
 @defproc[(with-check-info* (info (listof check-info?)) (thunk (-> any))) any]{
 
