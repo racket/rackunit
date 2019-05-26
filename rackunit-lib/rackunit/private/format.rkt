@@ -121,6 +121,8 @@
            (display-raised-message e)]
           [else
            (display-raised-summary "ERROR" e)
+           (display-check-info-stack (current-check-info)
+                                     #:verbose? verbose?)
            (display-raised-message e)])
     (display-delimiter)))
 
