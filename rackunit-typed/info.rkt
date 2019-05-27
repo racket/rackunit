@@ -5,8 +5,7 @@
 (define test-responsibles '((all jay)))
 
 (define deps
-  '("racket-index"
-    "rackunit-gui"
+  '("rackunit-gui"
     "rackunit-lib"
     "typed-racket-lib"
     "base"
