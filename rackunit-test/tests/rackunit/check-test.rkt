@@ -196,10 +196,11 @@
     (check-within (list (flvector 1.0) '() (flvector 2.0 3.0))
                   (list (flvector 0.9999) '() (flvector 2.001 3.0))
                   0.1))
-  (test-case "check-within allows differences within epsilon in extflvectors"
-    (check-within (list (extflvector 1.0t0) '() (extflvector 2.0t0 3.0t0))
-                  (list (extflvector 0.9999t0) '() (extflvector 2.001t0 3.0t0))
-                  0.1))
+  (when (extflonum-available?)
+    (test-case "check-within allows differences within epsilon in extflvectors"
+      (check-within (list (extflvector 1.0t0) '() (extflvector 2.0t0 3.0t0))
+                    (list (extflvector 0.9999t0) '() (extflvector 2.001t0 3.0t0))
+                    0.1)))
   (test-case "check-within allows differences within eplison inside hash-tables"
     (check-within (hash 'a (list 3) 'b (flvector 10.0 20.0))
                   (hash 'a (list 2.98) 'b (flvector 9.99 20.01))
@@ -217,11 +218,12 @@
                      (list 'a (flvector 2.0 3.0))
                      (list 'a (flvector 2.5 3.0))
                      0.1)
-  (make-failure-test "check-within failure > epsilon inside an extflvector"
-                     check-within
-                     (list 'a (extflvector 2.0t0 3.0t0))
-                     (list 'a (extflvector 2.5t0 3.0t0))
-                     0.1)
+  (when (extflonum-available?)
+    (make-failure-test "check-within failure > epsilon inside an extflvector"
+                       check-within
+                       (list 'a (extflvector 2.0t0 3.0t0))
+                       (list 'a (extflvector 2.5t0 3.0t0))
+                       0.1))
   (make-failure-test "check-within failure > epsilon inside a hash-table"
                      check-within
                      (hash 'a 3.0 'b 10.0)
