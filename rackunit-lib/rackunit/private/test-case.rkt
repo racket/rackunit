@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base syntax/parse)
          racket/contract/base
          rackunit/log
          "format.rkt"
@@ -70,18 +70,11 @@
       stx)]))
 
 (define-syntax (test-case stx)
-  (syntax-case stx ()
-    [(_ name expr ...)
+  (syntax-parse stx
+    [(_ (~describe "test-case name" name:string) expr ...)
      (quasisyntax/loc stx
-       (parameterize
-           ([current-test-name
-             (ensure-string name (quote-syntax #,(datum->syntax #f 'loc #'name)))])
+       (parameterize ([current-test-name name])
          (test-begin expr ...)))]))
-
-(define (ensure-string name src-stx)
-  (contract string? name
-            (syntax-source src-stx)
-            (syntax-source-module #'test-case #t)))
 
 (define-syntax before
   (syntax-rules ()
@@ -112,7 +105,7 @@
          after-e)))
     ((after error ...)
      (raise-syntax-error
-      'before
+      'after
       "Incorrect use of after macro.  Correct format is (after expr1 expr2 ... after-expr)"
       'after
       '(error ...)))))
