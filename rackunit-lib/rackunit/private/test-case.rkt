@@ -70,11 +70,18 @@
       stx)]))
 
 (define-syntax (test-case stx)
-  (syntax-parse stx
-    [(_ (~describe "test-case name" name:string) expr ...)
+  (syntax-case stx ()
+    [(_ name expr ...)
      (quasisyntax/loc stx
-       (parameterize ([current-test-name name])
+       (parameterize
+           ([current-test-name
+             (ensure-string name (quote-syntax #,(datum->syntax #f 'loc #'name)))])
          (test-begin expr ...)))]))
+
+(define (ensure-string name src-stx)
+  (contract string? name
+            (syntax-source src-stx)
+            (syntax-source-module #'test-case #t)))
 
 (define-syntax before
   (syntax-rules ()
