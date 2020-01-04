@@ -176,19 +176,26 @@ entirely.
 ]
 }
 
-@defproc[(check-compile-time-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
-                    (thunk (-> any)) (message (or/c string? #f) #f))
+@defform[(check-compile-time-exn exn-predicate body)
+         #:contracts ([exn-predicate (or/c (-> any/c any/c) regexp?)]
+                      [body (-> any)])
          void?]{
 
-Same as @racket[check-exn], but wraps @racket[thunk] with 
-@racket[convert-compile-time-error] to check for compile time exceptions.
+Similar to @racket[check-exn], but checks that an expression, @racket[body],
+raises a runtime or compile time exception and that either @racket[exn-predicate] 
+returns a true value if it is a function, or that it matches the 
+message in the exception if  @racket[exn-predicate] is a regexp. 
+In the latter case, the exception raised must be an @racket[exn:fail?].
+}
 
-@defproc[(check-syntax-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
-                    (thunk (-> any)) (message (or/c string? #f) #f))
+@defform[(check-syntax-exn exn-predicate body)
+         #:contracts ([exn-predicate (or/c (-> any/c any/c) regexp?)]
+                      [body (-> any)])
          void?]{
 
-Same as @racket[check-exn], but wraps @racket[thunk] with 
-@racket[convert-syntax-error] to check for compile time syntax exceptions.
+Same as @racket[check-compile-time-exn], but only catches compile-time
+@racket[exn:fail:syntax?] exceptions and runtime exceptions in @racket[body].
+}
 
 @defproc[(check-not-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
 
@@ -203,17 +210,21 @@ the check fails.
 
 }
 
-@defproc[(check-not-compile-time-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
+@defform[(check-not-compile-time-exn body)
+          #:contracts ([body (-> any)])
+          void?]{
 
-Same as @racket[check-not-exn], but wraps @racket[thunk] with 
-@racket[convert-compile-time-error] to check that there are no
-compile time exceptions.
+Similar to @racket[check-not-exn], but checks that an expression, @racket[body],
+does not raise a runtime or compile time exception.
+}
 
-@defproc[(check-not-syntax-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
+@defform[(check-not-syntax-exn body)
+          #:contracts ([body (-> any)])
+          void?]{
 
-Same as @racket[check-not-exn], but wraps @racket[thunk] with 
-@racket[convert-syntax-error] to check that there are no
-compile time syntax exceptions.
+Same as @racket[check-not-compile-time-exn], but only catches compile-time
+@racket[exn:fail:syntax?] exceptions and runtime exceptions in @racket[body].
+}
 
 @defproc[(check-regexp-match (regexp regexp?)
                              (string string?))

@@ -144,7 +144,7 @@
                (procedure-arity-includes? thunk 0))
     (raise-arguments-error name "thunk must be a procedure that accepts 0 arguments" "thunk" thunk)))
 
-(define-check (check-exn raw-pred thunk)
+(define-check (check-exn-helper raw-pred thunk location)
   (let ([pred
          (cond [(regexp? raw-pred)
                 (λ (x) (and (exn:fail? x) (regexp-match raw-pred (exn-message x))))]
@@ -169,55 +169,77 @@
            [exn:fail?
             (lambda (exn)
               (with-default-check-info*
-               (list
-                (make-check-message "Wrong exception raised")
-                (make-check-info 'exn-message (exn-message exn))
-                (make-check-info 'exn exn))
+               (append (list
+                          (make-check-message "Wrong exception raised")
+                          (make-check-info 'exn-message (exn-message exn))
+                          (make-check-info 'exn exn))
+                       (if (equal? location null)
+                           null
+                           (list 
+                             (make-check-location location))))
                (lambda () (fail-check))))])
         (thunk))
       (with-default-check-info*
        (list (make-check-message "No exception raised"))
        (lambda () (fail-check))))))
-       
-(define-syntax check-compile-time-exn
-  (syntax-rules ()
-    ((_ raw-pred thunk)
-     (check-exn raw-pred
-                (lambda () 
-                   (convert-compile-time-error thunk))))))
-                   
-(define-syntax check-syntax-exn
- (syntax-rules ()
-   ((_ raw-pred thunk)
-    (check-exn raw-pred
-               (lambda () 
-                  (convert-syntax-error thunk))))))
 
-(define-check (check-not-exn thunk)
+(define-check (check-exn raw-pred thunk)
+  (check-exn-helper raw-pred thunk null ))
+       
+(define-syntax (check-compile-time-exn stx)
+  (with-syntax ([loc (datum->syntax #f 'loc stx)])
+     (syntax-parse stx
+       [(_ raw-pred body)
+        (syntax/loc stx (check-exn-helper raw-pred
+                                          (lambda ()
+                                             (convert-compile-time-error body))
+                                          (syntax->location #'loc)))])))
+                   
+(define-syntax (check-syntax-exn stx)
+  (with-syntax ([loc (datum->syntax #f 'loc stx)])
+     (syntax-parse stx
+       [(_ raw-pred body)
+        (syntax/loc stx (check-exn-helper raw-pred
+                                          (lambda ()
+                                             (convert-syntax-error body))
+                                          (syntax->location #'loc)))])))
+
+(define-check (check-not-exn-helper thunk location)
   (raise-error-if-not-thunk 'check-not-exn thunk)
   (with-handlers
       ([exn:test:check? refail-check]
        [exn?
         (lambda (exn)
           (with-default-check-info*
-           (list
-            (make-check-message "Exception raised")
-            (make-check-info 'exception-message (exn-message exn))
-            (make-check-info 'exception exn))
+           (append (list
+                      (make-check-message "Exception raised")
+                      (make-check-info 'exception-message (exn-message exn))
+                      (make-check-info 'exception exn))
+                    (if (equal? location null)
+                        null
+                        (list 
+                          (make-check-location location))))
            (lambda () (fail-check))))])
     (thunk)))
-    
-(define-syntax check-not-compile-time-exn
- (syntax-rules ()
-   ((_ thunk)
-    (check-not-exn (lambda () 
-                      (convert-compile-time-error thunk))))))
-                      
-(define-syntax check-not-syntax-exn
- (syntax-rules ()
-   ((_ thunk)
-    (check-not-exn (lambda () 
-                      (convert-syntax-error thunk))))))
+  
+(define-check (check-not-exn thunk)
+  (check-not-exn-helper thunk null))
+  
+(define-syntax (check-not-compile-time-exn stx)
+  (with-syntax ([loc (datum->syntax #f 'loc stx)])
+     (syntax-parse stx
+       [(_ body)
+        (syntax/loc stx (check-not-exn-helper (lambda ()
+                                                 (convert-compile-time-error body))
+                                              (syntax->location #'loc)))])))
+                                              
+(define-syntax (check-not-syntax-exn stx)
+  (with-syntax ([loc (datum->syntax #f 'loc stx)])
+     (syntax-parse stx
+       [(_ body)
+        (syntax/loc stx (check-not-exn-helper (lambda ()
+                                                 (convert-syntax-error body))
+                                              (syntax->location #'loc)))])))
 
 (define-syntax-rule (define-simple-check-values [header body ...] ...)
   (begin (define-simple-check header body ...) ...))
