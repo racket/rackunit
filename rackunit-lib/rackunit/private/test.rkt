@@ -79,7 +79,11 @@
          test-false
          test-not-false
          test-exn
+         test-compile-time-exn
+         test-syntax-exn
          test-not-exn
+         test-not-compile-time-exn
+         test-not-syntax-exn
 
          foldts-test-suite
          fold-test-results
@@ -97,7 +101,11 @@
 
          check
          check-exn
+         check-compile-time-exn
+         check-syntax-exn
          check-not-exn
+         check-not-compile-time-exn
+         check-not-syntax-exn
          check-true
          check-false
          check-pred
@@ -173,5 +181,17 @@
 (define-shortcut (test-exn pred thunk)
   (check-exn pred thunk))
 
+(define-shortcut (test-compile-time-exn pred thunk)
+  (check-compile-time-exn pred thunk))
+  
+(define-shortcut (test-syntax-exn pred thunk)
+  (check-syntax-exn pred thunk))
+
 (define-shortcut (test-not-exn thunk)
   (check-not-exn thunk))
+  
+(define-shortcut (test-not-compile-time-exn thunk)
+  (check-not-compile-time-exn thunk))
+  
+(define-shortcut (test-not-syntax-exn thunk)
+  (check-not-syntax-exn thunk))

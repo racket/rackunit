@@ -7,6 +7,7 @@
          racket/match
          rackunit/log
          syntax/parse/define
+         syntax/macro-testing
          "base.rkt"
          "equal-within.rkt"
          "check-info.rkt"
@@ -28,7 +29,11 @@
 
          check
          check-exn
+         check-compile-time-exn
+         check-syntax-exn
          check-not-exn
+         check-not-compile-time-exn
+         check-not-syntax-exn
          check-true
          check-false
          check-pred
@@ -173,6 +178,20 @@
       (with-default-check-info*
        (list (make-check-message "No exception raised"))
        (lambda () (fail-check))))))
+       
+(define-syntax check-compile-time-exn
+  (syntax-rules ()
+    ((_ raw-pred thunk)
+     (check-exn raw-pred
+                (lambda () 
+                   (convert-compile-time-error thunk))))))
+                   
+(define-syntax check-syntax-exn
+ (syntax-rules ()
+   ((_ raw-pred thunk)
+    (check-exn raw-pred
+               (lambda () 
+                  (convert-syntax-error thunk))))))
 
 (define-check (check-not-exn thunk)
   (raise-error-if-not-thunk 'check-not-exn thunk)
@@ -187,6 +206,18 @@
             (make-check-info 'exception exn))
            (lambda () (fail-check))))])
     (thunk)))
+    
+(define-syntax check-not-compile-time-exn
+ (syntax-rules ()
+   ((_ thunk)
+    (check-not-exn (lambda () 
+                      (convert-compile-time-error thunk))))))
+                      
+(define-syntax check-not-syntax-exn
+ (syntax-rules ()
+   ((_ thunk)
+    (check-not-exn (lambda () 
+                      (convert-syntax-error thunk))))))
 
 (define-syntax-rule (define-simple-check-values [header body ...] ...)
   (begin (define-simple-check header body ...) ...))

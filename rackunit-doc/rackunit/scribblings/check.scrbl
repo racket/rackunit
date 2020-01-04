@@ -176,6 +176,20 @@ entirely.
 ]
 }
 
+@defproc[(check-compile-time-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
+                    (thunk (-> any)) (message (or/c string? #f) #f))
+         void?]{
+
+Same as @racket[check-exn], but wraps @racket[thunk] with 
+@racket[convert-compile-time-error] to check for compile time exceptions.
+
+@defproc[(check-syntax-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
+                    (thunk (-> any)) (message (or/c string? #f) #f))
+         void?]{
+
+Same as @racket[check-exn], but wraps @racket[thunk] with 
+@racket[convert-syntax-error] to check for compile time syntax exceptions.
+
 @defproc[(check-not-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
 
 Checks that @racket[thunk] does not raise any exceptions.
@@ -188,6 +202,18 @@ the check fails.
                     (check-not-exn (λ () (/ 1 0)) "don't divide by 0")]
 
 }
+
+@defproc[(check-not-compile-time-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
+
+Same as @racket[check-not-exn], but wraps @racket[thunk] with 
+@racket[convert-compile-time-error] to check that there are no
+compile time exceptions.
+
+@defproc[(check-not-syntax-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
+
+Same as @racket[check-not-exn], but wraps @racket[thunk] with 
+@racket[convert-syntax-error] to check that there are no
+compile time syntax exceptions.
 
 @defproc[(check-regexp-match (regexp regexp?)
                              (string string?))
