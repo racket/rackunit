@@ -178,7 +178,7 @@ entirely.
 
 @defform[(check-compile-time-exn exn-predicate body)
          #:contracts ([exn-predicate (or/c (-> any/c any/c) regexp?)]
-                      [body (-> any)])
+                      [body (-> any/c)])
          void?]{
 
 Similar to @racket[check-exn], but checks that an expression, @racket[body],
