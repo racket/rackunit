@@ -188,15 +188,6 @@ message in the exception if  @racket[exn-predicate] is a regexp.
 In the latter case, the exception raised must be an @racket[exn:fail?].
 }
 
-@defform[(check-syntax-exn exn-predicate body)
-         #:contracts ([exn-predicate (or/c (-> any/c any/c) regexp?)]
-                      [body (-> any)])
-         void?]{
-
-Same as @racket[check-compile-time-exn], but only catches compile-time
-@racket[exn:fail:syntax?] exceptions and runtime exceptions in @racket[body].
-}
-
 @defproc[(check-not-exn (thunk (-> any)) (message (or/c string? #f) #f)) void?]{
 
 Checks that @racket[thunk] does not raise any exceptions.
@@ -216,14 +207,6 @@ the check fails.
 
 Similar to @racket[check-not-exn], but checks that an expression, @racket[body],
 does not raise a runtime or compile time exception.
-}
-
-@defform[(check-not-syntax-exn body)
-          #:contracts ([body (-> any)])
-          void?]{
-
-Same as @racket[check-not-compile-time-exn], but only catches compile-time
-@racket[exn:fail:syntax?] exceptions and runtime exceptions in @racket[body].
 }
 
 @defproc[(check-regexp-match (regexp regexp?)

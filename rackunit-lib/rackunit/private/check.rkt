@@ -30,10 +30,8 @@
          check
          check-exn
          check-compile-time-exn
-         check-syntax-exn
          check-not-exn
          check-not-compile-time-exn
-         check-not-syntax-exn
          check-true
          check-false
          check-pred
@@ -194,15 +192,6 @@
                                           (lambda ()
                                              (convert-compile-time-error body))
                                           (syntax->location #'loc)))])))
-                   
-(define-syntax (check-syntax-exn stx)
-  (with-syntax ([loc (datum->syntax #f 'loc stx)])
-     (syntax-parse stx
-       [(_ raw-pred body)
-        (syntax/loc stx (check-exn-helper raw-pred
-                                          (lambda ()
-                                             (convert-syntax-error body))
-                                          (syntax->location #'loc)))])))
 
 (define-check (check-not-exn-helper thunk location)
   (raise-error-if-not-thunk 'check-not-exn thunk)
@@ -231,14 +220,6 @@
        [(_ body)
         (syntax/loc stx (check-not-exn-helper (lambda ()
                                                  (convert-compile-time-error body))
-                                              (syntax->location #'loc)))])))
-                                              
-(define-syntax (check-not-syntax-exn stx)
-  (with-syntax ([loc (datum->syntax #f 'loc stx)])
-     (syntax-parse stx
-       [(_ body)
-        (syntax/loc stx (check-not-exn-helper (lambda ()
-                                                 (convert-syntax-error body))
                                               (syntax->location #'loc)))])))
 
 (define-syntax-rule (define-simple-check-values [header body ...] ...)

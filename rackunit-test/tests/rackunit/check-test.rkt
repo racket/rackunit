@@ -436,9 +436,9 @@
                (lambda ()
                  (check-not-exn (lambda (x) x)))))
                  
- ;; Verify syntax and compile time errors are now 
- ;; supported by check-compile-time-exn, check-syntax-exn,
- ;; check-not-compile-time-exn, check-not-syntax-expand
+ ;; Verify compile time exceptions are now 
+ ;; supported by check-compile-time-exn and
+ ;; check-not-compile-time-exn
  (test-case
   "check-compile-time-exn converts compile time exceptions to runtime phase"
   (check-compile-time-exn exn:fail:syntax?
@@ -446,22 +446,9 @@
                             (if (= 1 1) 1))))
 
  (test-case
-  "check-syntax-exn converts compile time syntax exceptions to runtime phase"
-  (check-syntax-exn exn:fail:syntax?
-                    (lambda ()
-                      (struct foo (fizz) #:constructor-name bar)
-                      (foo 53))))
-
- (test-case
   "check-not-compile-time-exn does not call any compile time exceptions when none are provided"
   (check-not-compile-time-exn (lambda ()
                                 (if (= 1 1) 1 1))))
-
- (test-case
-  "check-not-syntax-exn does not call any compile time exceptions when none are provided"
-  (check-not-syntax-exn (lambda ()
-                          (struct foo (fizz) #:constructor-name bar)
-                          (bar 53))))
 
   ;; Regression test
   ;; Uses of check (and derived forms) used to be un-compilable!

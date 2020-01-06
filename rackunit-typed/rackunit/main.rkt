@@ -260,10 +260,8 @@
   (test-not-false (check-not-false v))
   (test-exn (check-exn pred thunk))
   (test-compile-time-exn (check-compile-time-exn pred thunk))
-  (test-syntax-exn (check-syntax-exn pred thunk))
   (test-not-exn (check-not-exn thunk))
-  (test-not-compile-time-exn (check-not-compile-time-exn thunk))
-  (test-not-syntax-exn (check-not-syntax-exn thunk)))
+  (test-not-compile-time-exn (check-not-compile-time-exn thunk)))
 
 
 ; 3.4
