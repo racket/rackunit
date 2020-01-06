@@ -17,6 +17,11 @@
       (error 'log "bad ~a\n actual: ~v\n expected: ~v"
              label stdout-av stdout-ev))))
 
+;; TODO(jackfirth): This testing system is pretty weird, and it's only necessary
+;;   because the test log is a pair of global variables. That makes it hard to
+;;   keep these tests from affecting the test log used by raco test. If the test
+;;   log were a parameter, then these tests could simply create a new log and
+;;   parameterize the current log to it. We should probably do that instead.
 (define-syntax-rule (& test-e stdout-e stderr-e exit-e)
   (let ()
     (define stdout-p (open-output-string))
@@ -42,7 +47,7 @@
 (& (test-log #:exit? #t) "" "" 0)
 (& (test-log #:display? #t #:exit? #t) "1 test passed\n" "" 0)
 
-(parameterize ([current-error-port (current-output-port)])
+(parameterize ([current-error-port (open-output-string)])
   (check-true #f))
 
 (& (test-log) "" "" 0)
@@ -56,3 +61,14 @@
   (& (test-log #:display? #t) "" "1/2 test failures\n" 0)
   (& (test-log #:exit? #t) "" "" 1)
   (& (test-log #:display? #t #:exit? #t) "" "1/2 test failures\n" 1))
+
+(test-begin
+ (check-true #t))
+
+(& (test-log #:display? #t) "" "1/3 test failures\n" 0)
+
+(parameterize ([current-error-port (open-output-string)])
+  (test-begin
+   (check-true #f)))
+
+(& (test-log #:display? #t) "" "2/4 test failures\n" 0)
