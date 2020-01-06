@@ -1,28 +1,24 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse)
+(require (for-syntax racket/base)
          racket/contract/base
          rackunit/log
+         syntax/parse/define
          "format.rkt"
          "base.rkt"
          "check.rkt")
 
-(provide current-test-name
-         current-test-case-around
-
-         test-begin
+(provide test-begin
          test-case
-
          before
          after
          around)
 
-(define current-test-name
-  (make-parameter
-   #f
-   (lambda (v)
-     (if (string? v)
-         v
-         (raise-type-error 'current-test-name "string" v)))))
+(provide
+ (contract-out
+  [current-test-name (parameter/c (or/c string? #f))]
+  [current-test-case-around (parameter/c (-> (-> any) any))]))
+
+(define current-test-name (make-parameter #f))
 
 ;; test-case-around : ( -> a) -> a
 ;;
@@ -38,98 +34,34 @@
 (define (default-test-case-handler e)
   (display-test-failure/error e (current-test-name)))
 
-(define current-test-case-around
-  (make-parameter
-   default-test-case-around
-   (lambda (v)
-     (if (procedure? v)
-         v
-         (raise-type-error 'current-test-case-around "procedure" v)))))
+(define current-test-case-around (make-parameter default-test-case-around))
 
 (define (log-and-handle! e)
   (test-log! #f)
-  (if (exn:break? e)
-      (raise e)
-      (default-test-case-handler e)))
+  (when (exn:break? e) (raise e))
+  (default-test-case-handler e))
 
-(define-syntax (test-begin stx)
-  (syntax-case stx ()
-    [(_ body ...)
-     (syntax/loc stx
-       ((current-test-case-around)
-        (lambda ()
-          (parameterize ([current-check-around plain-check-around])
-            ;; empty parameterize body is a syntax error, but an empty
-            ;; test-begin body is allowed
-            (void)
-            body ...))))]
-    [_
-     (raise-syntax-error
-      #f
-      "Correct form is (test-begin expr ...)"
-      stx)]))
+(define (run-test-case test-thunk #:name [name (current-test-name)])
+  (parameterize ([current-test-name name])
+    ((current-test-case-around)
+     (λ ()
+       (parameterize ([current-check-around plain-check-around])
+         (test-thunk))))))
 
-(define-syntax (test-case stx)
-  (syntax-case stx ()
-    [(_ name expr ...)
-     (quasisyntax/loc stx
-       (parameterize
-           ([current-test-name
-             (ensure-string name (quote-syntax #,(datum->syntax #f 'loc #'name)))])
-         (test-begin expr ...)))]))
+(define-simple-macro (test-begin body:expr ...)
+  ;; empty test-begin body is allowed
+  (run-test-case (λ () (void) body ...)))
 
-(define (ensure-string name src-stx)
-  (contract string? name
-            (syntax-source src-stx)
-            (syntax-source-module #'test-case #t)))
+(define-simple-macro (test-case name body:expr ...)
+  #:declare name (expr/c #'string?)
+  ;; empty test-case body is allowed
+  (run-test-case (λ () (void) body ...) #:name name.c))
 
-(define-syntax before
-  (syntax-rules ()
-    ((_ before-e expr1 expr2 ...)
-     (dynamic-wind
-       (lambda ()
-         before-e)
-       (lambda ()
-         expr1 expr2 ...)
-       (lambda ()
-         (void))))
-    ((before error ...)
-     (raise-syntax-error
-      'before
-      "Incorrect use of before macro.  Correct format is (before before-expr expr1 expr2 ...)"
-      'before
-      '(error ...)))))
+(define-simple-macro (before setup:expr body:expr ...+)
+  (dynamic-wind (λ () setup) (λ () body ...) void))
 
-(define-syntax after
-  (syntax-rules ()
-    ((_ expr1 expr2 ... after-e)
-     (dynamic-wind
-       (lambda ()
-         (void))
-       (lambda ()
-         expr1 expr2 ...)
-       (lambda ()
-         after-e)))
-    ((after error ...)
-     (raise-syntax-error
-      'after
-      "Incorrect use of after macro.  Correct format is (after expr1 expr2 ... after-expr)"
-      'after
-      '(error ...)))))
+(define-simple-macro (after body:expr ...+ teardown:expr)
+  (dynamic-wind void (λ () body ...) (λ () teardown)))
 
-(define-syntax around
-  (syntax-rules ()
-    ((_ before-e expr1 expr2 ... after-e)
-     (dynamic-wind
-       (lambda ()
-         before-e)
-       (lambda ()
-         expr1 expr2 ...)
-       (lambda ()
-         after-e)))
-    ((around error ...)
-     (raise-syntax-error
-      'around
-      "Incorrect use of around macro.  Correct format is (around before-expr expr1 expr2 ... after-expr)"
-      'around
-      '(error ...)))))
+(define-simple-macro (around setup:expr body:expr ...+ teardown:expr)
+  (dynamic-wind (λ () setup) (λ () body ...) (λ () teardown)))
