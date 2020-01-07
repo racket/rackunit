@@ -185,13 +185,16 @@
   (check-exn-helper raw-pred thunk null ))
        
 (define-syntax (check-compile-time-exn stx)
-  (with-syntax ([loc (datum->syntax #f 'loc stx)])
-     (syntax-parse stx
-       [(_ raw-pred body)
-        (syntax/loc stx (check-exn-helper raw-pred
+  (syntax-parse stx
+       [(_ body ...+)
+        (with-syntax ([loc (datum->syntax #f 'loc stx)])
+                     (syntax/loc stx
+                                (check-exn exn:fail?
                                           (lambda ()
-                                             (convert-compile-time-error body))
-                                          (syntax->location #'loc)))])))
+                                            (convert-compile-time-error (lambda ()
+                                                                            body ...
+                                                                            (void))))
+                                          (syntax->location #'loc))))]))
 
 (define-check (check-not-exn-helper thunk location)
   (raise-error-if-not-thunk 'check-not-exn thunk)
@@ -215,12 +218,15 @@
   (check-not-exn-helper thunk null))
   
 (define-syntax (check-not-compile-time-exn stx)
-  (with-syntax ([loc (datum->syntax #f 'loc stx)])
-     (syntax-parse stx
-       [(_ body)
-        (syntax/loc stx (check-not-exn-helper (lambda ()
-                                                 (convert-compile-time-error body))
-                                              (syntax->location #'loc)))])))
+  (syntax-parse stx
+       [(_ body ...+)
+        (with-syntax ([loc (datum->syntax #f 'loc stx)])
+                     (syntax/loc stx
+                                (check-not-exn (lambda ()
+                                                  (convert-compile-time-error (lambda ()
+                                                                                  body ...
+                                                                                  (void))))
+                                          (syntax->location #'loc))))]))
 
 (define-syntax-rule (define-simple-check-values [header body ...] ...)
   (begin (define-simple-check header body ...) ...))

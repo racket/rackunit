@@ -9,3 +9,7 @@ doc/
 .DS_Store
 *.bak
 TAGS
+
+pkgs-catalog
+
+catalog-config.txt
