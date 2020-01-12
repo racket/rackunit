@@ -90,33 +90,19 @@
 
    (test-case
     "Before macro catches badly formed syntax w/ helpful message"
-    (check-syntax-error
-     "Incorrect use of before macro.  Correct format is (before before-expr expr1 expr2 ...)"
-     '(before 1))
-    (check-syntax-error
-     "Incorrect use of before macro.  Correct format is (before before-expr expr1 expr2 ...)"
-     '(before)))
+    (check-syntax-error "before: expected more terms" '(before 1))
+    (check-syntax-error "before: expected more terms" '(before)))
 
    (test-case
     "After macro catches badly formed syntax w/ helpful message"
-    (check-syntax-error
-     "Incorrect use of after macro.  Correct format is (after expr1 expr2 ... after-expr)"
-     '(after 1))
-    (check-syntax-error
-     "Incorrect use of after macro.  Correct format is (after expr1 expr2 ... after-expr)"
-     '(after)))
+    (check-syntax-error "after: expected more terms" '(after 1))
+    (check-syntax-error "after: expected more terms" '(after)))
 
    (test-case
     "Around macro catches badly formed syntax w/ helpful message"
-    (check-syntax-error
-     "Incorrect use of around macro.  Correct format is (around before-expr expr1 expr2 ... after-expr)"
-     '(around))
-    (check-syntax-error
-     "Incorrect use of around macro.  Correct format is (around before-expr expr1 expr2 ... after-expr)"
-     '(around 1))
-    (check-syntax-error
-     "Incorrect use of around macro.  Correct format is (around before-expr expr1 expr2 ... after-expr)"
-     '(around 1 2)))
+    (check-syntax-error "around: expected more terms" '(around))
+    (check-syntax-error "around: expected more terms" '(around 1))
+    (check-syntax-error "around: expected more terms" '(around 1 2)))
 
    (test-case
     "Test around action"
