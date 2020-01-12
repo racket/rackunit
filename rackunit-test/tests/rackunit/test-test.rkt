@@ -1,9 +1,6 @@
 #lang racket/base
 
-(require (for-syntax racket/base)
-         racket/runtime-path
-         srfi/1
-         srfi/13
+(require racket/string
          rackunit
          rackunit/private/check-info
          rackunit/private/util
@@ -47,7 +44,7 @@
       (namespace-require 'rackunit)
       (check-exn (lambda (e)
                    (check-pred exn:fail:syntax? e)
-                   (check string-contains (exn-message e) msg))
+                   (check string-contains? (exn-message e) msg))
                  (lambda ()
                    (eval sexp))))))
 

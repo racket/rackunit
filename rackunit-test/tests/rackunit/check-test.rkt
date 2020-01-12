@@ -28,10 +28,9 @@
 
 #lang racket/base
 
-(require racket/runtime-path
+(require racket/list
          racket/flonum
          racket/extflonum
-         srfi/1
          rackunit
          rackunit/private/check
          rackunit/private/result
@@ -371,17 +370,17 @@
            [names (map check-info-name
                        (exn:test:check-stack result))])
       (check-true
-       (fold (lambda (name found?)
-               (if (eq? name 'exception)
-                   #t
-                   found?))
-             #f names))
+       (foldl (lambda (name found?)
+                (if (eq? name 'exception)
+                    #t
+                    found?))
+              #f names))
       (check-true
-       (fold (lambda (name found?)
-               (if (eq? name 'exception-message)
-                   #t
-                   found?))
-             #f names))))
+       (foldl (lambda (name found?)
+                (if (eq? name 'exception-message)
+                    #t
+                    found?))
+              #f names))))
 
   (test-case
       "check-exn has check failure message"
