@@ -9,6 +9,5 @@
 (define pkg-authors '(noel ryanc))
 (define build-deps '("base"
                      "eli-tester"
-                     "rackunit-lib"
-                     "srfi-lite-lib"))
+                     "rackunit-lib"))
 (define update-implies '("rackunit-lib"))
