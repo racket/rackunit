@@ -8,11 +8,18 @@ cache:
 
 env:
 - PATH=~/racket/bin:$PATH
+- PATH=~/racket/bin:$PATH  VARIANT=cs
+
 
 before_install:
 - export PKG=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`
 - echo $PKG
-- curl -L -o installer.sh http://plt.eecs.northwestern.edu/snapshots/current/installers/min-racket-current-x86_64-linux-precise.sh
+- |
+    if [ "$VARIANT" = "cs" ]; then
+      curl --location --fail --output installer.sh http://www.cs.utah.edu/plt/snapshots/current/installers/min-racket-current-x86_64-linux-cs-xenial.sh;
+    else
+      curl --location --fail --output installer.sh http://www.cs.utah.edu/plt/snapshots/current/installers/min-racket-current-x86_64-linux-precise.sh;
+    fi
 - sh installer.sh --in-place --dest ~/racket/
 
 install:
@@ -20,10 +27,11 @@ install:
 - echo file://`pwd`/pkgs-catalog/ > catalog-config.txt
 - raco pkg config catalogs >> catalog-config.txt
 - raco pkg config --set catalogs `cat catalog-config.txt`
-- raco pkg install --auto $PKG-test
-- raco pkg install --auto $PKG-typed
-- raco pkg install --auto compiler-lib
+- raco pkg install --installation --auto $PKG-test
+- raco pkg install --installation --auto $PKG-typed
+- raco pkg install --installation --auto compiler-lib
 - ls $HOME/.racket/download-cache
+- racket -v
 
 script:
 - raco test --drdr -p $PKG-test
