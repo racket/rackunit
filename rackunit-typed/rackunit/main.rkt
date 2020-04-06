@@ -1,9 +1,11 @@
 #lang typed/racket
+#:no-optimize ;; precaution, because of unsafe-provide
 (require typed/racket/class
          typed/private/utils
          typed/private/rewriter
          "type-env-ext.rkt"
-         (for-syntax syntax/parse))
+         (for-syntax syntax/parse)
+         (only-in typed/racket/unsafe unsafe-provide))
 
 (define-type check-ish-ty
   (case-lambda
@@ -131,7 +133,7 @@
     (raise-argument-error 'test-case "string?" name))
   name)
 
-(provide test-begin test-case)
+(unsafe-provide test-begin test-case)
 
 (require/opaque-type TestCase test-case? rackunit)
 (provide TestCase test-case?)
@@ -223,7 +225,7 @@
             tests
             (ann before : (Thunk Any))
             (ann after : (Thunk Any)))))]))
-(provide test-suite)
+(unsafe-provide test-suite)
 
 (define-type TestSuite rackunit-test-suite)
 (provide TestSuite (rename-out [rackunit-test-suite? test-suite?]))
@@ -246,7 +248,7 @@
 
 ; 3.3.1.1
 (define-syntax-rule (def-test [tst (ch args ...)] ...)
-  (begin (provide tst ...)
+  (begin (unsafe-provide tst ...)
          (define-syntax-rule (tst name args ...)
            (test-case name (ch args ...))) ...))
 
