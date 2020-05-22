@@ -41,6 +41,8 @@
            #"\
 --------------------
 ERROR
+name:       check-pred
+location:   standalone-check-test.rkt:44:0
 
 Outta here!
 --------------------
@@ -59,11 +61,13 @@ message:    0.0
 --------------------
 ERROR
 
+
 First Outta here!
 --------------------
 --------------------
 error
 ERROR
+
 
 Second Outta here!
 --------------------
