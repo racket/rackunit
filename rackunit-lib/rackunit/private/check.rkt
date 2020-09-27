@@ -119,10 +119,9 @@
                       (make-check-location location)
                       (make-check-expression '(chk . args)))
                 (λ ()
-                  ((current-check-around)
-                   (λ () ((check-impl #:location location
-                                      #:expression '(chk . args))
-                          . args))))))]
+                  ((check-impl #:location location
+                               #:expression '(chk . args))
+                   . args))))]
           [chk:id
            #'(check-impl #:location (syntax->location #'loc)
                          #:expression 'chk)])))))
