@@ -43,6 +43,7 @@
 ERROR
 name:       check-pred
 location:   standalone-check-test.rkt:44:0
+params:     '(#<procedure:proc> foo)
 
 Outta here!
 --------------------
