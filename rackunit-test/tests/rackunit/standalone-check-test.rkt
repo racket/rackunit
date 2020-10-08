@@ -41,7 +41,7 @@
 (check = 1 1 0.0)
 
 ;; This check should display an error including the message "Outta here!"
-(check-pred (lambda (x) (error "Outta here!")) 'foo)
+(check-pred (procedure-rename (lambda (x) (error "Outta here!")) 'proc) 'foo)
 
 
 ;; This check should display a failure
