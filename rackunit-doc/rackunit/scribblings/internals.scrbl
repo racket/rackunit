@@ -24,7 +24,7 @@ raised by check failures.  The default value is a procedure
 that will display the exception data in a user-friendly format.
 }
 
-@defparam[current-check-around check (-> (-> any) any)]{
+@defparam[current-check-around check (-> (-> void?) any)]{
 
 Parameter containing the function that handles the execution
 of checks.  The default value wraps the evaluation of
@@ -65,7 +65,7 @@ parameterized to this value within the scope of a
 structure instead of immediately evaluating the thunk.
 }
 
-@defproc[(test-suite-check-around [thunk (-> any/c)]) any/c]{
+@defproc[(test-suite-check-around [thunk (-> void?)]) any/c]{
 
 The @racket[current-check-around] parameter is parameterized
 to this value within the scope of a @racket[test-suite].
