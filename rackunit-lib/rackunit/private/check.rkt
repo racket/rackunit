@@ -17,7 +17,7 @@
  (contract-out
   [fail-check (->* () (string?) void?)]
   [current-check-handler (parameter/c (-> any/c any))]
-  [current-check-around (parameter/c (-> (-> void?) any))]
+  [current-check-around (parameter/c (-> (-> any/c) any))]
   [plain-check-around (-> (-> void?) void?)]))
 
 (provide check-around
