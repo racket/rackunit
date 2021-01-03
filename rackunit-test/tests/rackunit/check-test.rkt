@@ -34,7 +34,8 @@
          rackunit
          rackunit/private/check
          rackunit/private/result
-         rackunit/private/test-suite)
+         rackunit/private/test-suite
+         syntax/macro-testing)
 
 (define (make-failure-test name pred . args)
   (test-case
