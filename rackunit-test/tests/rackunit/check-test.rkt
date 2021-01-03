@@ -435,6 +435,45 @@
                (lambda ()
                  (check-not-exn (lambda (x) x)))))
 
+  ;; Verify compile time exceptions are now
+  ;; supported by check-compile-time-exn and
+  ;; check-not-compile-time-exn
+  (test-case
+      "check-compile-time-exn converts compile time exceptions to runtime phase"
+    (check-compile-time-exn exn:fail:syntax?
+                            (lambda ()
+                              (if 1 2))))
+
+  (test-case "check-compile-time-exn should not evaluate its body"
+    (define evaluated? (box #f))
+    (check-compile-time-exn exn:fail?
+      (lambda ()
+        (set-box! evaluated? #t)
+        (define kaboom)))
+    (check-false (unbox evaluated?)))
+
+  (test-case "check-compile-time-exn expression do not need to be thunks"
+    (check-compile-time-exn exn:fail? (define)))
+
+  (test-case "check-compile-time-exn accepts regular expression"
+    (check-compile-time-exn #rx"missing an \"else\" expression" (if 1 2)))
+
+  (test-case
+      "check-not-compile-time-exn does not call any compile time exceptions when none are provided"
+    (check-not-compile-time-exn (lambda ()
+                                  (if 1 2 3))))
+
+  (test-case "check-not-compile-time-exn should not evaluate its body"
+    (define evaluated? (box #f))
+    (check-not-compile-time-exn
+      (lambda ()
+        (set-box! evaluated? #t)
+        (define kaboom 7)))
+    (check-false (unbox evaluated?)))
+
+  (test-case "check-not-compile-time-exn expression do not need to be thunks"
+    (check-compile-time-exn exn:fail? (define 7)))
+
   ;; Regression test
   ;; Uses of check (and derived forms) used to be un-compilable!
   ;; We check that (write (compile --code-using-check--)) works.
