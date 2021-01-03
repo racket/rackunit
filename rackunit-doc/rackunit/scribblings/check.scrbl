@@ -189,6 +189,24 @@ the check fails.
 
 }
 
+@defform[(check-compile-time-exn (exn-predicate (or/c (-> any/c any/c) regexp?))
+                    (expr (-> any)))
+         void?]{
+
+Similar to @racket[check-exn], but checks that an expression, @racket[expr],
+raises a runtime or compile time exception and that either @racket[exn-predicate] 
+returns a true value if it is a function, or that it matches the 
+message in the exception if  @racket[exn-predicate] is a regexp. 
+In the latter case, the exception raised must be an @racket[exn:fail?].
+}
+
+@defform[(check-compile-time-exn (expr (-> any)))
+         void?]{
+
+Similar to @racket[check-not-exn], but checks that an expression, @racket[expr],
+does not raise a runtime or compile time exception.
+}
+
 @defproc[(check-regexp-match (regexp regexp?)
                              (string string?))
          void?]{
