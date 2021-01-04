@@ -200,7 +200,7 @@ message in the exception if  @racket[exn-predicate] is a regexp.
 In the latter case, the exception raised must be an @racket[exn:fail?].
 }
 
-@defform[(check-compile-time-exn (expr (-> any)))
+@defform[(check-not-compile-time-exn (expr (-> any)))
          void?]{
 
 Similar to @racket[check-not-exn], but checks that an expression, @racket[expr],

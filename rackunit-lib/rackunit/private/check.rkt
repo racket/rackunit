@@ -229,7 +229,7 @@
     [(_ expr:expr)
      #:with loc (datum->syntax #f 'loc stx)
      #'(let ([location (syntax->location #'loc)])
-         (with-check-info (['name 'check-compile-time-exn]
+         (with-check-info (['name 'check-not-compile-time-exn]
                            ['location location]
                            ['params (list (syntax->datum #'expr))])
            (let/ec finish
