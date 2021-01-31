@@ -21,7 +21,7 @@
   [plain-check-around (-> (-> void?) void?)]))
 
 (provide check-around
-         
+
          define-check
          define-binary-check
          define-simple-check
@@ -104,7 +104,7 @@
           (with-default-check-info* infos
             (λ () ((current-check-around) (λ () body ... (void))))))
       'pub)))
-                                      
+
 
 (define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin

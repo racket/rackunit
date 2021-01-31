@@ -97,17 +97,15 @@
   (syntax-case stx ()
     [(_ expr ...)
      (syntax/loc stx
-       ((current-test-case-around)
-        (lambda ()
-          (with-handlers ([(λ (e)
-                             (and (exn:fail? e)
-                                  (not (exn:test? e))))
-                           (λ ([e : exn:fail])
-                             (test-log! #f)
-                             (raise e))])
-          (parameterize ([current-check-handler raise])
-            (void)
-            expr ...)))))]
+       (with-handlers ([(λ (e)
+                          (and (exn:fail? e)
+                               (not (exn:test? e))))
+                        (λ ([e : exn:fail])
+                          (test-log! #f)
+                          (raise e))])
+         (parameterize ([current-check-handler raise])
+           (void)
+           expr ...)))]
     [_
      (raise-syntax-error
       #f
@@ -310,5 +308,3 @@
                  Any))]
  [current-check-around
   (Parameter ((Thunk Any) -> Any))])
-
-
