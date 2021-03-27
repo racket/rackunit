@@ -92,7 +92,8 @@
 
 (define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
   (λ (#:location [location (list 'unknown #f #f #f #f)]
-      #:expression [expression 'unknown])
+      #:expression [expression 'unknown]
+      #:suppress-check? [suppress-check? #f])
     (procedure-rename
       (λ (formal ... [message #f])
           (define infos
@@ -102,7 +103,11 @@
                      (make-check-params (list formal ...))
                      (and message (make-check-message message))))
           (with-default-check-info* infos
-            (λ () ((current-check-around) (λ () body ... (void))))))
+            (λ ()
+              (define (the-body-thunk) body ... (void))
+              (cond
+                [suppress-check? (the-body-thunk)]
+                [else ((current-check-around) the-body-thunk)]))))
       'pub)))
                                       
 
@@ -120,9 +125,12 @@
                       (make-check-expression '(chk . args)))
                 #,(syntax/loc #'loc
                     (λ ()
-                      ((check-impl #:location location
-                                   #:expression '(chk . args))
-                       . args)))))]
+                      ((current-check-around)
+                       (λ ()
+                         ((check-impl #:location location
+                                      #:expression '(chk . args)
+                                      #:suppress-check? #t)
+                          . args)))))))]
           [chk:id
            #'(check-impl #:location (syntax->location #'loc)
                          #:expression 'chk)])))))
