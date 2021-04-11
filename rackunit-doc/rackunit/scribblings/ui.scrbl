@@ -20,7 +20,7 @@ It is run via the @racket[run-tests] function.
 
 The given @racket[test] is run and the result of running it
 output to the @racket[current-output-port] if all tests pass, and to
-@racket[current-error-port] when there are test failurese.
+@racket[current-error-port] when there are test failures.
 The output is compatible with the (X)Emacs next-error command (as used,
 for example, by (X)Emacs's compile function).
 
