@@ -56,26 +56,6 @@ message:    0.0
 --------------------
 ")
 
-(test-file "standalone-check-higher-order-test.rkt"
-           #"Oh HAI!\nI didn't run\n"
-           #"\
---------------------
-ERROR
-name:       check-pred
-location:   standalone-check-higher-order-test.rkt:46:9
-params:     '(#<procedure:proc> foo)
-
-Outta here!
---------------------
---------------------
-FAILURE
-name:       check
-location:   standalone-check-higher-order-test.rkt:40:17
-params:     '(#<procedure:=> 1 2)
-message:    0.0
---------------------
-")
-
 (test-file "standalone-test-case-test.rkt"
            #""
            #"\

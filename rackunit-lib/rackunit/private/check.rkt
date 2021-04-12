@@ -92,8 +92,7 @@
 
 (define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
   (λ (#:location [location (list 'unknown #f #f #f #f)]
-      #:expression [expression 'unknown]
-      #:check-around [check-around current-check-around])
+      #:expression [expression 'unknown])
     (procedure-rename
       (λ (formal ... [message #f])
           (define infos
@@ -103,7 +102,7 @@
                      (make-check-params (list formal ...))
                      (and message (make-check-message message))))
           (with-default-check-info* infos
-            (λ () ((check-around) (λ () body ... (void))))))
+            (λ () ((current-check-around) (λ () body ... (void))))))
       'pub)))
                                       
 
@@ -121,12 +120,9 @@
                       (make-check-expression '(chk . args)))
                 #,(syntax/loc #'loc
                     (λ ()
-                      ((current-check-around)
-                       (λ ()
-                         ((check-impl #:location location
-                                      #:expression '(chk . args)
-                                      #:check-around (λ () (λ (f) (f))))
-                          . args)))))))]
+                      ((check-impl #:location location
+                                   #:expression '(chk . args))
+                       . args)))))]
           [chk:id
            #'(check-impl #:location (syntax->location #'loc)
                          #:expression 'chk)])))))
