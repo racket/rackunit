@@ -93,7 +93,7 @@
 (define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
   (λ (#:location [location (list 'unknown #f #f #f #f)]
       #:expression [expression 'unknown]
-      #:check-around [check-around current-check-around])
+      #:check-around [check-around (current-check-around)])
     (procedure-rename
       (λ (formal ... [message #f])
           (define infos
@@ -115,19 +115,21 @@
         (syntax-parse stx
           [(chk . args)
            #`(let ([location (syntax->location #'loc)])
-               (with-default-check-info*
-                (list (make-check-name 'name)
-                      (make-check-location location)
-                      (make-check-expression '(chk . args)))
-                #,(syntax/loc #'loc
-                    (λ ()
-                      ((current-check-around)
-                       (λ ()
-                         ((check-impl #:location location
-                                      #:expression '(chk . args)
-                                      #:check-around (λ () (λ (f) (f))))
-                          . args)))))))]
-          [chk:id
+               #,(syntax/loc #'loc
+                     (λ ()
+                       ((current-check-around)
+                        (λ ()
+                          (call-with-values
+                           (lambda ()
+                             (with-default-check-info*
+                               (list (make-check-name 'name)
+                                     (make-check-location location)
+                                     (make-check-expression '(chk . args)))
+                               (values . args)))
+                           (check-impl #:location location
+                                       #:expression '(chk . args)
+                                       #:check-around (λ (f) (f)))))))))]
+        [chk:id
            #'(check-impl #:location (syntax->location #'loc)
                          #:expression 'chk)])))))
 
