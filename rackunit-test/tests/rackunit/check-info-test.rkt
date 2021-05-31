@@ -28,6 +28,7 @@
 #lang racket/base
 
 (require racket/function
+         racket/list
          rackunit
          rackunit/private/check-info
          syntax/srcloc
@@ -114,8 +115,15 @@
         (with-check-info (['custom 'custom]) (old-around chk)))
       (parameterize ([current-check-around new-around])
         (check-foo 'arg1 'arg2 'arg3)))
-    (check-equal? (call/info-box call-check-foo/extra-infos)
-                  (list 'name 'location 'expression 'params 'custom)))
+    (define info-keys (call/info-box call-check-foo/extra-infos))
+    (check-true (< (index-of info-keys 'name)
+                   (index-of info-keys 'location)
+                   (index-of info-keys 'expression)
+                   (index-of info-keys 'custom)))
+    (check-true (< (index-of info-keys 'name)
+                   (index-of info-keys 'location)
+                   (index-of info-keys 'expression)
+                   (index-of info-keys 'params))))
 
   (test-case "check-info-ref / check-info-contains-key"
     (define info0 (list (make-check-name 'my-name)))
