@@ -12,6 +12,16 @@
 (module+ for-test
   (provide display-check-info-stack))
 
+;; continuation-mark-set-parameter-value : Continuation-Mark-Set (Parameterof X) -> X
+(module continuation-mark-set-parameter-value racket/base
+  (require (only-in '#%paramz parameterization-key))
+  (provide continuation-mark-set-parameter-value)
+  (define (continuation-mark-set-parameter-value marks param)
+    (call-with-parameterization
+     (continuation-mark-set-first marks parameterization-key)
+     param)))
+(require 'continuation-mark-set-parameter-value)
+
 ;; name-width : integer
 ;;
 ;; Number of characters we reserve for the check-info name column
@@ -123,6 +133,11 @@
            (display-check-info-stack (exn:test:check-stack e)
                                      #:verbose? verbose?)
            (display-raised-message e)]
+          [(exn? e)
+           (display-raised-summary "ERROR" e)
+           (display-check-info-stack (exn-check-info e)
+                                     #:verbose? verbose?)
+           (display-raised-message e)]
           [else
            (display-raised-summary "ERROR" e)
            (display-check-info-stack (current-check-info)
@@ -144,3 +159,8 @@
       (parameterize ([error-print-context-length 0])
         ((error-display-handler) desc raised-value))
       (displayln desc)))
+
+;; exn-check-info : Exn -> (Listof Check-Info)
+(define (exn-check-info e)
+  (continuation-mark-set-parameter-value (exn-continuation-marks e)
+                                         current-check-info))
