@@ -54,7 +54,9 @@
                                 #:name-width [name-width* minimum-name-width])
   (define stack (if verbose? stack* (simplify-params stack*)))
   (define name-width (max name-width* (check-info-stack-name-width stack)))
-  (define (print-info info) (print-check-info info verbose? name-width))
+  (define (print-info info)
+    (print-check-info info verbose? name-width)
+    (newline))
   (for-each print-info stack))
 
 (define (print-check-info info verbose? name-width)
@@ -77,11 +79,10 @@
                (parameterize ([pretty-print-columns 'infinity])
                  (print-name name name-width)
                  (print-info-value value)))))
-
          (cond
            [(short-line? one-line-candidate)
-            (display one-line-candidate)
-            (newline)]
+            (print-name name name-width)
+            (print-info-value value)]
            [else
             (print-name name)
             (newline)

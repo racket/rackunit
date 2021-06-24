@@ -52,7 +52,8 @@
     [(location-info? info-value)
      (display (trim-current-directory
                 (location->string (location-info-value info-value))))]
-    [(pretty-info? info-value) (pretty-write (pretty-info-value info-value))]
+    [(pretty-info? info-value)
+     (pretty-write (pretty-info-value info-value) #:newline? #f)]
     [(verbose-info? info-value)
      (print-info-value (verbose-info-value info-value))]
     [else
