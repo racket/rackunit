@@ -1,8 +1,8 @@
 #lang racket/base
 (require racket/list
-         racket/match
-         racket/string
+         racket/port
          racket/pretty
+         racket/string
          "base.rkt"
          "check-info.rkt")
 
@@ -28,6 +28,7 @@
 (define minimum-name-width 9)
 
 (define nested-indent-amount 2)
+(define nesting-level (make-parameter 0))
 (define multi-line-indent-amount 2)
 
 (define (display-test-result res
@@ -50,10 +51,6 @@
 (define (string-padding str desired-len)
   (make-string (max (- desired-len (string-length str)) 0) #\space))
 
-(define (string-indent str amnt)
-  (define pad (make-string amnt #\space))
-  (string-append pad (string-replace str "\n" (string-append "\n" pad))))
-
 (define (check-info-name-width check-info)
   (string-length
    (symbol->string
@@ -63,50 +60,60 @@
   (define widths (map check-info-name-width check-info-stack))
   (apply max 0 widths))
 
-(define (check-info-stack->string stack* verbose?
-                                  #:name-width [name-width* minimum-name-width])
+(define (print-check-info-stack stack* verbose?
+                                #:name-width [name-width* minimum-name-width])
   (define stack (if verbose? stack* (simplify-params stack*)))
   (define name-width (max name-width* (check-info-stack-name-width stack)))
-  (define (info->str info) (check-info->string info verbose? name-width))
-  (string-join (map info->str stack) "\n"))
+  (define (print-info info) (print-check-info info verbose? name-width))
+  (for-each print-info stack))
 
-(define (check-info->string info verbose? name-width)
+(define (print-check-info info verbose? name-width)
   (define name (symbol->string (check-info-name info)))
   (define value (check-info-value info))
   (cond [(dynamic-info? value)
          (define new-info
            (make-check-info (check-info-name info)
                             ((dynamic-info-proc value))))
-         (check-info->string new-info verbose? name-width)]
+         (print-check-info new-info verbose? name-width)]
         [(nested-info? value)
-         (define nested-str (nested-info->string value verbose? name-width))
-         (format "~a:\n~a" name nested-str)]
+         (print-name name)
+         (newline)
+         (parameterize ([nesting-level (add1 (nesting-level))])
+           (print-check-info-stack (nested-info-values value) verbose? #:name-width name-width))]
         [else
-         (define pad (string-padding name name-width))
          (define one-line-candidate
-           (parameterize ([pretty-print-columns 'infinity])
-             (format "~a:~a  ~a" name pad (info-value->string value))))
-         (if (short-line? one-line-candidate)
-             one-line-candidate
-             (format "~a:\n~a"
-                     name
-                     (string-indent
-                      (info-value->string value)
-                      multi-line-indent-amount)))]))
+           (with-output-to-string
+             (lambda ()
+               (parameterize ([pretty-print-columns 'infinity])
+                 (print-name name name-width)
+                 (print-info-value value)))))
+         (cond
+           [(short-line? one-line-candidate)
+            (print-name name name-width)
+            (print-info-value value)
+            (newline)]
+           [else
+            (print-name name)
+            (newline)
+            (display (make-string multi-line-indent-amount #\space))
+            (print-info-value value)
+            (newline)])]))
+
+(define (print-name name [name-width #f])
+  (define indent (make-string (* nested-indent-amount (nesting-level)) #\space))
+  (define pad
+    (cond
+    [name-width (string-append "  " (string-padding name name-width))]
+    [else ""]))
+  (printf "~a~a:~a" indent name pad))
 
 (define (short-line? line)
   (and (<= (string-length line) (pretty-print-columns))
        (not (string-contains? line "\n"))))
 
-(define (nested-info->string nested verbose? name-width)
-  (define infos (nested-info-values nested))
-  (define nested-str
-    (check-info-stack->string infos verbose? #:name-width name-width))
-  (string-indent nested-str nested-indent-amount))
-
 ;; display-check-info-stack : (listof check-info) -> void
 (define (display-check-info-stack stack #:verbose? [verbose? #f])
-  (displayln (check-info-stack->string stack verbose?)))
+  (print-check-info-stack stack verbose?))
 
 ;; display-test-name : (U string #f) -> void
 (define (display-test-name name)

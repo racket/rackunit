@@ -2,9 +2,10 @@
 
 (require racket/function
          racket/port
+         racket/list
+         racket/pretty
          rackunit
          rackunit/private/check-info
-         rackunit/private/format
          (submod rackunit/private/format for-test))
 
 (define-check (check-output expected thnk)
@@ -16,11 +17,12 @@
        (fail-check)))))
 
 (test-case "display-check-info-stack"
-  (check-output "name:       \"foo\"\nactual:     1\nexpected:   2\n"
-                (thunk (display-check-info-stack
-                        (list (make-check-name "foo")
-                              (make-check-actual 1)
-                              (make-check-expected 2)))))
+  (test-case "basic"
+    (check-output "name:       \"foo\"\nactual:     1\nexpected:   2\n"
+                  (thunk (display-check-info-stack
+                           (list (make-check-name "foo")
+                                 (make-check-actual 1)
+                                 (make-check-expected 2))))))
   (test-case "string-info"
     (check-output "name:       foo\n"
                   (thunk (display-check-info-stack
@@ -47,4 +49,10 @@
                               (thunk
                                (nested-info
                                 (list (make-check-info 'foo 1)
-                                      (make-check-info 'bar 2)))))))))))))
+                                      (make-check-info 'bar 2))))))))))))
+  (let ([big (make-list 30 99)])
+    (test-case "multi-line"
+      (check-output (format "foo:\n  ~s\n" big)
+                    (thunk
+                     (display-check-info-stack
+                      (list (make-check-info 'foo big))))))))
