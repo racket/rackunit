@@ -112,6 +112,8 @@
          check-not-equal?
          check-regexp-match
          check-match
+         check-equal?/values
+         check-match/values
          fail)
 
 
