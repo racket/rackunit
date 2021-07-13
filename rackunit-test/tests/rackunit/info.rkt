@@ -1,3 +1,3 @@
 #lang info
 
-(define test-responsibles '((all (jay noel))))
+(define test-responsibles '((all (jay ryanc))))
