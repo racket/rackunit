@@ -82,13 +82,11 @@ message:    0.0
 --------------------
 ERROR
 
-
 First Outta here!
 --------------------
 --------------------
 error
 ERROR
-
 
 Second Outta here!
 --------------------

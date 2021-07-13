@@ -43,9 +43,10 @@
 
 (define (with-all-output-to-string* thnk)
   (with-output-to-string
-      (lambda ()
-        (parameterize ([current-error-port (current-output-port)])
-          (thnk)))))
+    (lambda ()
+      (port-count-lines! (current-output-port)) ;; needed by pretty-info
+      (parameterize ([current-error-port (current-output-port)])
+        (thnk)))))
 
 (define-runtime-path here ".")
 
