@@ -23,6 +23,16 @@ jobs:
           dest: '"${HOME}/racketdist-${{ matrix.racket-version }}-${{ matrix.racket-variant }}"'
           local_catalogs: $GITHUB_WORKSPACE
           sudo: never
+
+      - name: Save version
+        run: racket --version > .racket-version
+      - name: Cache Racket dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/racket
+            ~/.local/share/racket
+          key: ${{ runner.os }}-racket-current-${{ hashFiles('.racket-version') }}
       - name: Install rackunit
         run: raco pkg install -i --auto rackunit-test compiler-lib
       - name: Run Tests
