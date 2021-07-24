@@ -99,9 +99,11 @@
      (syntax/loc stx
        ((current-test-case-around)
         (lambda ()
-          (with-handlers ([(λ (e)
-                             (and (exn:fail? e)
-                                  (not (exn:test? e))))
+          (with-handlers ([(ann
+                             (λ (e)
+                               (and (exn:fail? e)
+                                    (not (exn:test? e))))
+                             (-> Any Boolean : #:+ exn:fail))
                            (λ ([e : exn:fail])
                              (test-log! #f)
                              (raise e))])
@@ -270,7 +272,7 @@
 ; XXX require/expose seems WRONG for typed/racket
 
 ; 3.7
-(require-typed-struct (exn:test exn) () rackunit)
+(require-typed-struct (exn:test exn:fail) () rackunit)
 (require-typed-struct (exn:test:check exn:test) ([stack : (Listof CheckInfo)]) rackunit)
 (require-typed-struct test-result ([test-case-name : (Option String)]) rackunit)
 (require-typed-struct (test-failure test-result) ([result : Any]) rackunit)
