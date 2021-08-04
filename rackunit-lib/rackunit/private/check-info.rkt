@@ -20,6 +20,7 @@
   [struct verbose-info ([value any/c])]
   [struct dynamic-info ([proc (-> any/c)])]
   [print-info-value (-> any/c any)]
+  [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
   [check-info-contains-key? (check-info-> symbol? boolean?)]
   [check-info-ref (check-info-> symbol? (or/c check-info? #f))]
@@ -45,6 +46,11 @@
 (struct verbose-info (value) #:transparent)
 (struct nested-info (values) #:transparent)
 (struct dynamic-info (proc) #:transparent)
+
+(define (info-value->string info-value)
+  (with-output-to-string
+    (lambda ()
+      (print-info-value info-value))))
 
 (define (print-info-value info-value)
   (cond
