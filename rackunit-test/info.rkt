@@ -12,3 +12,6 @@
                      "rackunit-lib"
                      "srfi-lite-lib"))
 (define update-implies '("rackunit-lib"))
+
+(define license
+  '(Apache-2.0 OR MIT))
