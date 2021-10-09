@@ -11,3 +11,6 @@
 (define pkg-desc "RackUnit test runner GUI")
 
 (define pkg-authors '(ryanc))
+
+(define license
+  '(Apache-2.0 OR MIT))

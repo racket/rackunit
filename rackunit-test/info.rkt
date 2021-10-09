@@ -11,3 +11,6 @@
                      "eli-tester"
                      "rackunit-lib"))
 (define update-implies '("rackunit-lib"))
+
+(define license
+  '(Apache-2.0 OR MIT))
