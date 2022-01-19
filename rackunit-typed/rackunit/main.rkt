@@ -6,7 +6,8 @@
          "type-env-ext.rkt"
          (for-syntax syntax/parse syntax/srcloc racket/syntax)
          (for-syntax syntax/parse)
-         (only-in typed/racket/unsafe unsafe-provide rackunit check-transformer-impl-name))
+         (only-in rackunit check-transformer-impl-name)
+         (only-in typed/racket/unsafe unsafe-provide))
 
 (begin-for-syntax
   ;; this implements the behavior of `define-check`, but defers the
@@ -17,14 +18,14 @@
     (with-syntax ([loc (build-source-location-list stx)])
       (syntax-case stx ()
         [(chk . args)
-         #`(#,impl-name #:location 'loc
-                        #:expression '(chk . args)
-                        . args)]
+         #`((#,impl-name #:location 'loc
+              #:expression '(chk . args)
+            ) . args)]
         [chk:id
          #`(lambda args
-             (apply #,impl-name
-                    #:location 'loc
-                    #:expression 'chk
+             ((#,impl-name
+               #:location 'loc
+               #:expression 'chk)
                     args))]))))
 
 (define-syntax (define-tcheck stx)
@@ -73,18 +74,22 @@
          (require/typed 'impls
                         [id-impl t] ... ...)
          (define-tcheck id) ... ...
-         (provide id ... ...)))]))
+         ;; use unsafe-provide in case untyped programs that import check-* from
+         ;; typed/rackunit
+         (unsafe-provide id ... ...)))]))
 ;; type for things like `check-equal?`
 (define-type check-impl-ish-ty
-  (case->
-    (Any Any #:location Any #:expression Any -> Any)
-    (Any Any String #:location Any #:expression Any -> Any)))
+  (-> #:location Any #:expression Any
+      (case->
+       (-> Any Any Any)
+       (-> Any Any String Any))))
 
 ;; type for things like `check-true`
 (define-type unary-check-impl-ish-ty
-  (case->
-    (Any #:location Any #:expression Any -> Any)
-    (Any String #:location Any #:expression Any -> Any)))
+  (-> #:location Any #:expression Any
+      (case->
+       (-> Any Any)
+       (-> Any String Any))))
 
 ;; all the actual specifications
 (require-checks [(check-equal? check-eq? check-eqv?
@@ -93,31 +98,38 @@
                 [(check-true check-false check-not-false)
                  unary-check-impl-ish-ty]
                 [(check-pred)
-                 (All (A)
-                      (case->
-                        ((A -> Any) A #:location Any #:expression Any -> Any)
-                        ((A -> Any) A String #:location Any #:expression Any -> Any)))]
+                 (-> #:location Any #:expression Any
+                     (All (A)
+                          (case->
+                           ((A -> Any) A -> Any)
+                           ((A -> Any) A String -> Any))))]
                 [(check-=)
-                 (case->
-                   (Real Real Real #:location Any #:expression Any -> Any)
-                   (Real Real Real String #:location Any #:expression Any -> Any))]
+                 (-> #:location Any #:expression Any
+                     (case->
+                      (Real Real Real -> Any)
+                      (Real Real Real String -> Any)))]
                 [(check-exn)
-                 (case->
-                   ((U (Predicate Any) Regexp) (Thunk Any) #:location Any #:expression Any -> Any)
-                   ((U (Predicate Any) Regexp) (Thunk Any) String #:location Any #:expression Any -> Any))]
+                 (-> #:location Any #:expression Any
+                     (case->
+                      ((U (Predicate Any) Regexp) (Thunk Any) -> Any)
+                      ((U (Predicate Any) Regexp) (Thunk Any) String -> Any)))]
                 [(check-not-exn)
-                 (case->
-                   ((Thunk Any) #:location Any #:expression Any -> Any)
-                   ((Thunk Any) String #:location Any #:expression Any -> Any))]
+                 (-> #:location Any #:expression Any
+                     (case->
+                      ((Thunk Any) -> Any)
+                      ((Thunk Any) String -> Any)))]
                 [(check)
-                 (All (A B)
-                      (case->
-                        ((A B -> Any) A B #:location Any #:expression Any -> Any)
-                        ((A B -> Any) A B String #:location Any #:expression Any -> Any)))]
+                 (-> #:location Any #:expression Any
+                     (All (A B)
+                          (case->
+                           ((A B -> Any) A B -> Any)
+                           ((A B -> Any) A B String -> Any))))]
                 [(fail)
-                 (->* (#:location Any #:expression Any) (String) Void)]
+                 (-> #:location Any #:expression Any
+                     (->* () (String) Void))]
                 [(check-regexp-match)
-                 (-> Regexp String #:location Any #:expression Any Any)])
+                 (-> #:location Any #:expression Any
+                     (-> Regexp String Any Any))])
 
 (define-type (Predicate A) (A -> Boolean))
 (define-type (Thunk A) (-> A))

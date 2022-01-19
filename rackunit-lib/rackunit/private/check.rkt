@@ -106,10 +106,10 @@
     (pattern i:id
              #:with impl-name (format-id #f "~a-impl" #'i))))
 
-(define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
-  (λ (#:location [location (list 'unknown #f #f #f #f)]
-      #:expression [expression 'unknown]
-      #:check-around [check-around current-check-around])
+(define-simple-macro (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
+  (define (name #:location [location (list 'unknown #f #f #f #f)]
+                #:expression [expression 'unknown]
+                #:check-around [check-around current-check-around])
     (procedure-rename
       (λ (formal ... [message #f])
           (define infos
@@ -122,31 +122,33 @@
             (λ () ((check-around) (λ () body ... (void))))))
       'pub)))
 
-
-
 (define-simple-macro (define-check (name:check-name formal:id ...) body:expr ...)
   (begin
-    (define check-impl (make-check-func (check-impl formal ...) #:public-name name body ...))
-    (define-syntax (name stx)
-      (with-syntax ([loc (datum->syntax #f 'loc stx)])
-        (syntax-parse stx
-          [(chk . args)
-           #`(let ([location (syntax->location #'loc)])
-               (with-default-check-info*
-                (list (make-check-name 'name)
-                      (make-check-location location)
-                      (make-check-expression '(chk . args)))
-                #,(syntax/loc #'loc
-                    (λ ()
-                      ((current-check-around)
-                       (λ ()
-                         ((check-impl #:location location
-                                      #:expression '(chk . args)
-                                      #:check-around (λ () (λ (f) (f))))
-                          . args)))))))]
-          [chk:id
-           #'(check-impl #:location (syntax->location #'loc)
-                         #:expression 'chk)])))))
+    (define-check-func (name.impl-name formal ...) #:public-name name body ...)
+    ;; (define check-impl (make-check-func (name.impl-name formal ...) #:public-name name body ...))
+    (define-syntax name
+      (check-transformer
+       (lambda (stx)
+         (with-syntax ([loc (datum->syntax #f 'loc stx)])
+           (syntax-parse stx
+             [(chk . args)
+              #`(let ([location (syntax->location #'loc)])
+                  (with-default-check-info*
+                    (list (make-check-name 'name)
+                          (make-check-location location)
+                          (make-check-expression '(chk . args)))
+                    #,(syntax/loc #'loc
+                        (λ ()
+                          ((current-check-around)
+                           (λ ()
+                             ((name.impl-name #:location location
+                                              #:expression '(chk . args)
+                                              #:check-around (λ () (λ (f) (f))))
+                              . args)))))))]
+             [chk:id
+              #'(name.impl-name #:location (syntax->location #'loc)
+                                #:expression 'chk)])))
+       #'name.impl-name))))
 
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
