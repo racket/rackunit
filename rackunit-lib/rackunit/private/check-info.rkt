@@ -19,13 +19,21 @@
   [struct nested-info ([values (listof check-info?)])]
   [struct verbose-info ([value any/c])]
   [struct dynamic-info ([proc (-> any/c)])]
+  [print-info-value (-> any/c any)]
   [info-value->string (-> any/c string?)]
   [current-check-info (parameter/c (listof check-info?))]
-  [with-check-info* ((listof check-info?) (-> any) . -> . any)])
+  [check-info-contains-key? (check-info-> symbol? boolean?)]
+  [check-info-ref (check-info-> symbol? (or/c check-info? #f))]
+  [with-check-info* ((listof check-info?) (-> any) . -> . any)]
+  [with-default-check-info* ((listof check-info?) (-> any) . -> . any)])
  with-check-info)
 
 (module+ for-test
   (provide trim-current-directory))
+
+(define (check-info-> dom cod)
+  (case-> (-> dom cod)
+          (-> (listof check-info?) dom cod)))
 
 ;; Structures --------------------------------------------------
 
@@ -40,15 +48,22 @@
 (struct dynamic-info (proc) #:transparent)
 
 (define (info-value->string info-value)
+  (with-output-to-string
+    (lambda ()
+      (print-info-value info-value))))
+
+(define (print-info-value info-value)
   (cond
-    [(string-info? info-value) (string-info-value info-value)]
+    [(string-info? info-value) (display (string-info-value info-value))]
     [(location-info? info-value)
-     (trim-current-directory
-      (location->string (location-info-value info-value)))]
-    [(pretty-info? info-value) (pretty-format (pretty-info-value info-value))]
+     (display (trim-current-directory
+                (location->string (location-info-value info-value))))]
+    [(pretty-info? info-value)
+     (pretty-print (pretty-info-value info-value) #:newline? #f)]
     [(verbose-info? info-value)
-     (info-value->string (verbose-info-value info-value))]
-    [else (~s info-value)]))
+     (print-info-value (verbose-info-value info-value))]
+    [else
+     (write info-value)]))
 
 (define (trim-current-directory path)
   (define cd (path->string (current-directory)))
@@ -63,7 +78,20 @@
   (define all-infos (append (current-check-info) info))
   (define infos/later-overriding-earlier
     (reverse (remove-duplicates (reverse all-infos) #:key check-info-name)))
-  (parameterize ([current-check-info infos/later-overriding-earlier])
+  (force/info infos/later-overriding-earlier thunk))
+
+;; with-default-check-info* : (listof check-info) thunk -> any
+(define (with-default-check-info* info thunk)
+  (define old-info (current-check-info))
+  (define old-keys (map check-info-name old-info))
+  (define (has-new-key? info)
+    (not (memq (check-info-name info) old-keys)))
+  (define new-info (filter has-new-key? info))
+  (force/info (append old-info new-info) thunk))
+
+;; force/info : (listof check-info) thunk -> any
+(define (force/info info thunk)
+  (parameterize ([current-check-info info])
     (thunk)))
 
 (define-syntax with-check-info
@@ -96,3 +124,17 @@
 (define-check-type message any/c)
 (define-check-type actual any/c #:wrapper pretty-info)
 (define-check-type expected any/c #:wrapper pretty-info)
+
+(define check-info-ref
+  (case-lambda
+   [(k)
+    (check-info-ref (current-check-info) k)]
+   [(info k)
+    (findf (λ (i) (eq? k (check-info-name i))) info)]))
+
+(define check-info-contains-key?
+  (case-lambda
+   [(k)
+    (check-info-contains-key? (current-check-info) k)]
+   [(info k)
+    (and (check-info-ref info k) #t)]))

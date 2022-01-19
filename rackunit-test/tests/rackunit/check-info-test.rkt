@@ -28,8 +28,10 @@
 #lang racket/base
 
 (require racket/function
+         racket/list
          rackunit
          rackunit/private/check-info
+         syntax/srcloc
          (submod rackunit/private/check-info for-test))
 
 (module+ test
@@ -113,8 +115,31 @@
         (with-check-info (['custom 'custom]) (old-around chk)))
       (parameterize ([current-check-around new-around])
         (check-foo 'arg1 'arg2 'arg3)))
-    (check-equal? (call/info-box call-check-foo/extra-infos)
-                  (list 'name 'location 'expression 'params 'custom)))
+    (define info-keys (call/info-box call-check-foo/extra-infos))
+    (check-true (< (index-of info-keys 'name)
+                   (index-of info-keys 'location)
+                   (index-of info-keys 'expression)
+                   (index-of info-keys 'custom)))
+    (check-true (< (index-of info-keys 'name)
+                   (index-of info-keys 'location)
+                   (index-of info-keys 'expression)
+                   (index-of info-keys 'params))))
+
+  (test-case "check-info-ref / check-info-contains-key"
+    (define info0 (list (make-check-name 'my-name)))
+    (define info1 (list (make-check-message 'my-message)))
+
+    (parameterize ([current-check-info info0])
+      (check-not-false (check-info-ref 'name))
+      (check-false (check-info-ref 'message))
+
+      (check-not-false (check-info-ref info1 'message))
+      (check-false (check-info-ref info1 'name))
+
+      (check-true (check-info-contains-key? 'name))
+      (check-false (check-info-contains-key? 'message))
+      (check-true (check-info-contains-key? info1 'message))
+      (check-false (check-info-contains-key? info1 'name))))
 
   (test-case "All tests for trim-current-directory"
     (test-case "trim-current-directory leaves directories outside the current directory alone"
@@ -128,4 +153,28 @@
      "trim-current-directory leaves subdirectories alone"
      (trim-current-directory
       (path->string (build-path (current-directory) "foo" "bar.rkt")))
-     "foo/bar.rkt")))
+     "foo/bar.rkt"))
+
+  (test-case "Do not trample check-info location"
+    (let ([srcloc #f] [LINE 1][COL 2][POS 3][SPAN 4])
+      ;; first test set!'s `srcloc` var
+      ;; check-exn (and others) should not overwrite my line, col vals
+      (with-check-info*
+        (list (make-check-location (list 'here LINE COL POS SPAN)))
+        (λ ()
+          (check-exn 
+           exn:fail?
+           (λ ()
+             (set! srcloc
+              (location-info-value
+               (check-info-value
+                (car
+                 (memf
+                  check-location? (current-check-info))))))
+             (error "err")))))
+      ;; check that check-exn did not overwrite my vals
+      (check-equal? (source-location-line srcloc) LINE)
+      (check-equal? (source-location-column srcloc) COL)
+      (check-equal? (source-location-position srcloc) POS)
+      (check-equal? (source-location-span srcloc) SPAN)))
+  )

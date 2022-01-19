@@ -1,7 +1,7 @@
 ;;;
 ;;; Time-stamp: <2008-06-06 15:32:49 noel>
 ;;;
-;;; Copyright (C) by Noel Welsh. 
+;;; Copyright (C) by Noel Welsh.
 ;;;
 
 ;;; This library is free software; you can redistribute it
@@ -37,22 +37,24 @@
 (module test racket/base
   (displayln "run as program for tests"))
 
+(define my-check check)
+
 ;; This check should succeed
-(check = 1 1 0.0)
+(my-check = 1 1 0.0)
 
 ;; This check should display an error including the message "Outta here!"
-(check-pred (procedure-rename (lambda (x) (error "Outta here!")) 'proc) 'foo)
+((values check-pred) (procedure-rename (lambda (x) (error "Outta here!")) 'proc) 'foo)
 
 
 ;; This check should display a failure
-(check = 1 2 0.0)
+(my-check = 1 2 0.0)
 
 ;; This check should display "Oh HAI!"
 (parameterize
     ([current-check-handler (lambda (e) (display "Oh HAI!\n"))])
-  (check = 1 2 0.0))
+  (my-check = 1 2 0.0))
 
 ;; This check should display "I didn't run"
 (parameterize
     ([current-check-around (lambda (t) (display "I didn't run\n"))])
-  (check = 1 1 0.0))
+  (my-check = 1 1 0.0))

@@ -1,10 +1,12 @@
 #lang typed/racket
+#:no-optimize ;; precaution, because of unsafe-provide
 (require typed/racket/class
          typed/private/utils
          typed/private/rewriter
          "type-env-ext.rkt"
          (for-syntax syntax/parse syntax/srcloc racket/syntax)
-         (only-in rackunit check-transformer-impl-name))
+         (for-syntax syntax/parse)
+         (only-in typed/racket/unsafe unsafe-provide rackunit check-transformer-impl-name))
 
 (begin-for-syntax
   ;; this implements the behavior of `define-check`, but defers the
@@ -117,7 +119,6 @@
                 [(check-regexp-match)
                  (-> Regexp String #:location Any #:expression Any Any)])
 
-
 (define-type (Predicate A) (A -> Boolean))
 (define-type (Thunk A) (-> A))
 
@@ -158,9 +159,11 @@
      (syntax/loc stx
        ((current-test-case-around)
         (lambda ()
-          (with-handlers ([(λ (e)
-                             (and (exn:fail? e)
-                                  (not (exn:test? e))))
+          (with-handlers ([(ann
+                             (λ (e)
+                               (and (exn:fail? e)
+                                    (not (exn:test? e))))
+                             (-> Any Boolean : #:+ exn:fail))
                            (λ ([e : exn:fail])
                              (test-log! #f)
                              (raise e))])
@@ -188,7 +191,7 @@
     (raise-argument-error 'test-case "string?" name))
   name)
 
-(provide test-begin test-case)
+(unsafe-provide test-begin test-case)
 
 (require/opaque-type TestCase test-case? rackunit)
 (provide TestCase test-case?)
@@ -280,7 +283,7 @@
             tests
             (ann before : (Thunk Any))
             (ann after : (Thunk Any)))))]))
-(provide test-suite)
+(unsafe-provide test-suite)
 
 (define-type TestSuite rackunit-test-suite)
 (provide TestSuite (rename-out [rackunit-test-suite? test-suite?]))
@@ -303,7 +306,7 @@
 
 ; 3.3.1.1
 (define-syntax-rule (def-test [tst (ch args ...)] ...)
-  (begin (provide tst ...)
+  (begin (unsafe-provide tst ...)
          (define-syntax-rule (tst name args ...)
            (test-case name (ch args ...))) ...))
 
@@ -329,7 +332,7 @@
 ; XXX require/expose seems WRONG for typed/racket
 
 ; 3.7
-(require-typed-struct (exn:test exn) () rackunit)
+(require-typed-struct (exn:test exn:fail) () rackunit)
 (require-typed-struct (exn:test:check exn:test) ([stack : (Listof CheckInfo)]) rackunit)
 (require-typed-struct test-result ([test-case-name : (Option String)]) rackunit)
 (require-typed-struct (test-failure test-result) ([result : Any]) rackunit)
@@ -369,5 +372,3 @@
                  Any))]
  [current-check-around
   (Parameter ((Thunk Any) -> Any))])
-
-

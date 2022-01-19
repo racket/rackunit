@@ -28,8 +28,9 @@
 
 #lang racket/base
 
-(require racket/runtime-path
-         srfi/1
+(require racket/list
+         racket/flonum
+         racket/extflonum
          rackunit
          rackunit/private/check
          rackunit/private/result
@@ -92,6 +93,20 @@
     (check-not-false 3))
   (test-case "Simple check-= test"
     (check-= 1.0 1.0 0.0001))
+  (test-case "Simple check-within test"
+    (check-within 1.0 1.0 0.0001))
+  (test-case "Simple check-within test with structure"
+    (check-within (list (list 1.0) '() (list 2.0 3.0))
+                  (list (list 1.0) '() (list 2.0 3.0))
+                  0.001))
+  (test-case "Simple check-within test with flvectors"
+    (check-within (list (list 1.0) '() (flvector 2.0 3.0))
+                  (list (list 1.0) '() (flvector 2.0 3.0))
+                  0.001))
+  (test-case "Simple check-within test with hash-tables"
+    (check-within (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  0.001))
    
   (test-case "Use of check as expression"
     (for-each check-false '(#f #f #f)))
@@ -152,6 +167,17 @@
                      check-not-false #f)
   (make-failure-test "check-= failure"
                      check-= 1.0 2.0 0.0)
+  (make-failure-test "check-within failure"
+                     check-within 1.0 2.0 0.0)
+  (make-failure-test "check-within failure with structure"
+                     check-within (list 1.0 2.0) (list 1.0 3.0) 0.0)
+  (make-failure-test "check-within failure with flvectors"
+                     check-within (flvector 1.0 2.0) (flvector 1.0 3.0) 0.0)
+  (make-failure-test "check-within failure with hash-tables"
+                     check-within
+                     (hash 'a 3.0 'b 10.0)
+                     (hash 'a 3.0 'b 98.6)
+                     0.0)
 
   (make-failure-test/stx "check-match failure pred"
                          check-match 5 x (even? x))
@@ -161,9 +187,47 @@
    
   (test-case "check-= allows differences within epsilon"
     (check-= 1.0 1.09 1.1))
+  (test-case "check-within allows differences within epsilon"
+    (check-within (list (list 1.0) '() (list 2.0 3.0))
+                  (list (list 0.9999) '() (list 2.001 3.0))
+                  0.1))
+  (test-case "check-within allows differences within epsilon inside flvectors"
+    (check-within (list (flvector 1.0) '() (flvector 2.0 3.0))
+                  (list (flvector 0.9999) '() (flvector 2.001 3.0))
+                  0.1))
+  (when (extflonum-available?)
+    (test-case "check-within allows differences within epsilon in extflvectors"
+      (check-within (list (extflvector 1.0t0) '() (extflvector 2.0t0 3.0t0))
+                    (list (extflvector 0.9999t0) '() (extflvector 2.001t0 3.0t0))
+                    0.1)))
+  (test-case "check-within allows differences within eplison inside hash-tables"
+    (check-within (hash 'a (list 3) 'b (flvector 10.0 20.0))
+                  (hash 'a (list 2.98) 'b (flvector 9.99 20.01))
+                  0.1))
    
   (make-failure-test "check-= failure > epsilon"
                      check-= 1 12/10 1/10)
+  (make-failure-test "check-within failure > epsilon"
+                     check-within
+                     (list (list 1.0) '() (list 2.0 3.0))
+                     (list (list 1.0) '() (list 2.5 3.0))
+                     0.1)
+  (make-failure-test "check-within failure > epsilon inside an flvector"
+                     check-within
+                     (list 'a (flvector 2.0 3.0))
+                     (list 'a (flvector 2.5 3.0))
+                     0.1)
+  (when (extflonum-available?)
+    (make-failure-test "check-within failure > epsilon inside an extflvector"
+                       check-within
+                       (list 'a (extflvector 2.0t0 3.0t0))
+                       (list 'a (extflvector 2.5t0 3.0t0))
+                       0.1))
+  (make-failure-test "check-within failure > epsilon inside a hash-table"
+                     check-within
+                     (hash 'a 3.0 'b 10.0)
+                     (hash 'a 3.7 'b 10.0)
+                     0.1)
    
   (test-case "check-as-expression failure"
     (check-exn exn:test:check?
@@ -272,7 +336,11 @@
             (('name "name") ('info "info"))
           #t)
         (fail-check))))
-   
+
+  (define (raise-sample-arity-error)
+    ;; expected 1 argument, got 0
+    (raise-arity-error 'check-test 1))
+
   ;; If check-exn isn't working correctly many tests above will
   ;; silently fail.  Here we test check-exn is working.
   (test-case
@@ -281,7 +349,7 @@
         ((exn?
           (lambda (exn) (fail "Received exception"))))
       (check-exn exn:fail:contract:arity?
-                 (lambda () (= 1)))))
+                 raise-sample-arity-error)))
   (test-case
       "check-exn fails if no exception raised"
     (with-handlers
@@ -290,7 +358,7 @@
          (exn:fail:contract:arity?
           (lambda (exn) (fail "check-exn didn't fail"))))
       (check-exn exn? (lambda () (= 1 1)))
-      (= 1)))
+      (raise-sample-arity-error)))
    
   (test-case
       "check-not-exn captures exception information if one raised"
@@ -302,17 +370,17 @@
            [names (map check-info-name
                        (exn:test:check-stack result))])
       (check-true
-       (fold (lambda (name found?)
-               (if (eq? name 'exception)
-                   #t
-                   found?))
-             #f names))
+       (foldl (lambda (name found?)
+                (if (eq? name 'exception)
+                    #t
+                    found?))
+              #f names))
       (check-true
-       (fold (lambda (name found?)
-               (if (eq? name 'exception-message)
-                   #t
-                   found?))
-             #f names))))
+       (foldl (lambda (name found?)
+                (if (eq? name 'exception-message)
+                    #t
+                    found?))
+              #f names))))
 
   (test-case
       "check-exn has check failure message"

@@ -10,7 +10,7 @@
 ;; struct (rackunit-test-suite test) : string (fdown fup fhere seed -> (listof test-result)) thunk thunk
 (define-struct (rackunit-test-suite test) (name tests before after) #:transparent)
 
-;; struct exn:test exn : ()
+;; struct exn:test exn:fail : ()
 ;;
 ;; The exception throw by test failures
 (define-struct (exn:test exn:fail) ())

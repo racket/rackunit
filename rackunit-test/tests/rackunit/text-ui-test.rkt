@@ -28,11 +28,11 @@
 
 #lang racket/base
 
-(require racket/runtime-path
+(require racket/list
          racket/pretty
          racket/port
-         srfi/1
-         srfi/13
+         racket/runtime-path
+         racket/string
          rackunit
          rackunit/text-ui)
 
@@ -43,9 +43,10 @@
 
 (define (with-all-output-to-string* thnk)
   (with-output-to-string
-      (lambda ()
-        (parameterize ([current-error-port (current-output-port)])
-          (thnk)))))
+    (lambda ()
+      (port-count-lines! (current-output-port)) ;; needed by pretty-info
+      (parameterize ([current-error-port (current-output-port)])
+        (thnk)))))
 
 (define-runtime-path here ".")
 
@@ -67,7 +68,7 @@
     "Dummy"
     (test-case "Dummy"
                (check-equal?
-                (list (iota 15) (iota 15) (iota 15))
+                (list (range 15) (range 15) (range 15))
                 1)))))
 
 (define (failing-test/complex-params)
@@ -76,7 +77,16 @@
     "Dummy"
     (test-case "Dummy"
                (check-false
-                (list (iota 15) (iota 15) (iota 15)))))))
+                (list (range 15) (range 15) (range 15)))))))
+
+(define (failing-test/issue-91)
+  (run-tests
+   (test-suite
+    "Dummy"
+    (test-case "Dummy"
+               (check-equal?
+                (make-list 10 'xfdjkalf)
+                (make-list 11 'xfdjkalf))))))
 
 (define (quiet-failing-test)
   (run-tests
@@ -99,17 +109,17 @@
    (test-case
     "Binary check displays actual and expected in failure error message"
     (let ((op (with-all-output-to-string (failing-test))))
-      (check string-contains
+      (check string-contains?
              op
              "expected")
-      (check string-contains
+      (check string-contains?
              op
              "actual")))
    
    (test-case
     "Binary check doesn't display params"
     (let ((op (with-all-output-to-string (failing-test))))
-      (check (lambda (out str) (not (string-contains out str)))
+      (check (lambda (out str) (not (string-contains? out str)))
              op
              "params")))
    
@@ -117,40 +127,65 @@
     "Binary check output is pretty printed"
     (let ([op (parameterize ([pretty-print-columns 80])
                 (with-all-output-to-string (failing-binary-test/complex-params)))])
-      (check string-contains
+      (check string-contains?
              op
-             "'((0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
-  (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
-  (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14))")))
+             "  '((0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+    (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+    (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14))")))
    
    (test-case
     "Non-binary check output is pretty printed"
     (let ([op (parameterize ([pretty-print-columns 80])
                 (with-all-output-to-string (failing-test/complex-params)))])
-      (check string-contains
+      (check string-contains?
              op
-             "'(((0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
-   (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
-   (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)))")))
+             "  '(((0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+     (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+     (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)))")))
+
+   (test-case
+    "Pretty printing test from github issue #91"
+     (let ([op (parameterize ([pretty-print-columns 80])
+                 (with-all-output-to-string (failing-test/issue-91)))])
+       (check string-contains?
+              op
+              "
+actual:
+  '(xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf)
+expected:
+  '(xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf
+    xfdjkalf)")))
    
    (test-case
     "Location trimmed when file is under current directory"
     (parameterize ((current-directory here))
       (let ((op (with-all-output-to-string (failing-test))))
-        (check string-contains
+        (check string-contains?
                op
                "location:   text-ui-test.rkt"))))
    
    (test-case
     "Name and location displayed before actual/expected"
     (let ((op (with-all-output-to-string (failing-test))))
-      (let ((name-idx (string-contains op "name:"))
-            (loc-idx (string-contains op "location:"))
-            (actual-idx (string-contains op "actual:"))
-            (expected-idx (string-contains op "expected:")))
-        (check < name-idx loc-idx)
-        (check < loc-idx actual-idx)
-        (check < actual-idx expected-idx))))
+      (check-regexp-match "name:.+location:.+actual:.+expected:.+" op)))
    
    (test-case
     "Quiet mode is quiet"

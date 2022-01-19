@@ -1,13 +1,14 @@
 #lang racket/base
 
-(require typed-racket/utils/utils
-         (prefix-in ru: rackunit)
+(require (prefix-in ru: rackunit)
          (for-syntax
           racket/base syntax/parse
-          (utils tc-utils)
-          (env init-envs)
-          (rep prop-rep object-rep type-rep)
-          (types abbrev)))
+          typed-racket/utils/tc-utils
+          typed-racket/env/init-envs
+          typed-racket/rep/prop-rep
+          typed-racket/rep/object-rep
+          typed-racket/rep/type-rep
+          typed-racket/types/abbrev))
 
 (define-for-syntax unit-env
   (make-env

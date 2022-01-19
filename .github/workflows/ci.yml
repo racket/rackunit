@@ -1,0 +1,35 @@
+name: Build and Test
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-18.04
+    container: racket/racket-ci:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        racket-version: ["current"]
+        racket-variant: ['BC', 'CS']
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - uses: Bogdanp/setup-racket@v1.5
+        with:
+          architecture: x64
+          distribution: minimal
+          variant: ${{ matrix.racket-variant }}
+          version: ${{ matrix.racket-version }}
+          dest: '"${HOME}/racketdist-${{ matrix.racket-version }}-${{ matrix.racket-variant }}"'
+          local_catalogs: $GITHUB_WORKSPACE
+          sudo: never
+      - name: Install rackunit
+        run: raco pkg install -i --auto rackunit-test compiler-lib
+      - name: Run Tests
+        run: raco test --table -e --process -p rackunit-test rackunit-lib
+      - name: Install extra packages
+        run: raco pkg install -i --auto rackunit-typed rackunit-gui rackunit-plugin-lib
+      - name: Run extra tests
+        run: xvfb-run raco test --table -e --process -p rackunit-typed rackunit-plugin-lib rackunit-gui
+      - name: Install docs
+        run: raco pkg install -i --auto rackunit-doc

@@ -24,6 +24,7 @@
 
          with-check-info
          with-check-info*
+         with-default-check-info*
 
          make-check-name
          make-check-params
@@ -73,6 +74,7 @@
          test-eq?
          test-eqv?
          test-=
+         test-within
          test-true
          test-false
          test-not-false
@@ -103,6 +105,7 @@
          check-eqv?
          check-equal?
          check-=
+         check-within
          check-not-false
          check-not-eq?
          check-not-eqv?
@@ -154,6 +157,9 @@
 
 (define-shortcut (test-= expr1 expr2 epsilon)
   (check-= expr1 expr2 epsilon))
+
+(define-shortcut (test-within expr1 expr2 epsilon)
+  (check-within expr1 expr2 epsilon))
 
 (define-shortcut (test-true expr)
   (check-true expr))

@@ -19,9 +19,10 @@ It is run via the @racket[run-tests] function.
          natural-number/c]{
 
 The given @racket[test] is run and the result of running it
-output to the @racket[current-output-port].  The output is
-compatable with the (X)Emacs next-error command (as used,
-for example, by (X)Emacs's compile function)
+output to the @racket[current-output-port] if all tests pass, and to
+@racket[current-error-port] when there are test failures.
+The output is compatible with the (X)Emacs next-error command (as used,
+for example, by (X)Emacs's compile function).
 
 The optional @racket[verbosity] is one of @racket['quiet],
 @racket['normal], or @racket['verbose].  Quiet output

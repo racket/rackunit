@@ -14,3 +14,6 @@
 (define pkg-desc "RackUnit testing framework")
 
 (define pkg-authors '(ryanc noel))
+
+(define license
+  '(Apache-2.0 OR MIT))

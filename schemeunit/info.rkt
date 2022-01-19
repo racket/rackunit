@@ -8,3 +8,6 @@
 (define pkg-desc "Legacy SchemeUnit testing framework")
 
 (define pkg-authors '(jay))
+
+(define license
+  '(Apache-2.0 OR MIT))
