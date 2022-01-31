@@ -27,5 +27,8 @@
 ;; Commentary:
 
 #lang racket/base
-(require "private/test.rkt")
-(provide (all-from-out "private/test.rkt"))
+(require "private/test.rkt"
+         "private/check.rkt")
+(provide (all-from-out "private/test.rkt")
+         (for-syntax check-transformer-impl-name
+                     check-transformer?))
