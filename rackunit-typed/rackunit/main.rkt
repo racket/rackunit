@@ -4,137 +4,67 @@
          typed/private/utils
          typed/private/rewriter
          "type-env-ext.rkt"
-         (for-syntax syntax/parse syntax/srcloc racket/syntax)
          (for-syntax syntax/parse)
-         (only-in rackunit check-transformer-impl-name)
          (only-in typed/racket/unsafe unsafe-provide))
 
-(begin-for-syntax
-  ;; this implements the behavior of `define-check`, but defers the
-  ;; actual work to `impl-name`
-  ;; impl-name : identifier?
-  ;; stx : syntax?
-  (define (call-impl stx impl-name)
-    (with-syntax ([loc (build-source-location-list stx)])
-      (syntax-case stx ()
-        [(chk . args)
-         #`((#,impl-name #:location 'loc
-              #:expression '(chk . args)
-            ) . args)]
-        [chk:id
-         #`(lambda args
-             ((#,impl-name
-               #:location 'loc
-               #:expression 'chk)
-                    args))]))))
-
-(define-syntax (define-tcheck stx)
-  (syntax-case stx ()
-    [(_ id)
-     (let* ([impl-id (format-id #'id "~a-imp" #'id)])
-     #`(begin
-         (define-syntax (id stx)
-           (call-impl stx #'#,impl-id))))]))
-
-;; This module creates bindings for each of the impls of the
-;; various checks we need, so that we have something to point
-;; to with `require/typed`
-(module impls racket/base
-  (require rackunit (for-syntax racket/base racket/syntax))
-  (define-syntax (get-impls stx)
-    (syntax-case stx ()
-      [(_ id ...)
-       #`(begin
-           #,@(for/list ([id (syntax->list #'(id ...))])
-                (define id-impl (format-id #f "~a-imp" id))
-                (define v (syntax-local-value id #f))
-                (unless (check-transformer? v)
-                  (raise-syntax-error #f "not a check-transformer" id))
-                #`(begin (provide #,id-impl)
-                         (define #,id-impl
-                           #,(check-transformer-impl-name v)))))]))
-  (get-impls check-equal? check-eq? check-eqv?
-             check-not-equal? check-not-eq? check-not-eqv?
-             check-true check-false check-not-false
-             check-pred check-= check-exn check-not-exn
-             check fail check-regexp-match))
-
-;; this generates the `require/typed` of the impl, the `define-tcheck`
-;; to create the macro wrapper that passes in the source location,
-;; and the provide
-(define-syntax (require-checks stx)
-  (syntax-case stx ()
-    [(require-checks [(id ...) t] ...)
-     (with-syntax ([(([id-impl t] ...) ...)
-                    (for/list ([ids (syntax->list #'((id ...) ...))]
-                               [t (syntax->list #'(t ...))])
-                      (for/list ([id (syntax->list ids)])
-                        (list (format-id id "~a-imp" id) t)))])
-     #'(begin
-         (require/typed 'impls
-                        [id-impl t] ... ...)
-         (define-tcheck id) ... ...
-         ;; use unsafe-provide in case untyped programs that import check-* from
-         ;; typed/rackunit
-         (unsafe-provide id ... ...)))]))
-;; type for things like `check-equal?`
-(define-type check-impl-ish-ty
-  (-> #:location Any #:expression Any
-      (case->
-       (-> Any Any Any)
-       (-> Any Any String Any))))
-
-;; type for things like `check-true`
-(define-type unary-check-impl-ish-ty
-  (-> #:location Any #:expression Any
-      (case->
-       (-> Any Any)
-       (-> Any String Any))))
-
-;; all the actual specifications
-(require-checks [(check-equal? check-eq? check-eqv?
-                               check-not-equal? check-not-eq? check-not-eqv?)
-                 check-impl-ish-ty]
-                [(check-true check-false check-not-false)
-                 unary-check-impl-ish-ty]
-                [(check-pred)
-                 (-> #:location Any #:expression Any
-                     (All (A)
-                          (case->
-                           ((A -> Any) A -> Any)
-                           ((A -> Any) A String -> Any))))]
-                [(check-=)
-                 (-> #:location Any #:expression Any
-                     (case->
-                      (Real Real Real -> Any)
-                      (Real Real Real String -> Any)))]
-                [(check-exn)
-                 (-> #:location Any #:expression Any
-                     (case->
-                      ((U (Predicate Any) Regexp) (Thunk Any) -> Any)
-                      ((U (Predicate Any) Regexp) (Thunk Any) String -> Any)))]
-                [(check-not-exn)
-                 (-> #:location Any #:expression Any
-                     (case->
-                      ((Thunk Any) -> Any)
-                      ((Thunk Any) String -> Any)))]
-                [(check)
-                 (-> #:location Any #:expression Any
-                     (All (A B)
-                          (case->
-                           ((A B -> Any) A B -> Any)
-                           ((A B -> Any) A B String -> Any))))]
-                [(fail)
-                 (-> #:location Any #:expression Any
-                     (->* () (String) Void))]
-                [(check-regexp-match)
-                 (-> #:location Any #:expression Any
-                     (-> Regexp String Any Any))])
-
+(define-type check-ish-ty
+  (case-lambda
+    (Any Any -> Any)
+    (Any Any String -> Any)))
 (define-type (Predicate A) (A -> Boolean))
 (define-type (Thunk A) (-> A))
 
 ; 3.2
+(require/typed/provide
+ rackunit
+ [check-eq? check-ish-ty]
+ [check-not-eq? check-ish-ty]
+ [check-eqv? check-ish-ty]
+ [check-not-eqv? check-ish-ty]
+ [check-equal? check-ish-ty]
+ [check-not-equal? check-ish-ty]
+ [check-pred
+  (All (A)
+       (case-lambda
+         ((A -> Any) A -> Any)
+         ((A -> Any) A String -> Any)))]
+ [check-=
+  (case-lambda
+    (Real Real Real -> Any)
+    (Real Real Real String -> Any))]
+ [check-true
+  (case-lambda
+    (Any -> Any)
+    (Any String -> Any))]
+ [check-false
+  (case-lambda
+    (Any -> Any)
+    (Any String -> Any))]
+ [check-not-false
+  (case-lambda
+    (Any -> Any)
+    (Any String -> Any))]
+ [check-exn
+  (case-lambda
+    ((U (Predicate Any) Regexp) (Thunk Any) -> Any)
+    ((U (Predicate Any) Regexp) (Thunk Any) String -> Any))]
+ [check-not-exn
+  (case-lambda
+    ((Thunk Any) -> Any)
+    ((Thunk Any) String -> Any))]
+ [check-regexp-match
+  (Regexp String -> Any)]
+
+
+ [check (All (A B)
+             (case-lambda
+               ((A B -> Any) A B -> Any)
+               ((A B -> Any) A B String -> Any)))]
+
+ [fail
+  (case-lambda
+    (-> Void)
+    (String -> Void))])
 
 (require/typed rackunit/log
   [test-log! (Any -> Any)])
@@ -384,3 +314,5 @@
                  Any))]
  [current-check-around
   (Parameter ((Thunk Any) -> Any))])
+
+

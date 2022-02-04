@@ -21,7 +21,7 @@
   [plain-check-around (-> (-> void?) void?)]))
 
 (provide check-around
-
+         
          define-check
          define-binary-check
          define-simple-check
@@ -90,26 +90,10 @@
 
 (define (list/if . vs) (filter values vs))
 
-(begin-for-syntax
-  (require racket/syntax)
-  ;; xform is the actual macro transformer procedure
-  ;; impl-name is an identifier naming the `check-impl` procedure
-  (struct check-transformer (xform impl)
-    #:property prop:procedure 0)
-  (provide check-transformer-impl-name check-transformer?)
-  (define (check-transformer-impl-name s)
-    (unless (check-transformer? s)
-      (raise-argument-error
-       'check-transformer-impl-name "check-transformer" s))
-    (check-transformer-impl s))
-  (define-syntax-class check-name
-    (pattern i:id
-             #:with impl-name (format-id #f "~a-impl" #'i))))
-
-(define-simple-macro (define-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
-  (define (name #:location [location (list 'unknown #f #f #f #f)]
-                #:expression [expression 'unknown]
-                #:check-around [check-around current-check-around])
+(define-simple-macro (make-check-func (name:id formal:id ...) #:public-name pub:id body:expr ...)
+  (λ (#:location [location (list 'unknown #f #f #f #f)]
+      #:expression [expression 'unknown]
+      #:check-around [check-around current-check-around])
     (procedure-rename
       (λ (formal ... [message #f])
           (define infos
@@ -121,35 +105,31 @@
           (with-default-check-info* infos
             (λ () ((check-around) (λ () body ... (void))))))
       'pub)))
+                                      
 
-(define-simple-macro (define-check (name:check-name formal:id ...) body:expr ...)
+(define-simple-macro (define-check (name:id formal:id ...) body:expr ...)
   (begin
-    (define-check-func (name.impl-name formal ...) #:public-name name body ...)
-    ;; (define check-impl (make-check-func (name.impl-name formal ...) #:public-name name body ...))
-    (define-syntax name
-      (check-transformer
-       (lambda (stx)
-         (with-syntax ([loc (datum->syntax #f 'loc stx)])
-           (syntax-parse stx
-             [(chk . args)
-              #`(let ([location (syntax->location #'loc)])
-                  (with-default-check-info*
-                    (list (make-check-name 'name)
-                          (make-check-location location)
-                          (make-check-expression '(chk . args)))
-                    #,(syntax/loc #'loc
-                        (λ ()
-                          ((current-check-around)
-                           (λ ()
-                             ((name.impl-name #:location location
-                                              #:expression '(chk . args)
-                                              #:check-around (λ () (λ (f) (f))))
-                              . args)))))))]
-             [chk:id
-              #'(name.impl-name #:location (syntax->location #'loc)
-                                #:expression 'chk)])))
-       #'name.impl-name))))
-
+    (define check-impl (make-check-func (check-impl formal ...) #:public-name name body ...))
+    (define-syntax (name stx)
+      (with-syntax ([loc (datum->syntax #f 'loc stx)])
+        (syntax-parse stx
+          [(chk . args)
+           #`(let ([location (syntax->location #'loc)])
+               (with-default-check-info*
+                (list (make-check-name 'name)
+                      (make-check-location location)
+                      (make-check-expression '(chk . args)))
+                #,(syntax/loc #'loc
+                    (λ ()
+                      ((current-check-around)
+                       (λ ()
+                         ((check-impl #:location location
+                                      #:expression '(chk . args)
+                                      #:check-around (λ () (λ (f) (f))))
+                          . args)))))))]
+          [chk:id
+           #'(check-impl #:location (syntax->location #'loc)
+                         #:expression 'chk)])))))
 
 (define-syntax-rule (define-simple-check (name param ...) body ...)
   (define-check (name param ...)
