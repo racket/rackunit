@@ -100,7 +100,7 @@
   (define (check-transformer-impl-name s)
     (unless (check-transformer? s)
       (raise-argument-error
-       'check-transformer-impl-name "check-transformer" s))
+       'check-transformer-impl-name "check-transformer?" s))
     (check-transformer-impl s))
   (define-syntax-class check-name
     (pattern i:id

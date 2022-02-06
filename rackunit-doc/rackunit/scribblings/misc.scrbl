@@ -46,7 +46,7 @@ Provided by @racketmodname[rackunit] at phase 1.
 }
 
 @defproc[(check-transformer-impl-name [ct check-transformer?]) identifier?]{
-Given a transformer @racket[_ct] defined with @racket[defined-check],
+Given a transformer @racket[_ct] defined with @racket[define-check],
 produces an identifier which names the procedure implementing the
 check. This procedure takes the same arguments as the check form, as
 well as two mandatory keyword arguments: @racket[#:location] whose argument
