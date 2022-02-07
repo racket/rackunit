@@ -7,6 +7,7 @@
          racket/match
          rackunit/log
          syntax/parse/define
+         syntax/macro-testing
          "base.rkt"
          "equal-within.rkt"
          "check-info.rkt"
@@ -29,6 +30,8 @@
          check
          check-exn
          check-not-exn
+         check-compile-time-exn
+         check-not-compile-time-exn
          check-true
          check-false
          check-pred
@@ -171,14 +174,16 @@
                (procedure-arity-includes? thunk 0))
     (raise-arguments-error name "thunk must be a procedure that accepts 0 arguments" "thunk" thunk)))
 
+(define (get-pred raw-pred)
+  (cond [(regexp? raw-pred)
+         (λ (x) (and (exn:fail? x) (regexp-match raw-pred (exn-message x))))]
+        [(and (procedure? raw-pred) (procedure-arity-includes? raw-pred 1))
+         raw-pred]
+        [else
+         (raise-argument-error 'check-exn "(or/c (-> any/c any/c) regexp?)" raw-pred)]))
+
 (define-check (check-exn raw-pred thunk)
-  (let ([pred
-         (cond [(regexp? raw-pred)
-                (λ (x) (and (exn:fail? x) (regexp-match raw-pred (exn-message x))))]
-               [(and (procedure? raw-pred) (procedure-arity-includes? raw-pred 1))
-                raw-pred]
-               [else
-                (raise-argument-error 'check-exn "(or/c (-> any/c any/c) regexp?)" raw-pred)])])
+  (let ([pred (get-pred raw-pred)])
     (raise-error-if-not-thunk 'check-exn thunk)
     (let/ec succeed
       (with-handlers
@@ -219,6 +224,48 @@
             (make-check-info 'exception exn))
            (lambda () (fail-check))))])
     (thunk)))
+
+(define-syntax (check-compile-time-exn stx)
+  (syntax-parse stx
+    [(_ raw-pred expr:expr)
+     #:with loc (datum->syntax #f 'loc stx)
+     #'(let ([pred (get-pred raw-pred)]
+             [location (syntax->location #'loc)])
+         (with-check-info (['name 'check-compile-time-exn]
+                           ['location location]
+                           ['params (list raw-pred (syntax->datum #'expr))])
+           (let/ec finish
+             (with-check-info (['message "Wrong exception raised"])
+               (with-handlers
+                   ([pred
+                     (lambda (exn) (finish))]
+                    [exn:fail?
+                     (lambda (exn)
+                       (with-check-info (['exn exn])
+                         (fail)
+                         (finish)))])
+                 (convert-compile-time-error expr)))
+             (with-check-info (['message "No exception raised"])
+               (fail)))))]))
+
+(define-syntax (check-not-compile-time-exn stx)
+  (syntax-parse stx
+    [(_ expr:expr)
+     #:with loc (datum->syntax #f 'loc stx)
+     #'(let ([location (syntax->location #'loc)])
+         (with-check-info (['name 'check-not-compile-time-exn]
+                           ['location location]
+                           ['params (list (syntax->datum #'expr))])
+           (let/ec finish
+             (with-check-info (['message "Exception raised"])
+               (with-handlers
+                   ([exn:fail?
+                     (lambda (exn)
+                       (with-check-info (['exn exn])
+                         (fail)
+                         (finish)))])
+                 (convert-compile-time-error expr)))
+             (finish))))]))
 
 (define-syntax-rule (define-simple-check-values [header body ...] ...)
   (begin (define-simple-check header body ...) ...))
