@@ -18,15 +18,14 @@
     (with-syntax ([loc (build-source-location-list stx)])
       (syntax-case stx ()
         [(chk . args)
-         #`((#,impl-name #:location 'loc
-              #:expression '(chk . args)
-            ) . args)]
+         #`((#,impl-name
+             #:location 'loc
+             #:expression '(chk . args))
+            . args)]
         [chk:id
-         #`(lambda args
-             ((#,impl-name
-               #:location 'loc
-               #:expression 'chk)
-                    args))]))))
+         #`(#,impl-name
+            #:location 'loc
+            #:expression 'chk)]))))
 
 (define-syntax (define-tcheck stx)
   (syntax-case stx ()
