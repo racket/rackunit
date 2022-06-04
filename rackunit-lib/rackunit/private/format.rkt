@@ -70,7 +70,26 @@
 (define (print-check-info info verbose? name-width)
   (define name (symbol->string (check-info-name info)))
   (define value (check-info-value info))
-  (cond [(dynamic-info? value)
+  (cond [(and (equal? name "exception") (exn? value))
+         (print-name name)
+         (newline)
+         (define indentation-step-string
+           (make-string multi-line-indent-amount #\space))
+         (define indentation-string
+           (string-append*
+            (make-list (add1 (nesting-level))
+                       indentation-step-string)))
+         (define lines
+           (call-with-output-string
+            (λ (p)
+              (parameterize ([current-error-port p])
+                ((error-display-handler) (exn-message value) value)))))
+         (displayln
+          (string-join
+           (for/list ([line (in-lines (open-input-string lines))])
+             (string-append indentation-string line))
+           "\n"))]
+        [(dynamic-info? value)
          (define new-info
            (make-check-info (check-info-name info)
                             ((dynamic-info-proc value))))
