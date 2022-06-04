@@ -31,6 +31,7 @@
 (require racket/list
          racket/flonum
          racket/extflonum
+         racket/port
          rackunit
          rackunit/private/check
          rackunit/private/result
@@ -433,6 +434,21 @@
     (check-exn exn:fail:contract?
                (lambda ()
                  (check-not-exn (lambda (x) x)))))
+
+  (test-case "error-display-handler is used to print exception"
+    (define this-check-handler (current-check-handler))
+    (define out-str
+      (parameterize ([current-check-handler
+                      (λ (e)
+                        (call-with-output-string
+                         (λ (p)
+                           (parameterize ([current-error-port p])
+                             (this-check-handler e)))))]
+                     [current-check-around check-around])
+        (check-not-exn
+         (λ () (raise-argument-error 'hello "integer?" 'abc)))))
+
+    (check-regexp-match #px"(?m:^    expected: integer\\?$)" out-str))
 
   ;; Regression test
   ;; Uses of check (and derived forms) used to be un-compilable!
