@@ -40,21 +40,21 @@
 (define my-check check)
 
 ;; This check should succeed
-(my-check = 1 1 0.0)
+(my-check = 1 1)
 
 ;; This check should display an error including the message "Outta here!"
 ((values check-pred) (procedure-rename (lambda (x) (error "Outta here!")) 'proc) 'foo)
 
 
 ;; This check should display a failure
-(my-check = 1 2 0.0)
+(my-check = 1 2)
 
 ;; This check should display "Oh HAI!"
 (parameterize
     ([current-check-handler (lambda (e) (display "Oh HAI!\n"))])
-  (my-check = 1 2 0.0))
+  (my-check = 1 2))
 
 ;; This check should display "I didn't run"
 (parameterize
     ([current-check-around (lambda (t) (display "I didn't run\n"))])
-  (my-check = 1 1 0.0))
+  (my-check = 1 1))
