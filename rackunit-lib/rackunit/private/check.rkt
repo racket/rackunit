@@ -112,14 +112,16 @@
                 #:check-around [check-around current-check-around])
     (procedure-rename
       (λ (formal ... [message #f])
-          (define infos
-            (list/if (make-check-name 'pub)
-                     (make-check-location location)
-                     (make-check-expression expression)
-                     (make-check-params (list formal ...))
-                     (and message (make-check-message message))))
-          (with-default-check-info* infos
-            (λ () ((check-around) (λ () body ... (void))))))
+        (when (and message (not (string? message)))
+          (raise-argument-error 'pub "(or/c #f string?)" message))
+        (define infos
+          (list/if (make-check-name 'pub)
+                   (make-check-location location)
+                   (make-check-expression expression)
+                   (make-check-params (list formal ...))
+                   (and message (make-check-message message))))
+        (with-default-check-info* infos
+          (λ () ((check-around) (λ () body ... (void))))))
       'pub)))
 
 (define-simple-macro (define-check (name:check-name formal:id ...) body:expr ...)

@@ -38,21 +38,21 @@
   (displayln "run as program for tests"))
 
 ;; This check should succeed
-(check = 1 1 0.0)
+(check = 1 1)
 
 ;; This check should display an error including the message "Outta here!"
 (check-pred (procedure-rename (lambda (x) (error "Outta here!")) 'proc) 'foo)
 
 
 ;; This check should display a failure
-(check = 1 2 0.0)
+(check = 1 2)
 
 ;; This check should display "Oh HAI!"
 (parameterize
     ([current-check-handler (lambda (e) (display "Oh HAI!\n"))])
-  (check = 1 2 0.0))
+  (check = 1 2))
 
 ;; This check should display "I didn't run"
 (parameterize
     ([current-check-around (lambda (t) (display "I didn't run\n"))])
-  (check = 1 1 0.0))
+  (check = 1 1))

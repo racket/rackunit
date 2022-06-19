@@ -478,4 +478,8 @@
                  (parameterize ([current-check-handler (lambda (e) (escape 'foo))]
                                 [current-check-around check-around])
                    (check-eq? 'a 'b)))
-               'foo)))
+               'foo))
+
+  (test-case "Optional message is handled correctly"
+    (check-exn (regexp (regexp-quote "expected: (or/c #f string?)"))
+               (lambda () (check = 1 2 0.0)))))

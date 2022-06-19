@@ -52,7 +52,6 @@ FAILURE
 name:       check
 location:   standalone-check-test.rkt:48:0
 params:     '(#<procedure:=> 1 2)
-message:    0.0
 --------------------
 ")
 
@@ -72,7 +71,6 @@ FAILURE
 name:       check
 location:   standalone-check-higher-order-test.rkt:40:17
 params:     '(#<procedure:=> 1 2)
-message:    0.0
 --------------------
 ")
 
