@@ -1,8 +1,12 @@
 #lang racket/base
-(require racket/contract)
 
-(define test-log-enabled? (make-parameter #t))
+(provide test-log-enabled?
+         test-log!
+         test-log)
 
+(define test-log-enabled?
+  (make-parameter #t (lambda (v) (and v #t))))
+  
 (define TOTAL 0)
 (define FAILED 0)
 
@@ -31,11 +35,3 @@
     (unless (zero? FAILED)
       (exit 1)))
   (cons FAILED TOTAL))
-
-(provide
- (contract-out
-  [test-log-enabled? (parameter/c boolean?)]
-  [test-log! (-> any/c void?)]
-  [test-log (->* () (#:display? boolean? #:exit? boolean?)
-                 (cons/c exact-nonnegative-integer?
-                         exact-nonnegative-integer?))]))
