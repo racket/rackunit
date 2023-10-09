@@ -152,6 +152,11 @@ For example, the following checks succeed:
      (raise (make-exn:fail "Hi there"
                            (current-continuation-marks)))))
   (check-exn
+   #rx"[Hh]i there"
+   (lambda ()
+     (raise (make-exn:fail "Hi there"
+                           (current-continuation-marks)))))
+  (check-exn
    exn:fail?
    (lambda ()
      (error 'hi "there")))
@@ -163,6 +168,11 @@ The following check fails:
   (check-exn exn:fail?
              (lambda ()
                (break-thread (current-thread))))
+  (check-exn
+   #rx"Hello there"
+   (lambda ()
+     (raise (make-exn:fail "Hi there"
+                           (current-continuation-marks)))))
 ]
 
 The following example is a common mistake. The call to @racket[error]
