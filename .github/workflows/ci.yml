@@ -13,7 +13,7 @@ jobs:
         racket-version: ["current"]
         racket-variant: ['BC', 'CS']
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - uses: Bogdanp/setup-racket@v1.5
         with:
           architecture: x64
