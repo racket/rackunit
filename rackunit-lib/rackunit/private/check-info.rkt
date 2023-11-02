@@ -124,6 +124,7 @@
 (define-check-type message any/c)
 (define-check-type actual any/c #:wrapper pretty-info)
 (define-check-type expected any/c #:wrapper pretty-info)
+(define-check-type tolerance any/c #:wrapper pretty-info)
 
 (define check-info-ref
   (case-lambda
