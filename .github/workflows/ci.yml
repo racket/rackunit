@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     container: racket/racket-ci:latest
 
     strategy:
@@ -13,8 +13,8 @@ jobs:
         racket-version: ["current"]
         racket-variant: ['BC', 'CS']
     steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: Bogdanp/setup-racket@v1.5
+      - uses: actions/checkout@v3
+      - uses: Bogdanp/setup-racket@v1.11
         with:
           architecture: x64
           distribution: minimal
