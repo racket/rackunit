@@ -113,7 +113,12 @@ For example, the following checks pass:
 
 And the following checks fail:
 @interaction[#:eval rackunit-eval
-  (check-within (list 6.02e23 9.8) (list 6.0e23 10.0) 0.05)
+  (define (avogadro-constant) 6.0e23) ;computes the Avogadro constant
+  (define (gravity-constant)  10.0)   ;computes the Gravity constant
+  
+  (check-within (list (avogadro-constant) (gravity-constant))
+                (list 6,02214076e23 9.81) 0.05)
+  
   (check-within (hash 'C 18 'F 64) (hash 'C 25 'F 77) 10)
 ]
 
