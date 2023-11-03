@@ -117,7 +117,7 @@ And the following checks fail:
   (define (gravity-constant)  10.0)   ;computes the Gravity constant
   
   (check-within (list (avogadro-constant) (gravity-constant))
-                (list 6,02214076e23 9.81) 0.05)
+                (list 6.02214076e23 9.81) 0.05)
   
   (check-within (hash 'C 18 'F 64) (hash 'C 25 'F 77) 10)
 ]
