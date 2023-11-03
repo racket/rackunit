@@ -74,40 +74,46 @@ The following check fails:
          void?]{
 
 Checks that @racket[v1] and @racket[v2] are numbers within
-@racket[epsilon] of one another.  The optional
-@racket[message] is included in the output if the check
-fails.
+@racket[epsilon] of one another. Usually the first number
+is produced by a function, the second number is the expected
+value and epsilon is the tolerance. The optional @racket[message]
+is included in the output if the check fails.
 
 For example, the following check passes:
 
 @interaction[#:eval rackunit-eval
-  (check-= 1.0 1.01 0.02 "I work")
+  (define (golden-ratio) 1.62) ;computes the golden ratio
+  (check-= (golden-ratio) 1.618033988749  0.01 "I work")
 ]
+
 The following check fails:
 @interaction[#:eval rackunit-eval
-  (check-= 1.0 1.01 0.005 "I fail")
+  (check-= (golden-ratio) 1.618033988749  0.001 "I fail")
 ]
 }
 
 @defproc[(check-within [v1 any/c] [v2 any/c] [epsilon number?] [message (or/c string? #f) #f])
          void?]{
-
+                
 Checks that @racket[v1] and @racket[v2] are @racket[equal?] to each
 other, while allowing numbers @italic{inside} of them to be different by
 at most @racket[epsilon] from one another. If @racket[(equal? v1 v2)] would
 call @racket[equal?] on sub-pieces that are numbers, then those numbers are
 considered "good enough" if they're within @racket[epsilon].
+This check is similar to @racket[check-=] except it works on data structures
+like lists, flvectors and hash tables.
 
 For example, the following checks pass:
 
 @interaction[#:eval rackunit-eval
-  (check-within (list 6 10) (list 6.02 9.99) 0.05)
-  (check-within (flvector 3.0 4.0 5.0) (flvector 3.01 4.01 5.014) 0.02)
-  (check-within (hash 'C 20 'F 68) (hash 'C 25 'F 77) 10)
+  (check-within (list 6.02 9.99) (list 6 10) 0.05)
+  (check-within (flvector 3.01 4.01 5.014) (flvector 3.0 4.0 5.0) 0.02)
+  (check-within (hash 'C 25 'F 77) (hash 'C 20 'F 68) 10)
 ]
+
 And the following checks fail:
 @interaction[#:eval rackunit-eval
-  (check-within (list 6.0e23 10.0) (list 6.02e23 9.8) 0.05)
+  (check-within (list 6.02e23 9.8) (list 6.0e23 10.0) 0.05)
   (check-within (hash 'C 18 'F 64) (hash 'C 25 'F 77) 10)
 ]
 
