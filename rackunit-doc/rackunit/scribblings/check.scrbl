@@ -106,7 +106,7 @@ like lists, flvectors and hash tables.
 For example, the following checks pass:
 
 @interaction[#:eval rackunit-eval
-  (check-within (list 6.02 9.99) (list 6 10) 0.05)
+  (check-within (list 6 10) (list 6.02 9.99) 0.05)
   (check-within (flvector 3.01 4.01 5.014) (flvector 3.0 4.0 5.0) 0.02)
   (check-within (hash 'C 25 'F 77) (hash 'C 20 'F 68) 10)
 ]
