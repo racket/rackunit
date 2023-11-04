@@ -228,8 +228,6 @@
 (define-simple-check-values
   [(check operator expr1 expr2) (operator expr1 expr2)]
   [(check-pred predicate expr) (predicate expr)]
-  [(check-= expr1 expr2 epsilon)
-   (<= (magnitude (- expr1 expr2)) epsilon)]
   [(check-true expr) (eq? expr #t)]
   [(check-false expr) (eq? expr #f)]
   [(check-not-false expr) expr]
@@ -238,10 +236,20 @@
   [(check-not-equal? expr1 expr2) (not (equal? expr1 expr2))]
   [(fail) #f])
 
+(define-check (check-= expr1 expr2 epsilon)
+  (with-check-info*
+   (list (make-check-actual expr1)
+         (make-check-expected expr2)
+         (make-check-tolerance epsilon))
+   (lambda ()
+     (unless (<= (magnitude (- expr1 expr2)) epsilon)
+       (fail-check)))))
+
 (define-check (check-within expr1 expr2 epsilon)
   (with-check-info*
    (list (make-check-actual expr1)
-         (make-check-expected expr2))
+         (make-check-expected expr2)
+         (make-check-tolerance epsilon))
    (lambda ()
      (unless (equal?/within expr1 expr2 epsilon)
        (fail-check)))))
