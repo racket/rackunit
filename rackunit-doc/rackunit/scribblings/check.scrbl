@@ -1,10 +1,10 @@
 #lang scribble/doc
 @(require "base.rkt")
 
-@(require (for-label racket/match racket/flonum))
+@(require (for-label racket/match racket/flonum racket/list))
 
 @(define rackunit-eval (make-base-eval))
-@(interaction-eval #:eval rackunit-eval (require rackunit racket/flonum))
+@(interaction-eval #:eval rackunit-eval (require rackunit racket/flonum racket/list))
 @(interaction-eval #:eval rackunit-eval (error-print-context-length 0))
 
 @title{Checks}
@@ -17,7 +17,8 @@ check will report the failure using the current @tech{check-info stack}
 
 Although checks are implemented as macros, which is
 necessary to grab source locations (see @secref{rackunit:custom-checks}), they are conceptually
-functions (with the exception of @racket[check-match] below).
+functions (with the exception of @racket[check-match], @racket[check-equal?/values], and
+@racket[check-match/values] below).
 This means, for instance, checks always evaluate
 their arguments.  You can use a check as a first class
 function, though this will affect the source location that the check grabs.
@@ -270,6 +271,41 @@ This check fails because of a failure to match:
 ]
 
 }
+
+@defform[(check-equal?/values actual-expr expected-expr)]{
+
+Like @racket[check-equal?], except handling multiple values.
+For the check to pass, the @racket[actual-expr] and
+@racket[expected-expr] must produce the same number of values
+and the two lists of values must be equal.
+
+@interaction[#:eval rackunit-eval
+  (check-equal?/values (quotient/remainder 67 12)
+                       (values 5 7))
+  (check-equal?/values (split-at (list 'a 'b 'c 'd 'e) 2)
+                       (values (list 'a 'b)
+                               (list 'c 'd 'e)))
+]
+}
+
+@defform*[#:literals (values)
+          ((check-match/values expr (values pattern ...))
+           (check-match/values expr (values pattern ...) #:when pred)
+           (check-match/values expr (values pattern ...) #:unless pred))]{
+
+Like @racket[check-match], except handling multiple values.
+For the check to pass, the @racket[expr] must produce the same
+number of values as the number of @racket[pattern]s, each
+value must match the corresponding pattern, and the
+`#:when`/`#:unless` conditions must pass if they exist.
+
+@interaction[#:eval rackunit-eval
+  (check-match/values (split-at (list 1 3 4 6 8) 2)
+                      (values (list (? odd?) ...)
+                              (list (? even?) ...)))
+]
+}
+
 
 
 @defproc[(check (op (-> any/c any/c any/c))

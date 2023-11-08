@@ -42,6 +42,8 @@
          check-not-eqv?
          check-not-equal?
          check-match
+         check-equal?/values
+         check-match/values
          fail)
 
 (define current-check-handler (make-parameter display-test-failure/error))
@@ -271,10 +273,71 @@
                 (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
               (make-check-expression '#,(syntax->datum stx))
               (make-check-actual actual-val)
-              (make-check-expected 'expected))
+              (make-check-expected (written 'expected)))
         (lambda ()
-         (check-true (match actual-val
-                       [expected pred]
-                       [_ #f]))))))]
+          (check-not-false (match actual-val
+                             [expected pred]
+                             [_ #f]))))))]
     [(_ actual expected)
      (syntax/loc stx (check-match actual expected #t))]))
+
+;; NOTE: Like check-match, the check-equal?/values and check-match/values forms
+;; do not evaluate their arguments like functions would, so they're defined
+;; with define-syntax instead
+(define-syntax check-equal?/values
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ actual expected)
+       (quasisyntax
+        (let ([actual-lst (call-with-values (λ () actual) list)]
+              [expected-lst (call-with-values (λ () expected) list)])
+          (with-check-info*
+           (list (make-check-name 'check-equal?/values)
+                 (make-check-location
+                  (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
+                 (make-check-expression '#,(syntax->datum stx))
+                 (make-check-actual (written (cons 'values (map printed actual-lst))))
+                 (make-check-expected (written (cons 'values (map printed expected-lst)))))
+           (lambda ()
+             (check-equal? actual-lst expected-lst)))))])))
+
+(define-syntax check-match/values
+  (lambda (stx)
+    (syntax-case stx (values)
+      [(_ actual (values expected ...))
+       (syntax/loc stx
+         (check-match/values actual
+                             (values expected ...)
+                             #:when #t))]
+      [(_ actual (values expected ...) #:unless unless-condition)
+       (syntax/loc stx
+         (check-match/values actual
+                             (values expected ...)
+                             #:when (not unless-condition)))]
+      [(_ actual (values expected ...) #:when pred)
+       (quasisyntax
+        (let ([actual-lst (call-with-values (λ () actual) list)])
+          (with-check-info*
+           (list (make-check-name 'check-match/values)
+                 (make-check-location
+                  (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
+                 (make-check-expression '#,(syntax->datum stx))
+                 (make-check-actual (written (cons 'values (map printed actual-lst))))
+                 (make-check-expected (written '(values expected ...))))
+           (lambda ()
+             (check-not-false (match actual-lst
+                                [(list expected ...) pred]
+                                [_ #f]))))))])))
+
+;; Helper structs for check-equal?/values and check-match/values
+(struct written (val) #:transparent
+  #:property prop:custom-write
+  (lambda (this out mode) (write (written-val this) out)))
+
+(struct printed (val) #:transparent
+  #:property prop:custom-write
+  (lambda (this out mode)
+    (if (integer? mode)
+        (print (printed-val this) out mode)
+        (print (printed-val this) out))))
+
