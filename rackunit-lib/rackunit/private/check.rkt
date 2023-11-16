@@ -271,7 +271,9 @@
                 (syntax->location (quote-syntax #,(datum->syntax #f 'loc stx))))
               (make-check-expression '#,(syntax->datum stx))
               (make-check-actual actual-val)
-              (make-check-expected 'expected))
+              (make-check-info 'pattern 'expected)
+              #,@(cond [(eq? (syntax-e #'pred) #t) '()]
+                       [else #'((make-check-info 'condition 'pred))]))
         (lambda ()
          (check-true (match actual-val
                        [expected pred]
