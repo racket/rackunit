@@ -36,6 +36,7 @@
          rackunit/private/check
          rackunit/private/result
          rackunit/private/test-suite
+         (only-in rackunit/log test-log-enabled?)
          (only-in rackunit/text-ui run-tests)
          (only-in rackunit/private/check-info current-check-info))
 
@@ -146,7 +147,9 @@
       (define actual
         (call-with-output-string
          (lambda (e)
-           (parameterize ([current-error-port e] [current-check-info '()])
+           (parameterize ([current-error-port e]
+                          [current-check-info '()]
+                          [test-log-enabled? #false])
              (run-tests (test-suite "check-failure-message" (thunk)))))))
       (with-check-info*
        (list (make-check-info 'actual (string-info actual)))
