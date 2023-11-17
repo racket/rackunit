@@ -35,7 +35,10 @@
          rackunit
          rackunit/private/check
          rackunit/private/result
-         rackunit/private/test-suite)
+         rackunit/private/test-suite
+         (only-in rackunit/log test-log-enabled?)
+         (only-in rackunit/text-ui run-tests)
+         (only-in rackunit/private/check-info current-check-info))
 
 (define (make-failure-test name pred . args)
   (test-case
@@ -138,7 +141,45 @@
       (check-match (data 1 2 (data 1 2 3))
                    (data _ _ (data x y z))
                    (equal? (+ x y z) 6))))
-   
+
+  (test-case "check-match failure message"
+    (define-check (check-failure-message rx thunk)
+      (define actual
+        (call-with-output-string
+         (lambda (e)
+           (parameterize ([current-error-port e]
+                          [current-check-info '()]
+                          [test-log-enabled? #false])
+             (run-tests (test-suite "check-failure-message" (thunk)))))))
+      (with-check-info*
+       (list (make-check-info 'actual (string-info actual)))
+       (lambda () (check-regexp-match rx actual))))
+    (define (rx . strs) (regexp (apply string-append strs)))
+    (check-failure-message
+     (rx
+      "name: *check-match\n.*"
+      "actual: *1\n"
+      "pattern: *a\n"
+      "condition: *" (regexp-quote "(symbol? a)"))
+     (lambda ()
+       (check-match 1 a (symbol? a))))
+    (check-failure-message
+     (rx
+      "name: *check-match\n.*"
+      "actual: *" (regexp-quote "'(1)") "\n"
+      "pattern: *" (regexp-quote "(quasiquote ((unquote a)))") "\n"
+      "condition: *" (regexp-quote "(symbol? a)"))
+     (lambda ()
+       (check-match `(1) `(,a) (symbol? a))))
+    (check-failure-message
+     (rx
+      "name: *check-match\n.*"
+      "actual: *" (regexp-quote "'a") "\n"
+      "pattern: *" (regexp-quote "a") "\n"
+      "condition: *" (regexp-quote "(integer? a)"))
+     (lambda ()
+       (check-match 'a a (integer? a)))))
+
   ;; Failures
   (make-failure-test "check-equal? failure"
                      check-equal? 1 2)
