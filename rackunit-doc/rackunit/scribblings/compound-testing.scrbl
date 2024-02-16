@@ -62,7 +62,7 @@ so the test can be named.
                        [pred (-> any/c any/c)]
                        [v any/c])
             void?]
-           [(test-equal? [name string?] [v1 any/c] [v2 any/c]) (void?)]
+           [(test-equal? [name string?] [v1 any/c] [v2 any/c]) void?]
            [(test-eq? [name string?] [v1 any/c] [v2 any/c]) void?]
            [(test-eqv? [name string?] [v1 any/c] [v2 any/c]) void?]
            [(test-= [name string?] [v1 real?] [v2 real?] [epsilon real?]) void?]
