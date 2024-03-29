@@ -44,11 +44,9 @@
 (define (combine-names test-name suite-names)
   (define any-names? (or test-name (not (empty? suite-names))))
   (and any-names?
-       (string-join (snoc (or test-name "Unnamed test")
-                          (reverse suite-names))
+       (string-join (reverse (cons (or test-name "Unnamed test")
+                                   suite-names))
                     " > ")))
-
-(define (snoc v vs) (append vs (list v)))
 
 (define (string-padding str desired-len)
   (make-string (max (- desired-len (string-length str)) 0) #\space))
