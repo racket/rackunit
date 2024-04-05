@@ -1,6 +1,7 @@
 #lang scribble/doc
 
 @(require scribble/manual
+          "utils-label.rkt"
           (for-label racket
                      rackunit/log
                      rackunit/docs-complete))
@@ -36,30 +37,20 @@ as a predicate and passed each export of the module. If @racket[skip] is
 @section{Logging Test Results}
 @defmodule[rackunit/log]
 
-Rackunit provides a general purpose library for tracking test results
-and displaying a summary message.
+@deprecated[@racketmodname[raco/testing]]
 
 @defproc[(test-log! [result any/c]) void?]{
- Adds a test result to the running log. If @racket[result] is false,
- then the test is considered a failure.}
+  Re-exports @raco-testing[test-log!] from @racketmodname[raco/testing].}
 
 @defproc[(test-log [#:display? display? any/c #f]
                    [#:exit? exit? any/c #f])
          (cons/c exact-nonnegative-integer?
                  exact-nonnegative-integer?)]{
- Processes the running test log. The first integer is the failed tests, the
- second is the total tests. If @racket[display?] is true, then a message is
- displayed. If there were failures, the message is printed on
- @racket[(current-error-port)]. If @racket[exit?] is true, then if there were
- failures, calls @racket[(exit 1)].
-
+ Re-exports @raco-testing[test-report] from @racketmodname[raco/testing].
  @history[#:changed "1.11" @elem{Allow any value for the @racket[display?]
                                  and @racket[exit?] arguments, not just booleans.}]}
 
 @defboolparam[test-log-enabled? enabled? #:value #t]{
- When set to @racket[#f], @racket[test-log!] is a no-op. This is useful to
- dynamically disable certain tests whose failures are expected and shouldn't be
- counted in the test log, such as when testing a custom check's failure
- behavior.
+ Re-exports @raco-testing[test-log-enabled?] from @racketmodname[raco/testing].
  @history[#:added "1.1"
           #:changed "1.11" @elem{Allow any value for the parameter and coerce it to a boolean.}]}

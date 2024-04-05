@@ -1,37 +1,11 @@
 #lang racket/base
 
-(provide test-log-enabled?
-         test-log!
-         test-log)
+(provide (all-defined-out))
+(require (prefix-in rt: raco/testing))
 
-(define test-log-enabled?
-  (make-parameter #t (lambda (v) (and v #t))))
-  
-(define TOTAL 0)
-(define FAILED 0)
+;; we don't immediately export the imported ids so that Scribble doesn't treat
+;; them as re-exports.
 
-(define-syntax-rule (inc! id)
-  (set! id (add1 id)))
-
-(define (test-log! result)
-  (when (test-log-enabled?)
-    (inc! TOTAL)
-    (unless result
-      (inc! FAILED))))
-
-(define (test-log #:display? [display? #f]
-                  #:exit? [exit? #f])
-  (when display?
-    (unless (zero? TOTAL)
-      (cond
-        [(zero? FAILED)
-         (printf "~a test~a passed\n"
-                 TOTAL
-                 (if (= TOTAL 1) "" "s"))]
-        [else
-         (eprintf "~a/~a test failures\n"
-                  FAILED TOTAL)])))
-  (when exit?
-    (unless (zero? FAILED)
-      (exit 1)))
-  (cons FAILED TOTAL))
+(define test-log-enabled? rt:test-log-enabled?)
+(define test-log! rt:test-log!)
+(define test-log rt:test-report)

@@ -1,7 +1,8 @@
 #lang info
 (define collection 'multi)
 
-(define deps '("base"))
+(define deps '("base"
+               ["compiler-lib" #:version "1.13"]))
 
 (define pkg-desc "Utilities for interoperating between testing frameworks")
 
