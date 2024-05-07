@@ -1,10 +1,10 @@
 #lang racket/base
 
 (require racket/contract/base
-         racket/format
          racket/list
          racket/port
          racket/pretty
+         rackunit/log
          "location.rkt"
          (for-syntax racket/base
                      racket/syntax))
@@ -66,7 +66,8 @@
      (write info-value)]))
 
 (define (trim-current-directory path)
-  (define cd (path->string (current-directory)))
+  (define cd (path->string (or (current-test-invocation-directory)
+                               (current-directory))))
   (regexp-replace (regexp-quote cd) path ""))
 
 ;; Infrastructure ----------------------------------------------

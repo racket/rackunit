@@ -9,3 +9,4 @@
 (define test-log-enabled? rt:test-log-enabled?)
 (define test-log! rt:test-log!)
 (define test-log rt:test-report)
+(define current-test-invocation-directory rt:current-test-invocation-directory)

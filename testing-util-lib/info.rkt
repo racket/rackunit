@@ -2,11 +2,11 @@
 (define collection 'multi)
 
 (define deps '("base"
-               ["compiler-lib" #:version "1.13"]))
+               ["compiler-lib" #:version "1.14"]))
 
 (define pkg-desc "Utilities for interoperating between testing frameworks")
 
-(define version "1.1")
+(define version "1.2")
 
 (define pkg-authors '(florence))
 
