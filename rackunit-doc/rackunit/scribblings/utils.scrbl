@@ -54,3 +54,8 @@ as a predicate and passed each export of the module. If @racket[skip] is
  Re-exports @raco-testing[test-log-enabled?] from @racketmodname[raco/testing].
  @history[#:added "1.1"
           #:changed "1.11" @elem{Allow any value for the parameter and coerce it to a boolean.}]}
+
+@defparam[current-test-invocation-directory test-invocation-directory (or/c #f path-string?) #:value #f]{
+Re-exports @raco-testing[current-test-invocation-directory] from @racketmodname[raco/testing].
+@history[#:added "1.2"]
+}
