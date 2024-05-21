@@ -11,7 +11,8 @@
                      "eli-tester"
                      "typed-racket-lib"
                      "rackunit-typed"
-                     "rackunit-lib"))
+                     "rackunit-lib"
+                     "compiler-lib"))
 (define update-implies '("rackunit-lib"))
 
 (define license
