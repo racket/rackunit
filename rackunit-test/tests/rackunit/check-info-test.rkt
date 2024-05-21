@@ -32,6 +32,7 @@
          rackunit
          rackunit/private/check-info
          syntax/srcloc
+         raco/testing
          (submod rackunit/private/check-info for-test))
 
 (module+ test
@@ -141,19 +142,20 @@
       (check-true (check-info-contains-key? info1 'message))
       (check-false (check-info-contains-key? info1 'name))))
 
-  (test-case "All tests for trim-current-directory"
-    (test-case "trim-current-directory leaves directories outside the current directory alone"
-      (check-equal? (trim-current-directory "/foo/bar/") "/foo/bar/"))
-    (test-equal?
-     "trim-current-directory strips directory from files in current directory"
-     (trim-current-directory
-      (path->string (build-path (current-directory) "foo.rkt")))
-     "foo.rkt")
-    (test-equal?
-     "trim-current-directory leaves subdirectories alone"
-     (trim-current-directory
-      (path->string (build-path (current-directory) "foo" "bar.rkt")))
-     "foo/bar.rkt"))
+  (parameterize ([current-test-invocation-directory (current-directory)])
+    (test-case "All tests for trim-current-directory"
+      (test-case "trim-current-directory leaves directories outside the current directory alone"
+        (check-equal? (trim-current-directory "/foo/bar/") "/foo/bar/"))
+      (test-equal?
+       "trim-current-directory strips directory from files in current directory"
+       (trim-current-directory
+        (path->string (build-path (current-directory) "foo.rkt")))
+       "foo.rkt")
+      (test-equal?
+       "trim-current-directory leaves subdirectories alone"
+       (trim-current-directory
+        (path->string (build-path (current-directory) "foo" "bar.rkt")))
+       "foo/bar.rkt")))
 
   (test-case "Do not trample check-info location"
     (let ([srcloc #f] [LINE 1][COL 2][POS 3][SPAN 4])
