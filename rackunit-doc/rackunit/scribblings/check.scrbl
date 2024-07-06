@@ -22,6 +22,10 @@ This means, for instance, checks always evaluate
 their arguments.  You can use a check as a first class
 function, though this will affect the source location that the check grabs.
 
+Also, if the evaluation of the arguments to one of the
+checks raises an exception (except @racket[exn:break?]) the
+exception is caught and the test case is considered to have
+failed.
 
 @section[#:tag "rackunit:basic-checks"]{Basic Checks}
 
@@ -49,6 +53,7 @@ For example, the following checks all fail:
   (check-not-eqv? 1 1 "integers are eqv?")
   (check-equal? 1 1.0 "not equal?")
   (check-not-equal? (list 1) (list 1) "equal?")
+  (check-equal? (car #f) (car #f))
 ]
 }
 
@@ -171,14 +176,18 @@ For example, the following checks succeed:
    exn:fail?
    (lambda ()
      (error 'hi "there")))
+
+  (check-exn exn:fail:contract:divide-by-zero?
+             (lambda ()
+               (/ 1 0)))
 ]
 
 The following check fails:
 
 @interaction[#:eval rackunit-eval
-  (check-exn exn:fail?
+  (check-exn exn:fail:contract:divide-by-zero?
              (lambda ()
-               (break-thread (current-thread))))
+               (car #f)))
   (check-exn
    #rx"Hello there"
    (lambda ()
