@@ -24,7 +24,8 @@
 ;;
 ;; Run a test-case immediately, printing information on failure
 (define (default-test-case-around thunk)
-  (with-handlers ([(λ (_) #t) log-and-handle!])
+  (define (not-break-exn? x) (not (exn:break? x)))
+  (with-handlers ([not-break-exn? log-and-handle!])
     (begin0
       (parameterize ((current-custodian (make-custodian)))
         (thunk))

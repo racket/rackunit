@@ -115,11 +115,12 @@
       ([exn:test:check?
         (lambda (exn)
           (make-test-failure name exn))]
-       [(lambda _ #t)
+       [not-break-exn?
         (lambda (exn)
           (make-test-error name exn))])
     (let ((value (action)))
       (make-test-success name value))))
+(define (not-break-exn? x) (not (exn:break? x)))
 
 ;; run-test : test -> (list-of test-result)
 ;;
