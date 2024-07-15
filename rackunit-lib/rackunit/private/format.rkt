@@ -172,11 +172,19 @@
     (display-delimiter)))
 
 (define (display-raised-message v)
-  (if (exn? v)
-      (when (not (equal? (exn-message v) ""))
-        (newline)
-        (displayln (exn-message v)))
-      (printf "\nA value other than an exception was raised: ~e\n" v)))
+  (cond
+    [(exn:test? v)
+     (when (not (equal? (exn-message v) ""))
+       (newline)
+       (displayln (exn-message v)))]
+    [(exn:fail? v)
+     (define sp (open-output-string))
+     (parameterize ([current-error-port sp])
+       ((error-display-handler) (exn-message v) v))
+     (display "  ")
+     (display (regexp-replace* #rx"\n(.)" (get-output-string sp) "\n  \\1"))]
+    [else
+     (printf "\nA value other than an exception was raised: ~e\n" v)]))
 
 (define (display-delimiter) (displayln "--------------------"))
 
