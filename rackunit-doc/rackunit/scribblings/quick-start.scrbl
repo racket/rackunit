@@ -84,7 +84,7 @@ cases.  Here's a simple test case written using the
     lst)))
 ]
 
-Evalute this and you should see an error message like:
+Evaluate this and you should see an error message like:
 
 @verbatim{
 --------------------
