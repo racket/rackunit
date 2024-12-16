@@ -219,7 +219,7 @@ the check fails.
 
 }
 
-@defproc[(check-regexp-match (regexp regexp?)
+@defproc[(check-regexp-match (regexp (or/c regexp? string?))
                              (string string?))
          void?]{
 
