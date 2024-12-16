@@ -219,8 +219,8 @@ the check fails.
 
 }
 
-@defproc[(check-regexp-match (regexp (or/c regexp? string?))
-                             (string string?))
+@defproc[(check-regexp-match (regexp (or/c regexp? byte-regexp? string? bytes?))
+                             (string (or/c string? bytes? path? input-port?)))
          void?]{
 
 Checks that @racket[regexp] matches the @racket[string].
