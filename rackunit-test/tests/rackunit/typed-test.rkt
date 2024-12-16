@@ -35,8 +35,18 @@
     (check-eq? 10 20)))
 
 (module typed-check-regexp-match typed/racket/base
-  (require typed/rackunit)
-  (check-regexp-match "a+bba" "aaaaaabba"))
+  (require typed/rackunit
+           racket/port)
+  (check-regexp-match #rx"a+bba" "aaaaaabba")
+  (check-regexp-match #rx#"a+bba" "aaaaaabba")
+  (check-regexp-match "a+bba" "aaaaaabba")
+  (check-regexp-match #"a+bba" "aaaaaabba")
+  (check-regexp-match "a+bba" #"aaaaaabba")
+  (check-regexp-match "a+bba" (string->path "aaaaaabba"))
+  (call-with-input-string "aaaaaabba"
+    (lambda (in)
+      (check-regexp-match "a+bba" in))))
+
 
 
 (require rackunit racket/port rackunit/text-ui)

@@ -128,7 +128,9 @@
                      (->* () (String) Void))]
                 [(check-regexp-match)
                  (-> #:location Any #:expression Any
-                     (-> (U Regexp String) String Void))])
+                     (-> (U Regexp Byte-Regexp String Bytes)
+                         (U String Bytes Path Input-Port)
+                         Void))])
 
 (define-type (Predicate A) (A -> Boolean))
 (define-type (Thunk A) (-> A))
