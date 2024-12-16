@@ -44,7 +44,7 @@
   (check-regexp-match "a+bba" #"aaaaaabba")
   (check-regexp-match "a+bba" (string->path "aaaaaabba"))
   (call-with-input-string "aaaaaabba"
-    (lambda (in)
+    (lambda ([in : Input-Port])
       (check-regexp-match "a+bba" in))))
 
 
