@@ -34,6 +34,20 @@
     test1-report-loc
     (check-eq? 10 20)))
 
+(module typed-check-regexp-match typed/racket/base
+  (require typed/rackunit
+           racket/port)
+  (check-regexp-match #rx"a+bba" "aaaaaabba")
+  (check-regexp-match #rx#"a+bba" "aaaaaabba")
+  (check-regexp-match "a+bba" "aaaaaabba")
+  (check-regexp-match #"a+bba" "aaaaaabba")
+  (check-regexp-match "a+bba" #"aaaaaabba")
+  (check-regexp-match "a+bba" (string->path "aaaaaabba"))
+  (call-with-input-string "aaaaaabba"
+    (lambda ([in : Input-Port])
+      (check-regexp-match "a+bba" in))))
+
+
 
 (require rackunit racket/port rackunit/text-ui)
 (require 'typed-fail1)
@@ -48,5 +62,6 @@
 (module+ test
   (require (submod ".." typed-success1))
   (require (submod ".." typed-success2))
+  (require (submod ".." typed-check-regexp-match))
   (check-regexp-match (regexp-quote test1-report-loc)
                       report))

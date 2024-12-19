@@ -80,15 +80,15 @@
 (define-type check-impl-ish-ty
   (-> #:location Any #:expression Any
       (case->
-       (-> Any Any Any)
-       (-> Any Any String Any))))
+       (-> Any Any Void)
+       (-> Any Any String Void))))
 
 ;; type for things like `check-true`
 (define-type unary-check-impl-ish-ty
   (-> #:location Any #:expression Any
       (case->
-       (-> Any Any)
-       (-> Any String Any))))
+       (-> Any Void)
+       (-> Any String Void))))
 
 ;; all the actual specifications
 (require-checks [(check-equal? check-eq? check-eqv?
@@ -100,35 +100,37 @@
                  (-> #:location Any #:expression Any
                      (All (A)
                           (case->
-                           ((A -> Any) A -> Any)
-                           ((A -> Any) A String -> Any))))]
+                           ((A -> Any) A -> Void)
+                           ((A -> Any) A String -> Void))))]
                 [(check-=)
                  (-> #:location Any #:expression Any
                      (case->
-                      (Real Real Real -> Any)
-                      (Real Real Real String -> Any)))]
+                      (Real Real Real -> Void)
+                      (Real Real Real String -> Void)))]
                 [(check-exn)
                  (-> #:location Any #:expression Any
                      (case->
-                      ((U (Predicate Any) Regexp) (Thunk Any) -> Any)
-                      ((U (Predicate Any) Regexp) (Thunk Any) String -> Any)))]
+                      ((U (Predicate Any) Regexp) (Thunk Any) -> Void)
+                      ((U (Predicate Any) Regexp) (Thunk Any) String -> Void)))]
                 [(check-not-exn)
                  (-> #:location Any #:expression Any
                      (case->
-                      ((Thunk Any) -> Any)
-                      ((Thunk Any) String -> Any)))]
+                      ((Thunk Any) -> Void)
+                      ((Thunk Any) String -> Void)))]
                 [(check)
                  (-> #:location Any #:expression Any
                      (All (A B)
                           (case->
-                           ((A B -> Any) A B -> Any)
-                           ((A B -> Any) A B String -> Any))))]
+                           ((A B -> Any) A B -> Void)
+                           ((A B -> Any) A B String -> Void))))]
                 [(fail)
                  (-> #:location Any #:expression Any
                      (->* () (String) Void))]
                 [(check-regexp-match)
                  (-> #:location Any #:expression Any
-                     (-> Regexp String Any Any))])
+                     (-> (U Regexp Byte-Regexp String Bytes)
+                         (U String Bytes Path Input-Port)
+                         Void))])
 
 (define-type (Predicate A) (A -> Boolean))
 (define-type (Thunk A) (-> A))

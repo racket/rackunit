@@ -84,5 +84,8 @@
       (test-case case-name case-body ...) ...))))
 
 (define-simple-check (check-regexp-match regex string)
-  (and (string? string) 
+  (and (or (string? string)
+           (bytes? string)
+           (path? string)
+           (input-port? string))
        (regexp-match regex string)))
